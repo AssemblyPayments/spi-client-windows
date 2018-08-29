@@ -35,25 +35,28 @@ namespace SPIClient
         public const string SignatureAccepted = "signature_accept";
         public const string AuthCodeRequired = "authorisation_code_required";
         public const string AuthCodeAdvice = "authorisation_code_advice";
-        
+
         public const string CashoutOnlyRequest = "cash";
         public const string CashoutOnlyResponse = "cash_response";
 
         public const string MotoPurchaseRequest = "moto_purchase";
         public const string MotoPurchaseResponse = "moto_purchase_response";
-        
+
         public const string SettleRequest = "settle";
         public const string SettleResponse = "settle_response";
         public const string SettlementEnquiryRequest = "settlement_enquiry";
         public const string SettlementEnquiryResponse = "settlement_enquiry_response";
-        
+
+        public const string SetPosInfoRequest = "set_pos_info";
+        public const string SetPosInfoResponse = "set_pos_info_response";
+
         public const string KeyRollRequest = "request_use_next_keys";
         public const string KeyRollResponse = "response_use_next_keys";
-        
+
         public const string Error = "error";
-        
+
         public const string InvalidHmacSignature = "_INVALID_SIGNATURE_";
-     
+
         // Pay At Table Related Messages
         public const string PayAtTableGetTableConfig = "get_table_config"; // incoming. When eftpos wants to ask us for P@T configuration.
         public const string PayAtTableSetTableConfig = "set_table_config"; // outgoing. When we want to instruct eftpos with the P@T configuration.
@@ -185,7 +188,7 @@ namespace SPIClient
         /// Set on an incoming message just so you can have a look at what it looked like in its json form.
         /// </summary>
         [JsonIgnore]
-        public string DecryptedJson { get; private set; } 
+        public string DecryptedJson { get; private set; }
 
         [JsonConstructor]
         public Message(string id, string eventName, JObject data, bool needsEncryption)
@@ -196,14 +199,14 @@ namespace SPIClient
             _needsEncryption = needsEncryption;
         }
 
-        public enum SuccessState{Unknown, Success, Failed}
-        
+        public enum SuccessState { Unknown, Success, Failed }
+
         public SuccessState GetSuccessState()
         {
             if (Data == null) return SuccessState.Unknown;
             JToken success = null;
             var found = Data.TryGetValue("success", out success);
-            if (found) return (bool) success ? SuccessState.Success : SuccessState.Failed;
+            if (found) return (bool)success ? SuccessState.Success : SuccessState.Failed;
             return SuccessState.Unknown;
         }
 
@@ -211,7 +214,7 @@ namespace SPIClient
         {
             JToken e = null;
             var found = Data.TryGetValue("error_reason", out e);
-            if (found) return (string) e;
+            if (found) return (string)e;
             return null;
         }
 
@@ -219,12 +222,12 @@ namespace SPIClient
         {
             return GetDataStringValue("error_detail");
         }
-        
+
         public string GetDataStringValue(string attribute)
         {
             JToken v;
             var found = Data.TryGetValue(attribute, out v);
-            if (found) return (string) v;
+            if (found) return (string)v;
             return "";
         }
 
@@ -232,7 +235,7 @@ namespace SPIClient
         {
             JToken v;
             var value = 0;
-    
+
             var found = Data.TryGetValue(attribute, out v);
             var parse = v != null && int.TryParse(v.ToString(), out value);
             return found ? value : 0;
@@ -242,10 +245,10 @@ namespace SPIClient
         {
             JToken v;
             var found = Data.TryGetValue(attribute, out v);
-            if (found) return (bool) v;
+            if (found) return (bool)v;
             return defaultIfNotFound;
         }
-        
+
         public TimeSpan GetServerTimeDelta()
         {
             var now = DateTime.Now;
@@ -255,8 +258,8 @@ namespace SPIClient
 
         public static Message FromJson(string msgJson, Secrets secrets)
         {
-            var jsonSerializerSettings = new JsonSerializerSettings() {DateParseHandling = DateParseHandling.None};
-            
+            var jsonSerializerSettings = new JsonSerializerSettings() { DateParseHandling = DateParseHandling.None };
+
             var env = JsonConvert.DeserializeObject<MessageEnvelope>(msgJson, jsonSerializerSettings);
             if (env.Message != null)
             {
@@ -271,14 +274,14 @@ namespace SPIClient
                 // For example, if we cancel the pairing process a little late in the game and we get an encrypted key_check message after we've dropped the keys.
                 return new Message("UNKNOWN", "NOSECRETS", null, false);
             }
-            
+
             var sig = Crypto.HmacSignature(secrets.HmacKeyBytes, env.Enc);
             if (sig != env.Hmac)
             {
                 return new Message("_", Events.InvalidHmacSignature, null, false);
             }
             var decryptedJson = Crypto.AesDecrypt(secrets.EncKeyBytes, env.Enc);
-//            Console.WriteLine("Decrypyted Json: {0}", decryptedJson);
+            //Console.WriteLine("Decrypyted Json: {0}", decryptedJson);
             try
             {
                 var decryptedEnv =
