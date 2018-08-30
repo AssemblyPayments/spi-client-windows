@@ -14,8 +14,6 @@ build_script:
   - verbosity: detailed
 configuration:
   - Release
-build:
-  publish_nuget: true
 after_build:
   - ps: .\nuget.ps1
 artifacts:
