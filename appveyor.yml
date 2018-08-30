@@ -10,6 +10,4 @@ install:
 before_build:
   # restore nuget
   - nuget restore
-build_script:
-  - verbosity: detailed  
   
