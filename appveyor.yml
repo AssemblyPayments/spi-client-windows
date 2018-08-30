@@ -12,6 +12,8 @@ before_build:
   - nuget restore
 build_script:
   - verbosity: minimal
+configuration:
+  - Release
 after_build:
   - ps: .\nuget.ps1
 artifacts:
