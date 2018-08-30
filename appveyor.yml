@@ -10,4 +10,6 @@ install:
 before_build:
   # restore nuget
   - nuget restore
+configuration:
+  - Release  
   
