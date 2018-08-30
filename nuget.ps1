@@ -1,0 +1,1 @@
+﻿nuget pack SPIClient.csproj -IncludeReferencedProjects -Prop Configuration=Release
