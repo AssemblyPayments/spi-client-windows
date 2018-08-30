@@ -1,0 +1,9 @@
+version: '1.0.{build}'
+image: Visual Studio 2017
+branches:
+  only:
+  - master
+init:
+install:
+  # Force the path as VS2013 solutions uses msbuild 12.0 
+  - cmd: set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
