@@ -13,7 +13,7 @@ before_build:
 build_script:
   - verbosity: minimal
 after_build:
-  - ps: nuget.ps1
+  - ps: .\nuget.ps1
 artifacts:
   - path: '.\artifacts\**\*.nupkg'
 clone_depth: 1
