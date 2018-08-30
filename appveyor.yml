@@ -11,7 +11,7 @@ before_build:
   # Restore nuget packages
   - nuget restore
 build_script:
-  - verbosity: minimal
+  - verbosity: detailed
 configuration:
   - Release
 after_build:
