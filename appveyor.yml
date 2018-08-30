@@ -15,7 +15,7 @@ build_script:
 configuration:
   - Release
 build:
-  - publish_nuget: true
+  publish_nuget: true
 after_build:
   - ps: .\nuget.ps1
 artifacts:
