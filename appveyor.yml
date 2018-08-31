@@ -11,7 +11,7 @@ before_build:
   # restore nuget
   - nuget restore
 after_build:
-    - ps: nuget pack SPIClient.csproj -IncludeReferencedProjects  
+    - ps: nuget pack \SPIUClient\SPIClient.csproj -IncludeReferencedProjects  
 configuration:
   - Release  
 artifacts:
