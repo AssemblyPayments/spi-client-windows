@@ -9,7 +9,7 @@ install:
   - cmd: set PATH=C:\Program Files (x86)\MSBuild\15.0\Bin;%PATH%
 before_build:
   # restore nuget
-  - nuget pack SPIClient.nuspec
+  - nuget restore
 after_build:
     - ps: nuget pack \SPIClient\SPIClient.csproj -IncludeReferencedProjects  
 configuration:
