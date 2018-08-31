@@ -10,6 +10,8 @@ install:
 before_build:
   # restore nuget
   - nuget restore
+after_build:
+    - ps: nuget pack  
 configuration:
   - Release  
 artifacts:
