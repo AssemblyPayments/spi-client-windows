@@ -14,3 +14,7 @@ configuration:
   - Release  
 artifacts:
   - path: '.\artifacts\**\*.nupkg'  
+deploy:
+  provider: NuGet
+  api_key: 
+    secure: fg2Tr5qSe4jlwE9a46ItHC1yMnaUwsvO/y4nmf2vjT5KzDYPpYOiRBt6qs1c1J0i  
