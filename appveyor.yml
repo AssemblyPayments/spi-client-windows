@@ -16,7 +16,7 @@ after_build:
 configuration:
   - Release  
 artifacts:
-  - path: '.\*.nupkg'  
+  - path: '.\artifacts\**\*.nupkg'
 deploy:
   provider: NuGet
   api_key: 
