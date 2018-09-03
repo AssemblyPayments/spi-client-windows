@@ -12,7 +12,7 @@ before_build:
   - nuget restore
 after_build:
     - ps: nuget pack .\SPIClient\SPIClient.csproj -IncludeReferencedProjects  
-    - dir Deployments
+    - dir
 configuration:
   - Release  
 artifacts:
