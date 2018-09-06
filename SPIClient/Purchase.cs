@@ -8,25 +8,27 @@ namespace SPIClient
     public class PurchaseRequest
     {
         public string PosRefId { get; }
-        
-        public int PurchaseAmount { get;}
+
+        public int PurchaseAmount { get; }
         public int TipAmount { get; set; }
         public int CashoutAmount { get; set; }
         public bool PromptForCashout { get; set; }
 
         [Obsolete("Id is deprecated. Use PosRefId instead.")]
         public string Id { get; }
-        
+
         [Obsolete("AmountCents is deprecated. Use PurchaseAmount instead.")]
         public int AmountCents { get; }
 
         internal SpiConfig Config = new SpiConfig();
-        
+
+        internal TransactionOptions Options = new TransactionOptions();
+
         public PurchaseRequest(int amountCents, string posRefId)
         {
             PosRefId = posRefId;
             PurchaseAmount = amountCents;
-         
+
             // Library Backwards Compatibility
             Id = posRefId;
             AmountCents = amountCents;
@@ -38,19 +40,20 @@ namespace SPIClient
                 $"Tip: ${TipAmount / 100.0:.00}; " +
                 $"Cashout: ${CashoutAmount / 100.0:.00};";
         }
-        
+
         public Message ToMessage()
         {
             var data = new JObject(
                 new JProperty("pos_ref_id", PosRefId),
-                
+
                 new JProperty("purchase_amount", PurchaseAmount),
                 new JProperty("tip_amount", TipAmount),
                 new JProperty("cash_amount", CashoutAmount),
                 new JProperty("prompt_for_cashout", PromptForCashout)
-                
+
                 );
             Config.addReceiptConfig(data);
+            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("prchs"), Events.PurchaseRequest, data, true);
         }
     }
@@ -67,7 +70,7 @@ namespace SPIClient
         public string RequestId { get; }
         public string PosRefId { get; }
         public string SchemeName { get; }
-        
+
         /// <summary>
         /// Deprecated. Use SchemeName instead
         /// </summary>
@@ -99,7 +102,7 @@ namespace SPIClient
         {
             return _m.GetDataIntValue("purchase_amount");
         }
-        
+
         public int GetTipAmount()
         {
             return _m.GetDataIntValue("tip_amount");
@@ -109,7 +112,7 @@ namespace SPIClient
         {
             return _m.GetDataIntValue("surcharge_amount");
         }
-        
+
         public int GetCashoutAmount()
         {
             return _m.GetDataIntValue("cash_amount");
@@ -124,7 +127,7 @@ namespace SPIClient
         {
             return _m.GetDataIntValue("bank_cash_amount");
         }
-        
+
         public string GetCustomerReceipt()
         {
             return _m.GetDataStringValue("customer_receipt");
@@ -134,7 +137,7 @@ namespace SPIClient
         {
             return _m.GetDataStringValue("merchant_receipt");
         }
-        
+
         public string GetResponseText()
         {
             return _m.GetDataStringValue("host_response_text");
@@ -144,7 +147,7 @@ namespace SPIClient
         {
             return _m.GetDataStringValue("host_response_code");
         }
-        
+
         public string GetTerminalReferenceId()
         {
             return _m.GetDataStringValue("terminal_ref_id");
@@ -154,7 +157,7 @@ namespace SPIClient
         {
             return _m.GetDataStringValue("card_entry");
         }
-        
+
         public string GetAccountType()
         {
             return _m.GetDataStringValue("account_type");
@@ -174,12 +177,12 @@ namespace SPIClient
         {
             return _m.GetDataStringValue("bank_time");
         }
-        
+
         public string GetMaskedPan()
         {
             return _m.GetDataStringValue("masked_pan");
         }
-        
+
         public string GetTerminalId()
         {
             return _m.GetDataStringValue("terminal_id");
@@ -194,7 +197,7 @@ namespace SPIClient
         {
             return _m.GetDataBoolValue("customer_receipt_printed", false);
         }
-        
+
         public DateTime? GetSettlementDate()
         {
             //"bank_settlement_date":"20042018"
@@ -202,12 +205,12 @@ namespace SPIClient
             if (string.IsNullOrEmpty(dateStr)) return null;
             return DateTime.ParseExact(dateStr, "ddMMyyyy", CultureInfo.InvariantCulture).Date;
         }
-        
+
         public string GetResponseValue(string attribute)
         {
             return _m.GetDataStringValue(attribute);
         }
-        
+
         internal JObject ToPaymentSummary()
         {
             return new JObject(
@@ -231,10 +234,42 @@ namespace SPIClient
 
     public class CancelTransactionRequest
     {
-        
+
         public Message ToMessage()
         {
             return new Message(RequestIdHelper.Id("ctx"), Events.CancelTransactionRequest, null, true);
+        }
+    }
+
+    public class CancelTransactionResponse
+    {
+        public bool Success { get; }
+        public string PosRefId { get; }
+
+        private readonly Message _m;
+
+        public CancelTransactionResponse() { }
+
+        public CancelTransactionResponse(Message m)
+        {
+            _m = m;
+            PosRefId = _m.GetDataStringValue("pos_ref_id");
+            Success = m.GetSuccessState() == Message.SuccessState.Success;
+        }
+
+        public string GetErrorReason()
+        {
+            return _m.GetDataStringValue("error_reason");
+        }
+
+        public string GetErrorDetail()
+        {
+            return _m.GetDataStringValue("error_detail");
+        }
+
+        public string GetResponseValueWithAttribute(string attribute)
+        {
+            return _m.GetDataStringValue(attribute);
         }
     }
 
@@ -290,7 +325,7 @@ namespace SPIClient
         {
             return _m.GetError().StartsWith("OPERATION_IN_PROGRESS_AWAITING_PHONE_AUTH_CODE");
         }
-        
+
         public bool IsStillInProgress(string posRefId)
         {
             return WasOperationInProgressError() && GetPosRefId().Equals(posRefId);
@@ -300,7 +335,7 @@ namespace SPIClient
         {
             return _m.GetSuccessState();
         }
-        
+
         public bool WasSuccessfulTx()
         {
             return _m.GetSuccessState() == Message.SuccessState.Success;
@@ -315,13 +350,13 @@ namespace SPIClient
         {
             return _m.GetDataStringValue("pos_ref_id");
         }
-        
+
         [Obsolete("Should not need to look at this in a GLT Response")]
         public string GetSchemeApp()
         {
             return _m.GetDataStringValue("scheme_name");
         }
-        
+
         [Obsolete("Should not need to look at this in a GLT Response")]
         public string GetSchemeName()
         {
@@ -339,15 +374,15 @@ namespace SPIClient
         {
             return _m.GetDataIntValue("amount_transaction_type");
         }
-        
+
         [Obsolete("Should not need to look at this in a GLT Response")]
         public string GetBankDateTimeString()
         {
-            
-            var ds = _m.GetDataStringValue("bank_date")+_m.GetDataStringValue("bank_time");
+
+            var ds = _m.GetDataStringValue("bank_date") + _m.GetDataStringValue("bank_time");
             return ds;
         }
-        
+
         [Obsolete("Should not need to look at this in a GLT Response")]
         public string GetRRN()
         {
@@ -386,9 +421,11 @@ namespace SPIClient
     {
         public int AmountCents { get; }
         public string PosRefId { get; }
-        
+
         internal SpiConfig Config = new SpiConfig();
-        
+
+        internal TransactionOptions Options = new TransactionOptions();
+
         [Obsolete("Id is deprecated. Use PosRefId instead.")]
         public string Id { get; }
 
@@ -398,7 +435,7 @@ namespace SPIClient
             PosRefId = posRefId;
             Id = RequestIdHelper.Id("refund");
         }
-        
+
         public Message ToMessage()
         {
             var data = new JObject(
@@ -406,6 +443,7 @@ namespace SPIClient
                 new JProperty("pos_ref_id", PosRefId)
             );
             Config.addReceiptConfig(data);
+            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("refund"), Events.RefundRequest, data, true);
         }
     }
@@ -422,7 +460,7 @@ namespace SPIClient
         public string RequestId { get; }
         public string PosRefId { get; }
         public string SchemeName { get; }
-        
+
         /// <summary>
         /// Deprecated. Use SchemeName instead
         /// </summary>
@@ -464,7 +502,7 @@ namespace SPIClient
         {
             return _m.GetDataStringValue("merchant_receipt");
         }
-        
+
         public string GetResponseText()
         {
             return _m.GetDataStringValue("host_response_text");
@@ -474,7 +512,7 @@ namespace SPIClient
         {
             return _m.GetDataStringValue("host_response_code");
         }
-        
+
         public string GetTerminalReferenceId()
         {
             return _m.GetDataStringValue("terminal_ref_id");
@@ -484,7 +522,7 @@ namespace SPIClient
         {
             return _m.GetDataStringValue("card_entry");
         }
-        
+
         public string GetAccountType()
         {
             return _m.GetDataStringValue("account_type");
@@ -504,12 +542,12 @@ namespace SPIClient
         {
             return _m.GetDataStringValue("bank_time");
         }
-        
+
         public string GetMaskedPan()
         {
             return _m.GetDataStringValue("masked_pan");
         }
-        
+
         public string GetTerminalId()
         {
             return _m.GetDataStringValue("terminal_id");
@@ -532,14 +570,14 @@ namespace SPIClient
             if (string.IsNullOrEmpty(dateStr)) return null;
             return DateTime.ParseExact(dateStr, "ddMMyyyy", CultureInfo.InvariantCulture).Date;
         }
-        
+
         public string GetResponseValue(string attribute)
         {
             return _m.GetDataStringValue(attribute);
         }
 
     }
-    
+
     /// <summary>
     /// These attributes work for COM interop.
     /// </summary>
@@ -570,13 +608,13 @@ namespace SPIClient
             PosRefId = posRefId;
             _receiptToSign = receiptToSign;
         }
-        
+
         public string GetMerchantReceipt()
         {
             return _receiptToSign;
         }
     }
-    
+
     public class SignatureDecline
     {
         public string PosRefId { get; }
@@ -615,10 +653,12 @@ namespace SPIClient
     public class MotoPurchaseRequest
     {
         public string PosRefId { get; }
-        public int PurchaseAmount { get;}
-        
+        public int PurchaseAmount { get; }
+
         internal SpiConfig Config = new SpiConfig();
-        
+
+        internal TransactionOptions Options = new TransactionOptions();
+
         public MotoPurchaseRequest(int amountCents, string posRefId)
         {
             PosRefId = posRefId;
@@ -628,10 +668,11 @@ namespace SPIClient
         public Message ToMessage()
         {
             var data = new JObject(
-                new JProperty("pos_ref_id", PosRefId),                
+                new JProperty("pos_ref_id", PosRefId),
                 new JProperty("purchase_amount", PurchaseAmount)
             );
             Config.addReceiptConfig(data);
+            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("moto"), Events.MotoPurchaseRequest, data, true);
         }
     }
@@ -669,7 +710,7 @@ namespace SPIClient
     {
         public string RequestId { get; }
         public string PosRefId { get; }
-        
+
         private string _phoneNumber;
         private string _merchantId;
 
@@ -693,12 +734,12 @@ namespace SPIClient
             _phoneNumber = phoneNumber;
             _merchantId = merchantId;
         }
-        
+
         public string GetPhoneNumber()
         {
             return _phoneNumber;
         }
-        
+
         public string GetMerchantId()
         {
             return _merchantId;
@@ -720,10 +761,10 @@ namespace SPIClient
         {
             var data = new JObject(
                 new JProperty("pos_ref_id", PosRefId),
-                new  JProperty("auth_code", AuthCode)
+                new JProperty("auth_code", AuthCode)
             );
             return new Message(RequestIdHelper.Id("authad"), Events.AuthCodeAdvice, data, true);
         }
     }
-    
+
 }

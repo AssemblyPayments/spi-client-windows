@@ -26,6 +26,7 @@ namespace SPIClient
         public const string PurchaseRequest = "purchase";
         public const string PurchaseResponse = "purchase_response";
         public const string CancelTransactionRequest = "cancel_transaction";
+        public const string CancelTransactionResponse = "cancel_response";
         public const string GetLastTransactionRequest = "get_last_transaction";
         public const string GetLastTransactionResponse = "last_transaction";
         public const string RefundRequest = "refund";

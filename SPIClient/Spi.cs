@@ -140,7 +140,7 @@ namespace SPIClient
             {
                 // POS information is now required to be set
                 _log.Warn("Missing POS vendor ID and version. posVendorId and posVersion are required before starting");
-                return;
+                throw new NullReferenceException("Missing POS vendor ID and version. posVendorId and posVersion are required before starting");
             }
 
             _resetConn();
@@ -388,7 +388,7 @@ namespace SPIClient
         /// <param name="cashoutAmount">The Cashout Amount in Cents</param>
         /// <param name="promptForCashout">Whether to prompt your customer for cashout on the Eftpos</param>
         /// <returns>InitiateTxResult</returns>
-        public InitiateTxResult InitiatePurchaseTxV2(string posRefId, int purchaseAmount, int tipAmount, int cashoutAmount, bool promptForCashout)
+        public InitiateTxResult InitiatePurchaseTxV2(string posRefId, int purchaseAmount, int tipAmount, int cashoutAmount, bool promptForCashout, TransactionOptions options)
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
@@ -401,6 +401,7 @@ namespace SPIClient
 
                 var purchase = PurchaseHelper.CreatePurchaseRequestV2(posRefId, purchaseAmount, tipAmount, cashoutAmount, promptForCashout);
                 purchase.Config = Config;
+                purchase.Options = options;
                 var purchaseMsg = purchase.ToMessage();
                 CurrentTxFlowState = new TransactionFlowState(
                     posRefId, TransactionType.Purchase, purchaseAmount, purchaseMsg,
@@ -1131,11 +1132,35 @@ namespace SPIClient
             _txFlowStateChanged(this, CurrentTxFlowState);
         }
 
+        //When the transaction cancel response is returned.
+        private void _handleCancelTransactionResponse(Message m)
+        {
+            lock (_txLock) {
+                var incomingPosRefId = m.GetDataStringValue("pos_ref_id");
+                if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished || !CurrentTxFlowState.PosRefId.Equals(incomingPosRefId))
+                {
+                    _log.Info($"Received Cancel Required but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
+                    return;
+                }
+
+                var txState = CurrentTxFlowState;
+                var cancelResponse = new CancelTransactionResponse(m);
+
+                if (cancelResponse.Success) return;
+
+                _log.Warn("Failed to cancel transaction: reason=" + cancelResponse.GetErrorReason() + ", detail=" + cancelResponse.GetErrorDetail());
+
+                txState.CancelFailed("Failed to cancel transaction: " + cancelResponse.GetErrorDetail() + ". Check EFTPOS.");
+            }
+
+            _txFlowStateChanged(this, CurrentTxFlowState);
+        }
+
         private void _handleSetPosInfoResponse(Message m)
         {
             lock (_txLock)
             {
-                SetPosInfoResponse response = new SetPosInfoResponse(new Message());
+                var response = new SetPosInfoResponse(m);
                 if (response.isSuccess())
                 {
                     _hasSetInfo = true;
@@ -1505,6 +1530,9 @@ namespace SPIClient
                     break;
                 case Events.KeyRollRequest:
                     _handleKeyRollingRequest(m);
+                    break;
+                case Events.CancelTransactionResponse:
+                    _handleCancelTransactionResponse(m);
                     break;
                 case Events.SetPosInfoResponse:
                     _handleSetPosInfoResponse(m);

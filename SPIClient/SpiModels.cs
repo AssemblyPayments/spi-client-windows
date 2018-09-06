@@ -13,12 +13,12 @@ namespace SPIClient
         /// Paired and Connected
         /// </summary>
         PairedConnected,
-        
+
         /// <summary>
         /// Paired but trying to establish a connection 
         /// </summary>
         PairedConnecting,
-     
+
         /// <summary>
         /// Unpaired
         /// </summary>
@@ -51,7 +51,7 @@ namespace SPIClient
         /// Happens during the Unpaired SpiStatus.
         /// </summary>
         Pairing,
-        
+
         /// <summary>
         /// Currently going through the transaction Process Flow.
         /// Cannot happen in the Unpaired SpiStatus.
@@ -89,23 +89,23 @@ namespace SPIClient
         /// and your user needs to press YES or NO on the EFTPOS.
         /// </summary>
         public bool AwaitingCheckFromEftpos { get; internal set; }
-        
+
         /// <summary>
         /// When true, you need to display the YES/NO buttons on you pairing screen
         /// for your user to confirm the code.
         /// </summary>
         public bool AwaitingCheckFromPos { get; internal set; }
-        
+
         /// <summary>
         /// This is the confirmation code for the pairing process.
         /// </summary>
         public string ConfirmationCode { get; internal set; }
-        
+
         /// <summary>
         /// Indicates whether the Pairing Flow has finished its job.
         /// </summary>
         public bool Finished { get; internal set; }
-        
+
         /// <summary>
         /// Indicates whether pairing was successful or not.
         /// </summary>
@@ -121,10 +121,10 @@ namespace SPIClient
         Settle,
         SettlementEnquiry,
         GetLastTransaction,
-        
+
         Preauth,
         AccountVerify
-        
+
     }
 
     /// <summary>
@@ -143,7 +143,7 @@ namespace SPIClient
         /// When false, you can retry calling the InitiateX method.
         /// </summary>
         public bool Initiated { get; internal set; }
-        
+
         /// <summary>
         /// Text that gives reason for the Initiated flag, especially in case of false. 
         /// </summary>
@@ -177,7 +177,7 @@ namespace SPIClient
         /// When false, typically you have made the call when it was not being waited on.
         /// </summary>
         public bool Valid { get; internal set; }
-        
+
         /// <summary>
         /// Text that gives reason for the Valid flag, especially in case of false. 
         /// </summary>
@@ -193,8 +193,8 @@ namespace SPIClient
             Valid = valid;
             Message = message;
         }
-    }    
-    
+    }
+
     /// <summary>
     /// Represents the State during a TransactionFlow
     /// These attributes work for COM interop.
@@ -212,45 +212,45 @@ namespace SPIClient
         /// <summary>
         ///  The id given to this transaction
         /// </summary>
-        public string PosRefId { get; internal set; }        
-        
+        public string PosRefId { get; internal set; }
+
         /// <summary>
         /// Purchase/Refund/Settle/...
         /// </summary>
         public TransactionType Type { get; internal set; }
-        
+
         /// <summary>
         /// A text message to display on your Transaction Flow Screen
         /// </summary>
         public string DisplayMessage { get; internal set; }
-        
+
         /// <summary>
         /// Amount in cents for this transaction
         /// </summary>
         public int AmountCents { get; internal set; }
-        
+
         /// <summary>
         /// Whther the request has been sent to the EFTPOS yet or not.
         /// In the PairedConnecting state, the transaction is initiated
         /// but the request is only sent once the connection is recovered.
         /// </summary>
         public bool RequestSent { get; internal set; }
-        
+
         /// <summary>
         /// The time when the request was sent to the EFTPOS.
         /// </summary>
         public DateTime RequestTime { get; internal set; }
-                
+
         /// <summary>
         /// The time when we last asked for an update, including the original request at first
         /// </summary>
         public DateTime LastStateRequestTime { get; internal set; }
-        
+
         /// <summary>
         /// Whether we're currently attempting to Cancel the transaction.
         /// </summary>
         public bool AttemptingToCancel { get; internal set; }
-        
+
         /// <summary>
         /// When this flag is on, you need to display the dignature accept/decline buttons in your 
         /// transaction flow screen.
@@ -262,7 +262,7 @@ namespace SPIClient
         /// Then you need to provide your user means to enter that given code and submit it via SubmitAuthCode().
         /// </summary>
         public bool AwaitingPhoneForAuth { get; internal set; }
-        
+
         /// <summary>
         /// Whether this transaction flow is over or not.
         /// </summary>
@@ -273,7 +273,7 @@ namespace SPIClient
         /// When finished, can be Success, Failed OR Unknown.
         /// </summary>
         public Message.SuccessState Success { get; internal set; }
-        
+
         /// <summary>
         /// The response at the end of the transaction. 
         /// Might not be present in all edge cases.
@@ -291,12 +291,12 @@ namespace SPIClient
         /// The message the we received from EFTPOS that told us that Phone For Auth is required.
         /// </summary>
         public PhoneForAuthRequired PhoneForAuthRequiredMessage { get; internal set; }
-        
+
         /// <summary>
         /// The time when the cancel attempt was made.
         /// </summary>
         internal DateTime CancelAttemptTime { get; set; }
-                
+
         /// <summary>
         /// The request message that we are sending/sent to the server.
         /// </summary>
@@ -306,9 +306,9 @@ namespace SPIClient
         /// Whether we're currently waiting for a Get Last Transaction Response to get an update. 
         /// </summary>
         internal bool AwaitingGltResponse { get; set; }
-        
+
         [Obsolete("Use PosRefId instead.")]
-        public string Id { get ; internal set; }
+        public string Id { get; internal set; }
 
         internal TransactionFlowState(string posRefId, TransactionType type, int amountCents, Message message, string msg)
         {
@@ -339,6 +339,12 @@ namespace SPIClient
             DisplayMessage = msg;
         }
 
+        internal void CancelFailed(string msg)
+        {
+            AttemptingToCancel = false;
+            DisplayMessage = msg;
+        }
+
         internal void CallingGlt()
         {
             AwaitingGltResponse = true;
@@ -349,7 +355,7 @@ namespace SPIClient
         {
             AwaitingGltResponse = false;
         }
-        
+
         internal void Failed(Message response, string msg)
         {
             Success = Message.SuccessState.Failed;
@@ -377,13 +383,13 @@ namespace SPIClient
             AwaitingPhoneForAuth = true;
             DisplayMessage = msg;
         }
-        
+
         internal void AuthCodeSent(string msg)
         {
             AwaitingPhoneForAuth = false;
             DisplayMessage = msg;
         }
-        
+
         internal void Completed(Message.SuccessState state, Message response, string msg)
         {
             Success = state;
@@ -408,18 +414,18 @@ namespace SPIClient
             DisplayMessage = msg;
         }
     }
-    
+
     /// <summary>
     /// Used as a return in the SubmitAuthCode method to signify whether Code is valid
     /// </summary>
     public class SubmitAuthCodeResult
     {
         public bool ValidFormat { get; }
-        
+
         /// <summary>
         /// Text that gives reason for Invalidity
         /// </summary>
-        public string Message { get;}
+        public string Message { get; }
 
         public SubmitAuthCodeResult(bool validFormat, string message)
         {
@@ -446,11 +452,16 @@ namespace SPIClient
         /// 
         /// </summary>
         public bool PromptForCustomerCopyOnEftpos { get; set; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public bool SignatureFlowOnEftpos { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool PrintMerchantCopy { get; set; }
 
         internal void addReceiptConfig(JObject messageData)
         {
@@ -462,12 +473,49 @@ namespace SPIClient
             {
                 messageData.Add("print_for_signature_required_transactions", SignatureFlowOnEftpos);
             }
+            if (PrintMerchantCopy)
+            {
+                messageData.Add("print_merchant_copy", PrintMerchantCopy);
+            }
 
         }
 
         public override string ToString()
         {
-            return $"PromptForCustomerCopyOnEftpos:{PromptForCustomerCopyOnEftpos} SignatureFlowOnEftpos:{SignatureFlowOnEftpos}";
+            return $"PromptForCustomerCopyOnEftpos:{PromptForCustomerCopyOnEftpos} SignatureFlowOnEftpos:{SignatureFlowOnEftpos} PrintMerchantCopy: {PrintMerchantCopy}";
+        }
+    }
+
+    public class TransactionOptions
+    {
+        public string CustomerReceiptHeader;
+        public string CustomerReceiptFooter;
+        public string MerchantReceiptHeader;
+        public string MerchantReceiptFooter;
+
+        public void SetCustomerReceiptHeader(String customerReceiptHeader)
+        {
+            CustomerReceiptHeader = customerReceiptHeader;
+        }
+
+        public void SetCustomerReceiptFooter(String customerReceiptFooter)
+        {
+            CustomerReceiptFooter = customerReceiptFooter;
+        }
+        public void SetMerchantReceiptHeader(String merchantReceiptHeader)
+        {
+            MerchantReceiptHeader = merchantReceiptHeader;
+        }
+        public void SetMerchantReceiptFooter(String merchantReceiptFooter)
+        {
+            MerchantReceiptFooter = merchantReceiptFooter;
+        }
+        public void AddOptions(JObject messageData)
+        {
+            messageData.Add("customer_receipt_header", CustomerReceiptHeader);
+            messageData.Add("customer_receipt_footer", CustomerReceiptFooter);
+            messageData.Add("merchant_receipt_header", MerchantReceiptHeader);
+            messageData.Add("merchant_receipt_footer", MerchantReceiptFooter);
         }
     }
 }
