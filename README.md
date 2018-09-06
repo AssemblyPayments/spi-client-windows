@@ -1,6 +1,6 @@
 # SPI Client Windows
 
-[![NuGet](https://img.shields.io/nuget/v/SPIClient.Core.svg)](https://www.nuget.org/packages/SPIClient/)
+[![NuGet](https://img.shields.io/nuget/v/SPIClient.svg)](https://www.nuget.org/packages/SPIClient/)
 
 SPIClient/
 
