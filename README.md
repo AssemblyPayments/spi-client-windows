@@ -1,5 +1,11 @@
 # SPI Client Windows
 
+
+[![NuGet](https://img.shields.io/nuget/v/Nuget.Core.svg)](https://www.nuget.org/packages/SPIClient/)
+
+
+SPIClient/
+
 This is the Windows Client Library for Assembly Payments' In-Store Integration.
 
 **Note:** Source code for this library is not available yet. For now, you can download binaries via NuGet or from the [releases](https://github.com/AssemblyPayments/spi-client-windows/releases) section. The full source will be published in the near future.
