@@ -1239,7 +1239,7 @@ namespace SPIClient
                     break;
 
                 case ConnectionState.Connected:
-                    if (CurrentFlow == SpiFlow.Pairing)
+                    if (CurrentFlow == SpiFlow.Pairing && CurrentStatus == SpiStatus.Unpaired)
                     {
                         CurrentPairingFlowState.Message = "Requesting to Pair...";
                         _pairingFlowStateChanged(this, CurrentPairingFlowState);
