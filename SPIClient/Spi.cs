@@ -15,9 +15,9 @@ namespace SPIClient
     public class Spi : IDisposable
     {
         #region Public Properties and Events
-        
+
         public readonly SpiConfig Config = new SpiConfig();
-        
+
         /// <summary>
         /// The Current Status of this Spi instance. Unpaired, PairedConnecting or PairedConnected.
         /// </summary>
@@ -29,7 +29,7 @@ namespace SPIClient
                 if (_currentStatus == value)
                     return;
                 _currentStatus = value;
-                _statusChanged(this, new SpiStatusEventArgs{SpiStatus = value});
+                _statusChanged(this, new SpiStatusEventArgs { SpiStatus = value });
             }
         }
 
@@ -51,7 +51,7 @@ namespace SPIClient
         /// When CurrentFlow==Pairing, this represents the state of the pairing process. 
         /// </summary>
         public PairingFlowState CurrentPairingFlowState { get; private set; }
-        
+
         /// <summary>
         /// Subscribe to this event to know when the CurrentPairingFlowState changes 
         /// </summary>
@@ -65,7 +65,7 @@ namespace SPIClient
         /// When CurrentFlow==Transaction, this represents the state of the transaction process.
         /// </summary>
         public TransactionFlowState CurrentTxFlowState { get; internal set; }
-        
+
         /// <summary>
         /// Subscribe to this event to know when the CurrentPairingFlowState changes
         /// </summary>
@@ -109,8 +109,8 @@ namespace SPIClient
 
             // Our stamp for signing outgoing messages
             _spiMessageStamp = new MessageStamp(_posId, _secrets, TimeSpan.Zero);
-            _secrets = secrets;            
-            
+            _secrets = secrets;
+
             // We will maintain some state
             _mostRecentPingSent = null;
             _mostRecentPongReceived = null;
@@ -128,7 +128,7 @@ namespace SPIClient
             _spiPreauth = new SpiPreauth(this, _txLock);
             return _spiPreauth;
         }
-        
+
         /// <summary>
         /// Call this method after constructing an instance of the class and subscribing to events.
         /// It will start background maintenance threads. 
@@ -136,6 +136,13 @@ namespace SPIClient
         /// </summary>
         public void Start()
         {
+            if (string.IsNullOrWhiteSpace(_posVendorId) || string.IsNullOrWhiteSpace(_posVersion))
+            {
+                // POS information is now required to be set
+                _log.Warn("Missing POS vendor ID and version. posVendorId and posVersion are required before starting");
+                throw new NullReferenceException("Missing POS vendor ID and version. posVendorId and posVersion are required before starting");
+            }
+
             _resetConn();
             _startTransactionMonitoringThread();
 
@@ -166,7 +173,7 @@ namespace SPIClient
             _spiMessageStamp.PosId = posId;
             return true;
         }
-        
+
         /// <summary>
         /// Allows you to set the PinPad address. Sometimes the PinPad might change IP address 
         /// (we recommend reserving static IPs if possible).
@@ -179,6 +186,20 @@ namespace SPIClient
             _eftposAddress = "ws://" + address;
             _conn.Address = _eftposAddress;
             return true;
+        }
+
+        /**
+         * Sets values used to identify the POS software to the EFTPOS terminal.
+         * <p>
+         * Must be set before starting!
+         *
+         * @param posVendorId Vendor identifier of the POS itself.
+         * @param posVersion  Version string of the POS itself.
+         */
+        public void SetPosInfo(string posVendorId, string posVersion)
+        {
+            _posVendorId = posVendorId;
+            _posVersion = posVersion;
         }
 
         public static string GetVersion()
@@ -206,7 +227,7 @@ namespace SPIClient
                 CurrentFlow = SpiFlow.Idle;
                 return true;
             }
-            
+
             if (CurrentFlow == SpiFlow.Transaction && CurrentTxFlowState.Finished)
             {
                 CurrentFlow = SpiFlow.Idle;
@@ -214,10 +235,10 @@ namespace SPIClient
             }
 
             return false;
-        }        
+        }
 
         #endregion
-        
+
         #region Pairing Flow Methods
 
         /// <summary>
@@ -239,7 +260,7 @@ namespace SPIClient
                 _log.Warn("Tried to Pair but missing posId or eftposAddress");
                 return false;
             }
-                
+
             CurrentFlow = SpiFlow.Pairing;
             CurrentPairingFlowState = new PairingFlowState
             {
@@ -327,7 +348,7 @@ namespace SPIClient
         #endregion
 
         #region Transaction Methods
-        
+
         /// <summary>
         /// Initiates a purchase transaction. Be subscribed to TxFlowStateChanged event to get updates on the process.
         /// </summary>
@@ -367,19 +388,20 @@ namespace SPIClient
         /// <param name="cashoutAmount">The Cashout Amount in Cents</param>
         /// <param name="promptForCashout">Whether to prompt your customer for cashout on the Eftpos</param>
         /// <returns>InitiateTxResult</returns>
-        public InitiateTxResult InitiatePurchaseTxV2(string posRefId, int purchaseAmount, int tipAmount, int cashoutAmount, bool promptForCashout)
+        public InitiateTxResult InitiatePurchaseTxV2(string posRefId, int purchaseAmount, int tipAmount, int cashoutAmount, bool promptForCashout, TransactionOptions options)
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
             if (tipAmount > 0 && (cashoutAmount > 0 || promptForCashout)) return new InitiateTxResult(false, "Cannot Accept Tips and Cashout at the same time.");
-            
+
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
                 CurrentFlow = SpiFlow.Transaction;
-                
+
                 var purchase = PurchaseHelper.CreatePurchaseRequestV2(posRefId, purchaseAmount, tipAmount, cashoutAmount, promptForCashout);
                 purchase.Config = Config;
+                purchase.Options = options;
                 var purchaseMsg = purchase.ToMessage();
                 CurrentTxFlowState = new TransactionFlowState(
                     posRefId, TransactionType.Purchase, purchaseAmount, purchaseMsg,
@@ -392,7 +414,7 @@ namespace SPIClient
             _txFlowStateChanged(this, CurrentTxFlowState);
             return new InitiateTxResult(true, "Purchase Initiated");
         }
-     
+
         /// <summary>
         /// Initiates a refund transaction. Be subscribed to TxFlowStateChanged event to get updates on the process.
         /// </summary>
@@ -419,9 +441,9 @@ namespace SPIClient
                 }
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
-            return new InitiateTxResult(true,"Refund Initiated");
+            return new InitiateTxResult(true, "Refund Initiated");
         }
-        
+
         /// <summary>
         /// Let the EFTPOS know whether merchant accepted or declined the signature
         /// </summary>
@@ -459,9 +481,9 @@ namespace SPIClient
         {
             if (authCode.Length != 6)
             {
-                return new SubmitAuthCodeResult(false, "Not a 6-digit code.");    
+                return new SubmitAuthCodeResult(false, "Not a 6-digit code.");
             }
-            
+
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished || !CurrentTxFlowState.AwaitingPhoneForAuth)
@@ -476,7 +498,7 @@ namespace SPIClient
             _txFlowStateChanged(this, CurrentTxFlowState);
             return new SubmitAuthCodeResult(true, "Valid Code.");
         }
-        
+
         /// <summary>
         /// Attempts to cancel a Transaction. 
         /// Be subscribed to TxFlowStateChanged event to see how it goes.
@@ -567,7 +589,7 @@ namespace SPIClient
             _txFlowStateChanged(this, CurrentTxFlowState);
             return new InitiateTxResult(true, "MOTO Initiated");
         }
-        
+
         /// <summary>
         /// Initiates a settlement transaction.
         /// Be subscribed to TxFlowStateChanged event to get updates on the process.
@@ -590,7 +612,7 @@ namespace SPIClient
                 }
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
-            return new InitiateTxResult(true,"Settle Initiated");   
+            return new InitiateTxResult(true, "Settle Initiated");
         }
 
         /// <summary>
@@ -613,9 +635,9 @@ namespace SPIClient
                 }
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
-            return new InitiateTxResult(true,"Settle Initiated");   
+            return new InitiateTxResult(true, "Settle Initiated");
         }
-        
+
         /// <summary>
         /// Initiates a Get Last Transaction. Use this when you want to retrieve the most recent transaction
         /// that was processed by the Eftpos.
@@ -628,21 +650,21 @@ namespace SPIClient
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
-               
+
                 var gltRequestMsg = new GetLastTransactionRequest().ToMessage();
                 CurrentFlow = SpiFlow.Transaction;
                 var posRefId = gltRequestMsg.Id; // GetLastTx is not trying to get anything specific back. So we just use the message id.
                 CurrentTxFlowState = new TransactionFlowState(
-                    posRefId, TransactionType.GetLastTransaction, 0, gltRequestMsg, 
+                    posRefId, TransactionType.GetLastTransaction, 0, gltRequestMsg,
                     $"Waiting for EFTPOS connection to make a Get-Last-Transaction request.");
-                
+
                 if (_send(gltRequestMsg))
                 {
                     CurrentTxFlowState.Sent($"Asked EFTPOS to Get Last Transaction.");
                 }
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
-            return new InitiateTxResult(true,"GLT Initiated");   
+            return new InitiateTxResult(true, "GLT Initiated");
         }
 
         /// <summary>
@@ -662,14 +684,14 @@ namespace SPIClient
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
-               
+
                 CurrentFlow = SpiFlow.Transaction;
-                
+
                 var gltRequestMsg = new GetLastTransactionRequest().ToMessage();
                 CurrentTxFlowState = new TransactionFlowState(
-                    posRefId, txType, 0, gltRequestMsg, 
+                    posRefId, txType, 0, gltRequestMsg,
                     $"Waiting for EFTPOS connection to attempt recovery.");
-                
+
                 if (_send(gltRequestMsg))
                 {
                     CurrentTxFlowState.Sent($"Asked EFTPOS to recover state.");
@@ -678,7 +700,7 @@ namespace SPIClient
             _txFlowStateChanged(this, CurrentTxFlowState);
             return new InitiateTxResult(true, "Recovery Initiated");
         }
-        
+
         /// <summary>
         /// GltMatch attempts to conclude whether a gltResponse matches an expected transaction and returns
         /// the outcome. 
@@ -689,7 +711,7 @@ namespace SPIClient
         /// <param name="posRefId">The Reference Id that you passed in with the original request.</param>
 
         /// <returns></returns>
-        public Message.SuccessState GltMatch(GetLastTransactionResponse gltResponse, string posRefId) 
+        public Message.SuccessState GltMatch(GetLastTransactionResponse gltResponse, string posRefId)
         {
             _log.Info($"GLT CHECK: PosRefId: {posRefId}->{gltResponse.GetPosRefId()}");
 
@@ -707,9 +729,9 @@ namespace SPIClient
             return GltMatch(gltResponse, posRefId);
         }
         #endregion
-        
+
         #region Internals for Pairing Flow
-        
+
         /// <summary>
         /// Handling the 2nd interaction of the pairing process, i.e. an incoming KeyRequest.
         /// </summary>
@@ -763,7 +785,7 @@ namespace SPIClient
                     _log.Info("Got Pair Confirm from Eftpos, and already had confirm from POS. Now just waiting for first pong.");
                     _onPairingSuccess();
                 }
-                
+
                 // I need to ping even if the pos user has not said yes yet, 
                 // because otherwise within 5 seconds connection will be dropped by eftpos.
                 _startPeriodicPing();
@@ -779,7 +801,7 @@ namespace SPIClient
             _log.Info("Eftpos was Unpaired. I shall unpair from my end as well.");
             _doUnpair();
         }
-        
+
         private void _onPairingSuccess()
         {
             CurrentPairingFlowState.Successful = true;
@@ -812,7 +834,7 @@ namespace SPIClient
             _spiMessageStamp.Secrets = null;
             _secretsChanged(this, _secrets);
         }
-        
+
         /// <summary>
         /// Sometimes the server asks us to roll our secrets.
         /// </summary>
@@ -828,9 +850,9 @@ namespace SPIClient
         }
 
         #endregion
-       
+
         #region Internals for Transaction Management
-        
+
         /// <summary>
         /// The PinPad server will send us this message when a customer signature is reqired.
         /// We need to ask the customer to sign the incoming receipt.
@@ -872,7 +894,7 @@ namespace SPIClient
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
         }
-        
+
         /// <summary>
         /// The PinPad server will reply to our PurchaseRequest with a PurchaseResponse.
         /// </summary>
@@ -888,7 +910,7 @@ namespace SPIClient
                     return;
                 }
                 // TH-1A, TH-2A
-                
+
                 CurrentTxFlowState.Completed(m.GetSuccessState(), m, "Purchase Transaction Ended.");
                 // TH-6A, TH-6E
             }
@@ -910,7 +932,7 @@ namespace SPIClient
                     return;
                 }
                 // TH-1A, TH-2A
-                
+
                 CurrentTxFlowState.Completed(m.GetSuccessState(), m, "Cashout Transaction Ended.");
                 // TH-6A, TH-6E
             }
@@ -932,13 +954,13 @@ namespace SPIClient
                     return;
                 }
                 // TH-1A, TH-2A
-                
+
                 CurrentTxFlowState.Completed(m.GetSuccessState(), m, "Moto Transaction Ended.");
                 // TH-6A, TH-6E
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
-        }        
-        
+        }
+
         /// <summary>
         /// The PinPad server will reply to our RefundRequest with a RefundResponse.
         /// </summary>
@@ -954,13 +976,13 @@ namespace SPIClient
                     return;
                 }
                 // TH-1A, TH-2A
-                
+
                 CurrentTxFlowState.Completed(m.GetSuccessState(), m, "Refund Transaction Ended.");
                 // TH-6A, TH-6E
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
         }
-        
+
         /// <summary>
         /// Handle the Settlement Response received from the PinPad
         /// </summary>
@@ -975,7 +997,7 @@ namespace SPIClient
                     return;
                 }
                 // TH-1A, TH-2A
-                
+
                 CurrentTxFlowState.Completed(m.GetSuccessState(), m, "Settle Transaction Ended.");
                 // TH-6A, TH-6E
             }
@@ -996,13 +1018,13 @@ namespace SPIClient
                     return;
                 }
                 // TH-1A, TH-2A
-                
+
                 CurrentTxFlowState.Completed(m.GetSuccessState(), m, "Settlement Enquiry Ended.");
                 // TH-6A, TH-6E
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
         }
-        
+
         /// <summary>
         /// Sometimes we receive event type "error" from the server, such as when calling cancel_transaction and there is no transaction in progress.
         /// </summary>
@@ -1104,10 +1126,51 @@ namespace SPIClient
                             gtlResponse.CopyMerchantReceiptToCustomerReceipt();
                             txState.Completed(successState, m, "Transaction Ended.");
                         }
-                    } 
+                    }
                 }
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
+        }
+
+        //When the transaction cancel response is returned.
+        private void _handleCancelTransactionResponse(Message m)
+        {
+            lock (_txLock) {
+                var incomingPosRefId = m.GetDataStringValue("pos_ref_id");
+                if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished || !CurrentTxFlowState.PosRefId.Equals(incomingPosRefId))
+                {
+                    _log.Info($"Received Cancel Required but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
+                    return;
+                }
+
+                var txState = CurrentTxFlowState;
+                var cancelResponse = new CancelTransactionResponse(m);
+
+                if (cancelResponse.Success) return;
+
+                _log.Warn("Failed to cancel transaction: reason=" + cancelResponse.GetErrorReason() + ", detail=" + cancelResponse.GetErrorDetail());
+
+                txState.CancelFailed("Failed to cancel transaction: " + cancelResponse.GetErrorDetail() + ". Check EFTPOS.");
+            }
+
+            _txFlowStateChanged(this, CurrentTxFlowState);
+        }
+
+        private void _handleSetPosInfoResponse(Message m)
+        {
+            lock (_txLock)
+            {
+                var response = new SetPosInfoResponse(m);
+                if (response.isSuccess())
+                {
+                    _hasSetInfo = true;
+                    _log.Info("Setting POS info successful");
+                }
+                else
+                {
+                    _log.Warn("Setting POS info failed: reason=" + response.getErrorReason() + ", detail=" + response.getErrorDetail());
+                }
+            }
         }
 
         private void _startTransactionMonitoringThread()
@@ -1148,19 +1211,19 @@ namespace SPIClient
         }
 
         #endregion
-        
+
         #region Internals for Connection Management
 
         private void _resetConn()
         {
             // Setup the Connection
-            _conn = new Connection {Address = _eftposAddress};
+            _conn = new Connection { Address = _eftposAddress };
             // Register our Event Handlers
             _conn.ConnectionStatusChanged += _onSpiConnectionStatusChanged;
             _conn.MessageReceived += _onSpiMessageReceived;
             _conn.ErrorReceived += _onWsErrorReceived;
         }
-        
+
         /// <summary>
         /// This method will be called when the connection status changes.
         /// You are encouraged to display a PinPad Connection Indicator on the POS screen.
@@ -1265,13 +1328,13 @@ namespace SPIClient
                     {
                         _missedPongsCount += 1;
                         _log.Info($"Eftpos didn't reply to my Ping. Missed Count: {_missedPongsCount}/{_missedPongsToDisconnect}. ");
-                        
+
                         if (_missedPongsCount < _missedPongsToDisconnect)
                         {
                             _log.Info("Trying another ping...");
                             continue;
-                        } 
-                        
+                        }
+
                         // This means that we have reached missed pong limit.
                         // We consider this connection as broken.
                         // Let's Disconnect.
@@ -1293,7 +1356,7 @@ namespace SPIClient
         private void _onReadyToTransact()
         {
             _log.Info("On Ready To Transact!");
-            
+
             // So, we have just made a connection and pinged successfully.
             CurrentStatus = SpiStatus.PairedConnected;
 
@@ -1318,10 +1381,18 @@ namespace SPIClient
                 }
                 else
                 {
+                    if (!_hasSetInfo) { _callSetPosInfo(); }
+
                     // let's also tell the eftpos our latest table configuration.
-                     _spiPat?.PushPayAtTableConfig();
+                    _spiPat?.PushPayAtTableConfig();
                 }
             }
+        }
+
+        private void _callSetPosInfo()
+        {
+            SetPosInfoRequest setPosInfoRequest = new SetPosInfoRequest(_posVersion, _posVendorId, ".net", GetVersion(), DeviceInfo.GetAppDeviceInfo());
+            _send(setPosInfoRequest.toMessage());
         }
 
         /// <summary>
@@ -1368,7 +1439,7 @@ namespace SPIClient
                     _log.Info("First pong of connection but pairing process not finalised yet.");
                 }
             }
-            
+
             _mostRecentPongReceived = m;
             _log.Debug($"PongLatency:{DateTime.Now.Subtract(_mostRecentPingSentTime)}");
         }
@@ -1382,7 +1453,7 @@ namespace SPIClient
             var pong = PongHelper.GeneratePongRessponse(m);
             _send(pong);
         }
-        
+
         /// <summary>
         /// Ask the PinPad to tell us what the Most Recent Transaction was
         /// </summary>
@@ -1408,7 +1479,7 @@ namespace SPIClient
                 _spiPreauth?._handlePreauthMessage(m);
                 return;
             }
-            
+
             // And then we switch on the event type.
             switch (m.EventName)
             {
@@ -1459,6 +1530,12 @@ namespace SPIClient
                     break;
                 case Events.KeyRollRequest:
                     _handleKeyRollingRequest(m);
+                    break;
+                case Events.CancelTransactionResponse:
+                    _handleCancelTransactionResponse(m);
+                    break;
+                case Events.SetPosInfoResponse:
+                    _handleSetPosInfoResponse(m);
                     break;
                 case Events.PayAtTableGetTableConfig:
                     if (_spiPat == null)
@@ -1523,16 +1600,19 @@ namespace SPIClient
             _conn?.Disconnect();
             _conn = null;
         }
-        
+
         #endregion
-        
+
         #region Private State
 
         private string _posId;
         private string _eftposAddress;
         private Secrets _secrets;
         private MessageStamp _spiMessageStamp;
-        
+        private string _posVendorId;
+        private string _posVersion;
+        private bool _hasSetInfo;
+
         private Connection _conn;
         private readonly TimeSpan _pongTimeout = TimeSpan.FromSeconds(5);
         private readonly TimeSpan _pingFrequency = TimeSpan.FromSeconds(18);
@@ -1542,7 +1622,7 @@ namespace SPIClient
         private EventHandler<PairingFlowState> _pairingFlowStateChanged;
         internal EventHandler<TransactionFlowState> _txFlowStateChanged;
         private EventHandler<Secrets> _secretsChanged;
-        
+
         private Message _mostRecentPingSent;
         private DateTime _mostRecentPingSentTime;
         private Message _mostRecentPongReceived;
@@ -1556,11 +1636,11 @@ namespace SPIClient
         private readonly int _missedPongsToDisconnect = 2;
 
         private SpiPayAtTable _spiPat;
-        
+
         private SpiPreauth _spiPreauth;
-        
+
         private static readonly log4net.ILog _log = log4net.LogManager.GetLogger("spi");
-        
+
         private static readonly string _version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
         #endregion        

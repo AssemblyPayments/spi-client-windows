@@ -11,7 +11,9 @@ namespace SPIClient
         public int CashoutAmount { get;}
         
         internal SpiConfig Config = new SpiConfig();
-        
+
+        internal TransactionOptions Options = new TransactionOptions();
+
         public CashoutOnlyRequest(int amountCents, string posRefId)
         {
             PosRefId = posRefId;
@@ -25,6 +27,7 @@ namespace SPIClient
                 new JProperty("cash_amount", CashoutAmount)
                 );
             Config.addReceiptConfig(data);
+            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("cshout"), Events.CashoutOnlyRequest, data, true);
         }
     }
