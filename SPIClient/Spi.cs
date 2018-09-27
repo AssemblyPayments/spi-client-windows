@@ -1072,6 +1072,14 @@ namespace SPIClient
                             return;
                         }
                     }
+                    else if (gtlResponse.WasTimeOutOfSyncError())
+                    {
+                        // Let's not give up based on a TOOS error.
+                        // Let's log it, and ignore it. 
+                        _log.Info($"Time-Out-Of-Sync error in Get Last Transaction response. Let's ignore it and we'll try again.");
+                        // No need to publish txFlowStateChanged. Can return;
+                        return;
+                    }
                     else
                     {
                         // TH-4X - Unexpected Response when recovering
