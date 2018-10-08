@@ -1,4 +1,6 @@
-﻿using RestSharp;
+﻿using System;
+using System.Threading.Tasks;
+using RestSharp;
 
 namespace SPIClient.Service
 {
@@ -10,12 +12,14 @@ namespace SPIClient.Service
 
     public class DeviceIpService
     {
-        public DeviceService RetrieveService(string serialNumber)
+        public async Task<DeviceService> RetrieveService(string serialNumber)
         {
-            var deviceIpUrl = $"https://device-address-api-dev.nonprod-wbc.msp.assemblypayments.com/v1/{serialNumber}/ip";
+            var deviceIpUrl =
+                $"https://device-address-api-dev.nonprod-wbc.msp.assemblypayments.com/v1/{serialNumber}/ip";
             var ipService = new RestServiceHelper(deviceIpUrl);
             var request = new RestRequest(Method.GET);
-            var response = ipService.SendRequest<DeviceService>(request);
+            request.AddHeader("ASM-MSP-DEVICE-ADDRESS-API-KEY", "KebabPosRK");
+            var response = await ipService.SendRequest<DeviceService>(request);
 
             return response;
         }
