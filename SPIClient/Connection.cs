@@ -41,7 +41,7 @@ namespace SPIClient
             add { _connectionStatusChanged = _connectionStatusChanged + value; }
             remove { _connectionStatusChanged = _connectionStatusChanged - value; }
         }
-        
+
         private EventHandler<MessageEventArgs> _errorReceived;
         public event EventHandler<MessageEventArgs> ErrorReceived
         {

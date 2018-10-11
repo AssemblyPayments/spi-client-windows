@@ -306,7 +306,9 @@ namespace SPIClient
         /// Whether we're currently waiting for a Get Last Transaction Response to get an update. 
         /// </summary>
         internal bool AwaitingGltResponse { get; set; }
-        
+
+        public string GLTResponsePosRefId { get; internal set; }
+
         [Obsolete("Use PosRefId instead.")]
         public string Id { get ; internal set; }
 

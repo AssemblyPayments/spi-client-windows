@@ -11,7 +11,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SPIClient</RootNamespace>
     <AssemblyName>SPIClient</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <PackageId>SPIClient</PackageId>
     <PackageVersion>2.1.4</PackageVersion>
@@ -23,6 +23,7 @@
     <ReleaseVersion>2.1.4</ReleaseVersion>
     <SynchReleaseVersion>false</SynchReleaseVersion>
     <PackageReleaseNotes>Added GetRefundAmount to Refund Response</PackageReleaseNotes>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>anycpu</PlatformTarget>
@@ -35,6 +36,7 @@
     <WarningLevel>4</WarningLevel>
     <RegisterForComInterop>false</RegisterForComInterop>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -44,6 +46,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -79,6 +82,7 @@
     <Compile Include="Connection.cs" />
     <Compile Include="ConnectionViaHttpAdaptor.cs" />
     <Compile Include="Crypto.cs" />
+    <Compile Include="Device.cs" />
     <Compile Include="DiffieHellman.cs" />
     <Compile Include="KeyRollingHelper.cs" />
     <Compile Include="Messages.cs" />
@@ -93,8 +97,8 @@
     <Compile Include="Secrets.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Service\DeviceService.cs" />
-    <Compile Include="Service\IRestServiceHelper.cs" />
-    <Compile Include="Service\RestServiceHelper.cs" />
+    <Compile Include="Service\HttpBaseService.cs" />
+    <Compile Include="Service\IHttpBaseService.cs" />
     <Compile Include="Settlement.cs" />
     <Compile Include="Spi.cs" />
     <Compile Include="SpiModels.cs" />

@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using SPIClient.Service;
 
 namespace SPIClient
 {
@@ -33,6 +34,12 @@ namespace SPIClient
             }
         }
 
+        public bool AutoIpResolutionEnable
+        {
+            get => _autoIpResolutionEnable;
+            set => _autoIpResolutionEnable = value;
+        }
+
         /// <summary>
         /// Subscribe to this Event to know when the Status has changed.
         /// </summary>
@@ -40,6 +47,17 @@ namespace SPIClient
         {
             add => _statusChanged = _statusChanged + value;
             remove => _statusChanged = _statusChanged - value;
+        }
+
+        public DeviceStatus CurrentDeviceStatus { get; internal set; }
+
+        /// <summary>
+        /// Subscribe to this event when you want to know the DeviceStatus changes
+        /// </summary>
+        public event EventHandler<DeviceStatus> DeviceIpAddressChanged
+        {
+            add => _deviceIpChanged = _deviceIpChanged + value;
+            remove => _deviceIpChanged = _deviceIpChanged - value;
         }
 
         /// <summary>
@@ -101,11 +119,12 @@ namespace SPIClient
         /// <param name="posId">Uppercase AlphaNumeric string that Indentifies your POS instance. This value is displayed on the EFTPOS screen.</param>
         /// <param name="eftposAddress">The IP address of the target EFTPOS.</param>
         /// <param name="secrets">The Pairing secrets, if you know it already, or null otherwise</param>
-        public Spi(string posId, string eftposAddress, Secrets secrets)
+        public Spi(string posId, string eftposAddress, Secrets secrets, string serialNumber = "")
         {
             _posId = posId;
             _secrets = secrets;
             _eftposAddress = "ws://" + eftposAddress;
+            _serialNumber = serialNumber;
 
             // Our stamp for signing outgoing messages
             _spiMessageStamp = new MessageStamp(_posId, _secrets, TimeSpan.Zero);
@@ -1047,6 +1066,7 @@ namespace SPIClient
                 _log.Info($"Got Last Transaction..");
                 txState.GotGltResponse();
                 var gtlResponse = new GetLastTransactionResponse(m);
+                txState.GLTResponsePosRefId = gtlResponse.GetPosRefId();
                 if (!gtlResponse.WasRetrievedSuccessfully())
                 {
                     if (gtlResponse.IsStillInProgress(txState.PosRefId))
@@ -1176,6 +1196,7 @@ namespace SPIClient
                     break;
 
                 case ConnectionState.Connected:
+                    _retrySinceLastDeviceIpAddressResolution = 0;
                     if (CurrentFlow == SpiFlow.Pairing && CurrentStatus == SpiStatus.Unpaired)
                     {
                         CurrentPairingFlowState.Message = "Requesting to Pair...";
@@ -1216,12 +1237,23 @@ namespace SPIClient
                         Task.Factory.StartNew(() =>
                         {
                             if (_conn == null) return; // This means the instance has been disposed. Aborting.
-                            _log.Info($"Will try to reconnect in 5s...");
-                            Thread.Sleep(5000);
-                            if (CurrentStatus != SpiStatus.Unpaired)
+
+                            if (_retrySinceLastDeviceIpAddressResolution >= _retryBeforeResolvingDeviceIpAddress)
                             {
-                                // This is non-blocking
-                                _conn?.Connect();
+                                ResolveDeviceIpAddress();
+                                _retrySinceLastDeviceIpAddressResolution = 0;
+                            }
+                            else
+                            {
+                                _retrySinceLastDeviceIpAddressResolution += 1;
+                                _log.Info($"Will try to reconnect in 5s...");
+                                Thread.Sleep(5000);
+                                if (CurrentStatus != SpiStatus.Unpaired)
+                                {
+                                    // This is non-blocking
+                                    _conn?.Connect();
+
+                                }
                             }
                         });
                     }
@@ -1523,13 +1555,33 @@ namespace SPIClient
             _conn?.Disconnect();
             _conn = null;
         }
-        
         #endregion
-        
-        #region Private State
 
+        #region Device Management 
+        private async void ResolveDeviceIpAddress()
+        {
+            if (!AutoIpResolutionEnable)
+                return;
+
+            var service = new DeviceIpService();
+            var ip = await service.RetrieveService(_serialNumber, "KebabPosRK"); // TODO: fix this with api key
+
+            if (ip?.Ip != null)
+            {
+                CurrentDeviceStatus = new DeviceStatus
+                {
+                    Ip = ip.Ip,
+                    Last_updated = ip.Last_updated
+                };
+            }
+            _deviceIpChanged(this, CurrentDeviceStatus);
+        }
+        #endregion
+
+        #region Private State
         private string _posId;
         private string _eftposAddress;
+        private string _serialNumber;
         private Secrets _secrets;
         private MessageStamp _spiMessageStamp;
         
@@ -1538,7 +1590,9 @@ namespace SPIClient
         private readonly TimeSpan _pingFrequency = TimeSpan.FromSeconds(18);
 
         private SpiStatus _currentStatus;
+        private bool _autoIpResolutionEnable;
         private EventHandler<SpiStatusEventArgs> _statusChanged;
+        private EventHandler<DeviceStatus> _deviceIpChanged;
         private EventHandler<PairingFlowState> _pairingFlowStateChanged;
         internal EventHandler<TransactionFlowState> _txFlowStateChanged;
         private EventHandler<Secrets> _secretsChanged;
@@ -1547,6 +1601,7 @@ namespace SPIClient
         private DateTime _mostRecentPingSentTime;
         private Message _mostRecentPongReceived;
         private int _missedPongsCount;
+        private int _retrySinceLastDeviceIpAddressResolution = 0;
         private Thread _periodicPingThread;
 
         private readonly object _txLock = new Object();
@@ -1554,6 +1609,7 @@ namespace SPIClient
         private readonly TimeSpan _checkOnTxFrequency = TimeSpan.FromSeconds(20.0);
         private readonly TimeSpan _maxWaitForCancelTx = TimeSpan.FromSeconds(10.0);
         private readonly int _missedPongsToDisconnect = 2;
+        private readonly int _retryBeforeResolvingDeviceIpAddress = 5;
 
         private SpiPayAtTable _spiPat;
         
