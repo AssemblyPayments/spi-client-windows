@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using RestSharp;
 
 namespace SPIClient.Service
@@ -18,13 +18,11 @@ namespace SPIClient.Service
             var deviceIpUrl =
                 $"https://device-address-api-dev.nonprod-wbc.msp.assemblypayments.com/v1/{serialNumber}/ip";
 
-
             var ipService = new HttpBaseService(deviceIpUrl);
             var request = new RestRequest(Method.GET);
             request.AddHeader(ApiKeyHeader, apiKey);
 
             var response = await ipService.SendRequest<DeviceStatus>(request);
-
             return response;
         }
     }
