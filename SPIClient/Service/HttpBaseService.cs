@@ -8,7 +8,7 @@ namespace SPIClient.Service
 {
     public class HttpBaseService : IHttpBaseService
     {
-        private static readonly ILog Log = LogManager.GetLogger("device service");
+        private static readonly ILog Log = LogManager.GetLogger("Http base service");
 
         public DataFormat DataFormat { get; set; }
         private string Url { get; }
@@ -29,12 +29,10 @@ namespace SPIClient.Service
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 Log.Error($"Status code {(int)response.StatusCode} received from {Url} - Exception {response.ErrorException}");
-
                 return default(T);
             }
 
             Log.Info($"Response received from {Url} - {response.Content}");
-
             return response.Data;
         }
     }

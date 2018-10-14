@@ -49,12 +49,12 @@ namespace SPIClient
             remove => _statusChanged = _statusChanged - value;
         }
 
-        public DeviceStatus CurrentDeviceStatus { get; internal set; }
+        public DeviceIpAddressStatus CurrentDeviceStatus { get; internal set; }
 
         /// <summary>
         /// Subscribe to this event when you want to know the DeviceStatus changes
         /// </summary>
-        public event EventHandler<DeviceStatus> DeviceIpAddressChanged
+        public event EventHandler<DeviceIpAddressStatus> DeviceIpAddressChanged
         {
             add => _deviceIpChanged = _deviceIpChanged + value;
             remove => _deviceIpChanged = _deviceIpChanged - value;
@@ -198,6 +198,14 @@ namespace SPIClient
             _eftposAddress = "ws://" + address;
             _conn.Address = _eftposAddress;
             return true;
+        }
+
+        public void ResolveDeviceIpAddress(string serialNumber)
+        {
+            if (CurrentStatus == SpiStatus.PairedConnected)
+                return;
+
+            ResolveDeviceIpAddress();
         }
 
         public static string GetVersion()
@@ -1540,6 +1548,27 @@ namespace SPIClient
         }
         #endregion
 
+        #region Device Management 
+        private async void ResolveDeviceIpAddress()
+        {
+            if (!AutoIpResolutionEnable)
+                return;
+
+            var service = new DeviceIpAddressService();
+            var ip = await service.RetrieveService(_serialNumber, "KebabPosRK"); // TODO: fix this with api key
+
+            if (ip?.Ip != null)
+            {
+                CurrentDeviceStatus = new DeviceIpAddressStatus
+                {
+                    Ip = ip.Ip,
+                    Last_updated = ip.Last_updated
+                };
+            }
+            _deviceIpChanged(this, CurrentDeviceStatus);
+        }
+        #endregion
+
         #region IDisposable
 
         public void Dispose()
@@ -1557,26 +1586,6 @@ namespace SPIClient
         }
         #endregion
 
-        #region Device Management 
-        private async void ResolveDeviceIpAddress()
-        {
-            if (!AutoIpResolutionEnable)
-                return;
-
-            var service = new DeviceIpService();
-            var ip = await service.RetrieveService(_serialNumber, "KebabPosRK"); // TODO: fix this with api key
-
-            if (ip?.Ip != null)
-            {
-                CurrentDeviceStatus = new DeviceStatus
-                {
-                    Ip = ip.Ip,
-                    Last_updated = ip.Last_updated
-                };
-            }
-            _deviceIpChanged(this, CurrentDeviceStatus);
-        }
-        #endregion
 
         #region Private State
         private string _posId;
@@ -1592,7 +1601,7 @@ namespace SPIClient
         private SpiStatus _currentStatus;
         private bool _autoIpResolutionEnable;
         private EventHandler<SpiStatusEventArgs> _statusChanged;
-        private EventHandler<DeviceStatus> _deviceIpChanged;
+        private EventHandler<DeviceIpAddressStatus> _deviceIpChanged;
         private EventHandler<PairingFlowState> _pairingFlowStateChanged;
         internal EventHandler<TransactionFlowState> _txFlowStateChanged;
         private EventHandler<Secrets> _secretsChanged;
