@@ -194,9 +194,12 @@ namespace SPIClient
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class PayAtTableConfig
     {
+        public bool PayAtTabledEnabled { get; set; }
+
         public bool OperatorIdEnabled { get; set; }
 
         public bool SplitByAmountEnabled { get; set; }
+
         public bool EqualSplitEnabled { get; set; }
 
         public bool TippingEnabled { get; set; }
@@ -204,7 +207,9 @@ namespace SPIClient
         public bool SummaryReportEnabled { get; set; }
 
         public string LabelPayButton { get; set; }
+
         public string LabelOperatorId { get; set; }
+
         public string LabelTableId { get; set; }
 
         // 
@@ -217,7 +222,7 @@ namespace SPIClient
         public Message ToMessage(string messageId)
         {
             var data = new JObject(
-                new JProperty("pay_at_table_enabled", true),
+                new JProperty("pay_at_table_enabled", PayAtTabledEnabled),
                 new JProperty("operator_id_enabled", OperatorIdEnabled),
                 new JProperty("split_by_amount_enabled", SplitByAmountEnabled),
                 new JProperty("equal_split_enabled", EqualSplitEnabled),
