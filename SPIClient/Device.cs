@@ -8,4 +8,10 @@ namespace SPIClient
 
         public DeviceIpAddressChangedEventArgs() {}
     }
+
+    public class DeviceIpAddressRequest
+    {
+        public string ApiKey { get; set; }
+        public string SerialNumber { get; set; }
+    }
 }

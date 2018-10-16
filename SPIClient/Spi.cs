@@ -119,12 +119,17 @@ namespace SPIClient
         /// <param name="posId">Uppercase AlphaNumeric string that Indentifies your POS instance. This value is displayed on the EFTPOS screen.</param>
         /// <param name="eftposAddress">The IP address of the target EFTPOS.</param>
         /// <param name="secrets">The Pairing secrets, if you know it already, or null otherwise</param>
-        public Spi(string posId, string eftposAddress, Secrets secrets, string serialNumber = "")
+        public Spi(string posId, string eftposAddress, Secrets secrets, DeviceIpAddressRequest deviceIpAddressRequest = null)       
         {
-            _posId = posId;
+            _posId = posId;                 
             _secrets = secrets;
             _eftposAddress = "ws://" + eftposAddress;
-            _serialNumber = serialNumber;
+
+            if (deviceIpAddressRequest != null)
+            {
+                _serialNumber = deviceIpAddressRequest.SerialNumber;
+                _deviceApiKey = deviceIpAddressRequest.ApiKey;
+            }
 
             // Our stamp for signing outgoing messages
             _spiMessageStamp = new MessageStamp(_posId, _secrets, TimeSpan.Zero);
@@ -134,7 +139,7 @@ namespace SPIClient
             _mostRecentPingSent = null;
             _mostRecentPongReceived = null;
             _missedPongsCount = 0;
-        }
+        }       
 
         public SpiPayAtTable EnablePayAtTable()
         {
@@ -1555,7 +1560,7 @@ namespace SPIClient
                 return;
 
             var service = new DeviceIpAddressService();
-            var ip = await service.RetrieveService(_serialNumber, "KebabPosRK"); // TODO: fix this with api key
+            var ip = await service.RetrieveService(_serialNumber, _deviceApiKey); // TODO: fix this with api key
 
             if (ip?.Ip != null)
             {
@@ -1590,7 +1595,8 @@ namespace SPIClient
         #region Private State
         private string _posId;
         private string _eftposAddress;
-        private string _serialNumber;
+        private readonly string _serialNumber;
+        private readonly string _deviceApiKey;
         private Secrets _secrets;
         private MessageStamp _spiMessageStamp;
         
