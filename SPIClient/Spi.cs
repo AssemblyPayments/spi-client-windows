@@ -1,4 +1,5 @@
 ﻿using System;
+using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -205,10 +206,18 @@ namespace SPIClient
             return true;
         }
 
-        public void ResolveDeviceIpAddress(string serialNumber)
+        /// <summary>
+        /// Invoke ResolveDeviceIpAddress(). Once invoked, if Ip address changes it will trigger
+        /// _deviceIpChanged event.
+        /// </summary>
+        public void GetDeviceIpAddress(DeviceIpAddressRequest deviceIpAddressRequest)
         {
             if (CurrentStatus == SpiStatus.PairedConnected)
                 return;
+
+            // overwrite existing values with new request
+            _serialNumber = deviceIpAddressRequest?.SerialNumber;
+            _deviceApiKey = deviceIpAddressRequest?.ApiKey;
 
             ResolveDeviceIpAddress();
         }
@@ -1560,7 +1569,7 @@ namespace SPIClient
                 return;
 
             var service = new DeviceIpAddressService();
-            var ip = await service.RetrieveService(_serialNumber, _deviceApiKey); // TODO: fix this with api key
+            var ip = await service.RetrieveService(_serialNumber, _deviceApiKey);
 
             if (ip?.Ip != null)
             {
@@ -1595,8 +1604,8 @@ namespace SPIClient
         #region Private State
         private string _posId;
         private string _eftposAddress;
-        private readonly string _serialNumber;
-        private readonly string _deviceApiKey;
+        private string _serialNumber;
+        private string _deviceApiKey;
         private Secrets _secrets;
         private MessageStamp _spiMessageStamp;
         
