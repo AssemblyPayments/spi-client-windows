@@ -1219,6 +1219,7 @@ namespace SPIClient
 
                 case ConnectionState.Connected:
                     _retrySinceLastDeviceIpAddressResolution = 0;
+
                     if (CurrentFlow == SpiFlow.Pairing && CurrentStatus == SpiStatus.Unpaired)
                     {
                         CurrentPairingFlowState.Message = "Requesting to Pair...";

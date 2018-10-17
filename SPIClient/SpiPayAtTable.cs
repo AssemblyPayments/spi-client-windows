@@ -47,6 +47,7 @@ namespace SPIClient
 
             Config = new PayAtTableConfig
             {
+                PayAtTabledEnabled = true,
                 OperatorIdEnabled = true,
                 AllowedOperatorIds = new List<string>(),
                 EqualSplitEnabled = true,
