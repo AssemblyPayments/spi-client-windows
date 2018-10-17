@@ -19,6 +19,7 @@ namespace SPIClient.Service
             Url = url;
             DataFormat = DataFormat.Json;
             RestClient = new RestClient(url);
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12; // TODO: check this
         }
 
         public async Task<T> SendRequest<T>(IRestRequest request) where T : new()
