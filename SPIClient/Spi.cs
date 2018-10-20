@@ -97,7 +97,7 @@ namespace SPIClient
             add => _secretsChanged = _secretsChanged + value;
             remove => _secretsChanged = _secretsChanged - value;
         }
-        #endregion
+        #endregion 
 
         #region Setup Methods
 
