@@ -2,16 +2,10 @@
 
 namespace SPIClient
 {
-    public class DeviceIpAddressChangedEventArgs : EventArgs
+    public class DeviceAddressChangedEventArgs : EventArgs
     {
-        public string DeviceIpAddress { get; set; }
+        public string DeviceAddress { get; set; }
 
-        public DeviceIpAddressChangedEventArgs() {}
-    }
-
-    public class DeviceIpAddressRequest
-    {
-        public string ApiKey { get; set; }
-        public string SerialNumber { get; set; }
+        public DeviceAddressChangedEventArgs() {}
     }
 }

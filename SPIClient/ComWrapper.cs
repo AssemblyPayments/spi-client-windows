@@ -166,9 +166,9 @@ namespace SPIClient
             PaymentType paymentType = (PaymentType)intPaymentType;
             return paymentType.ToString();
         }
-        public Spi SpiInit(string posId, string eftposAddress, Secrets secrets)
+        public Spi SpiInit(string posId, string serialNumber, string eftposAddress, Secrets secrets)
         {
-            return new Spi(posId, eftposAddress, secrets);
+            return new Spi(posId, serialNumber, eftposAddress, secrets);
         }
 
         public PurchaseResponse PurchaseResponseInit(Message m)
