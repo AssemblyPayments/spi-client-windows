@@ -50,8 +50,8 @@ namespace SPIClient
         /// </summary>
         public event EventHandler<DeviceAddressStatus> DeviceAddressChanged
         {
-            add => _deviceIpChanged = _deviceIpChanged + value;
-            remove => _deviceIpChanged = _deviceIpChanged - value;
+            add => _deviceAddressChanged = _deviceAddressChanged + value;
+            remove => _deviceAddressChanged = _deviceAddressChanged - value;
         }
 
         /// <summary>
@@ -1247,7 +1247,7 @@ namespace SPIClient
                     break;
 
                 case ConnectionState.Connected:
-                    _retrySinceLastDeviceIpAddressResolution = 0;
+                    _retriesSinceLastDeviceAddressResolution = 0;
 
                     if (CurrentFlow == SpiFlow.Pairing && CurrentStatus == SpiStatus.Unpaired)
                     {
@@ -1292,14 +1292,14 @@ namespace SPIClient
 
                             if (_autoAddressResolutionEnabled)
                             {
-                                if (_retrySinceLastDeviceIpAddressResolution >= _retryBeforeResolvingDeviceIpAddress)
+                                if (_retriesSinceLastDeviceAddressResolution >= _retriesBeforeResolvingDeviceAddress)
                                 {
                                     ResolveEftposAddress();
-                                    _retrySinceLastDeviceIpAddressResolution = 0;
+                                    _retriesSinceLastDeviceAddressResolution = 0;
                                 }
                                 else
                                 {
-                                    _retrySinceLastDeviceIpAddressResolution += 1;
+                                    _retriesSinceLastDeviceAddressResolution += 1;
                                 }
                             }
 
@@ -1614,25 +1614,25 @@ namespace SPIClient
                 return;
 
             var service = new DeviceAddressService();
-            var ip = await service.RetrieveService(_serialNumber, _deviceApiKey, _inTestMode);
+            var addressResponse = await service.RetrieveService(_serialNumber, _deviceApiKey, _inTestMode);
 
-            if (ip?.Ip == null)
+            if (addressResponse?.Address == null)
                 return;
 
-            if (!HasEftposAddressChanged(ip.Ip))
+            if (!HasEftposAddressChanged(addressResponse.Address))
                 return;
 
             // update device and connection address
-            _eftposAddress = "ws://" + ip.Ip;
+            _eftposAddress = "ws://" + addressResponse.Address;
             _conn.Address = _eftposAddress;
 
             CurrentDeviceStatus = new DeviceAddressStatus
             {
-                Ip = ip.Ip,
-                Last_updated = ip.Last_updated
+                Address = addressResponse.Address,
+                LastUpdated = addressResponse.LastUpdated
             };
 
-            _deviceIpChanged(this, CurrentDeviceStatus);
+            _deviceAddressChanged(this, CurrentDeviceStatus);
         }
 
         #endregion
@@ -1670,7 +1670,7 @@ namespace SPIClient
 
         private SpiStatus _currentStatus;
         private EventHandler<SpiStatusEventArgs> _statusChanged;
-        private EventHandler<DeviceAddressStatus> _deviceIpChanged;
+        private EventHandler<DeviceAddressStatus> _deviceAddressChanged;
         private EventHandler<PairingFlowState> _pairingFlowStateChanged;
         internal EventHandler<TransactionFlowState> _txFlowStateChanged;
         private EventHandler<Secrets> _secretsChanged;
@@ -1679,7 +1679,7 @@ namespace SPIClient
         private DateTime _mostRecentPingSentTime;
         private Message _mostRecentPongReceived;
         private int _missedPongsCount;
-        private int _retrySinceLastDeviceIpAddressResolution = 0;
+        private int _retriesSinceLastDeviceAddressResolution = 0;
         private Thread _periodicPingThread;
 
         private readonly object _txLock = new Object();
@@ -1687,7 +1687,7 @@ namespace SPIClient
         private readonly TimeSpan _checkOnTxFrequency = TimeSpan.FromSeconds(20.0);
         private readonly TimeSpan _maxWaitForCancelTx = TimeSpan.FromSeconds(10.0);
         private readonly int _missedPongsToDisconnect = 2;
-        private readonly int _retryBeforeResolvingDeviceIpAddress = 5;
+        private readonly int _retriesBeforeResolvingDeviceAddress = 5;
 
         private SpiPayAtTable _spiPat;
         

@@ -5,8 +5,8 @@ namespace SPIClient.Service
 {
     public class DeviceAddressStatus
     {
-        public string Ip { get; set; }
-        public string Last_updated { get; set; }
+        public string Address { get; set; }
+        public string LastUpdated { get; set; }
     }
 
     public class DeviceAddressService
