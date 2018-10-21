@@ -182,12 +182,13 @@ namespace SPIClient
         /// </summary>
         public bool SetSerialNumber(string serialNumber)
         {
-            if (CurrentStatus != SpiStatus.Unpaired || !_autoAddressResolutionEnabled || !HasSerialNumberChanged(serialNumber))
+            if (CurrentStatus != SpiStatus.Unpaired)
                 return false;
 
+            if (_autoAddressResolutionEnabled && HasSerialNumberChanged(serialNumber))
+                ResolveEftposAddress();
+            
             _serialNumber = serialNumber;
-            ResolveEftposAddress();
-
             return true;
         }
 
