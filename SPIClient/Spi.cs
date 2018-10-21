@@ -198,12 +198,15 @@ namespace SPIClient
         /// <returns></returns>
         public bool SetAutoAddressResolution(bool autoAddressResolution)
         {
-            if (CurrentStatus == SpiStatus.PairedConnected || string.IsNullOrWhiteSpace(_serialNumber))
+            if (CurrentStatus == SpiStatus.PairedConnected)
                 return false;
 
+            if (autoAddressResolution && !_autoAddressResolutionEnabled)
+            {
+                // we're turning it on
+                ResolveEftposAddress();
+            }
             _autoAddressResolutionEnabled = autoAddressResolution;
-            ResolveEftposAddress();
-
             return true;
         }
 
@@ -1612,6 +1615,9 @@ namespace SPIClient
         private async void ResolveEftposAddress()
         {
             if (!_autoAddressResolutionEnabled)
+                return;
+            
+            if (string.IsNullOrWhiteSpace(_serialNumber))
                 return;
 
             var service = new DeviceAddressService();
