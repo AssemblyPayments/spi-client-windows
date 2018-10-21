@@ -211,18 +211,24 @@ namespace SPIClient
         }
 
         /// <summary>
-        /// Call this method to set it to test mode for the auto address discovery feature.
+        /// Call this method to set the client library test mode.
+        /// Set it to true only while you are developing the integration. 
+        /// It defaults to false. For a real merchant, always leave it set to false. 
         /// </summary>
         /// <param name="testMode"></param>
         /// <returns></returns>
         public bool SetTestMode(bool testMode)
         {
-            if (CurrentStatus != SpiStatus.Unpaired || !_autoAddressResolutionEnabled || string.IsNullOrWhiteSpace(_serialNumber))
+            if (CurrentStatus != SpiStatus.Unpaired)
                 return false;
 
+            if (testMode != _inTestMode)
+            {
+                // we're changing mode
+                ResolveEftposAddress();
+            }
+            
             _inTestMode = testMode;
-            ResolveEftposAddress();
-
             return true;
         }
 
