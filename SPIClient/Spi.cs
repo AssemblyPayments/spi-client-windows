@@ -186,7 +186,7 @@ namespace SPIClient
                 return false;
 
             if (_autoAddressResolutionEnabled && HasSerialNumberChanged(serialNumber))
-                ResolveEftposAddress();
+                _autoResolveEftposAddress();
             
             _serialNumber = serialNumber;
             return true;
@@ -204,7 +204,7 @@ namespace SPIClient
             if (autoAddressResolution && !_autoAddressResolutionEnabled)
             {
                 // we're turning it on
-                ResolveEftposAddress();
+                _autoResolveEftposAddress();
             }
             _autoAddressResolutionEnabled = autoAddressResolution;
             return true;
@@ -225,7 +225,7 @@ namespace SPIClient
             if (testMode != _inTestMode)
             {
                 // we're changing mode
-                ResolveEftposAddress();
+                _autoResolveEftposAddress();
             }
             
             _inTestMode = testMode;
@@ -1304,7 +1304,7 @@ namespace SPIClient
                             {
                                 if (_retriesSinceLastDeviceAddressResolution >= _retriesBeforeResolvingDeviceAddress)
                                 {
-                                    ResolveEftposAddress();
+                                    _autoResolveEftposAddress();
                                     _retriesSinceLastDeviceAddressResolution = 0;
                                 }
                                 else
@@ -1618,7 +1618,7 @@ namespace SPIClient
             return _eftposAddress != updatedEftposAddress;
         }
 
-        private async void ResolveEftposAddress()
+        private async void _autoResolveEftposAddress()
         {
             if (!_autoAddressResolutionEnabled)
                 return;
