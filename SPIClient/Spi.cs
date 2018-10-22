@@ -1313,8 +1313,8 @@ namespace SPIClient
                                 }
                             }
 
-                            _log.Info($"Will try to reconnect in 5s...");
-                            Thread.Sleep(5000);
+                            _log.Info($"Will try to reconnect in {_sleepBeforeReconnectMs}ms ...");
+                            Thread.Sleep(_sleepBeforeReconnectMs);
                             if (CurrentStatus != SpiStatus.Unpaired)
                             {
                                 // This is non-blocking
@@ -1699,6 +1699,7 @@ namespace SPIClient
         private readonly TimeSpan _txMonitorCheckFrequency = TimeSpan.FromSeconds(1);
         private readonly TimeSpan _checkOnTxFrequency = TimeSpan.FromSeconds(20.0);
         private readonly TimeSpan _maxWaitForCancelTx = TimeSpan.FromSeconds(10.0);
+        private readonly int _sleepBeforeReconnectMs = 5000;
         private readonly int _missedPongsToDisconnect = 2;
         private readonly int _retriesBeforeResolvingDeviceAddress = 5;
 
