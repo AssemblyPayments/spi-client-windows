@@ -1,12 +1,16 @@
 using System.Threading.Tasks;
 using RestSharp;
+using RestSharp.Deserializers;
 
 namespace SPIClient.Service
 {
     public class DeviceAddressStatus
     {
-        public string Ip { get; set; }
-        public string Last_updated { get; set; }
+        [DeserializeAs(Name = "ip")]
+        public string Address { get; set; }
+
+        [DeserializeAs(Name = "last_udpated")]
+        public string LastUpdated { get; set; }
     }
 
     public class DeviceAddressService

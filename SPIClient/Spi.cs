@@ -50,8 +50,8 @@ namespace SPIClient
         /// </summary>
         public event EventHandler<DeviceAddressStatus> DeviceAddressChanged
         {
-            add => _deviceIpChanged = _deviceIpChanged + value;
-            remove => _deviceIpChanged = _deviceIpChanged - value;
+            add => _deviceAddressChanged = _deviceAddressChanged + value;
+            remove => _deviceAddressChanged = _deviceAddressChanged - value;
         }
 
         /// <summary>
@@ -182,12 +182,13 @@ namespace SPIClient
         /// </summary>
         public bool SetSerialNumber(string serialNumber)
         {
-            if (CurrentStatus != SpiStatus.Unpaired || !_autoAddressResolutionEnabled || !HasSerialNumberChanged(serialNumber))
+            if (CurrentStatus != SpiStatus.Unpaired)
                 return false;
 
+            if (_autoAddressResolutionEnabled && HasSerialNumberChanged(serialNumber))
+                _autoResolveEftposAddress();
+            
             _serialNumber = serialNumber;
-            ResolveEftposAddress();
-
             return true;
         }
 
@@ -197,28 +198,37 @@ namespace SPIClient
         /// <returns></returns>
         public bool SetAutoAddressResolution(bool autoAddressResolution)
         {
-            if (CurrentStatus == SpiStatus.PairedConnected || string.IsNullOrWhiteSpace(_serialNumber))
+            if (CurrentStatus == SpiStatus.PairedConnected)
                 return false;
 
+            if (autoAddressResolution && !_autoAddressResolutionEnabled)
+            {
+                // we're turning it on
+                _autoResolveEftposAddress();
+            }
             _autoAddressResolutionEnabled = autoAddressResolution;
-            ResolveEftposAddress();
-
             return true;
         }
 
         /// <summary>
-        /// Call this method to set it to test mode for the auto address discovery feature.
+        /// Call this method to set the client library test mode.
+        /// Set it to true only while you are developing the integration. 
+        /// It defaults to false. For a real merchant, always leave it set to false. 
         /// </summary>
         /// <param name="testMode"></param>
         /// <returns></returns>
         public bool SetTestMode(bool testMode)
         {
-            if (CurrentStatus != SpiStatus.Unpaired || !_autoAddressResolutionEnabled || string.IsNullOrWhiteSpace(_serialNumber))
+            if (CurrentStatus != SpiStatus.Unpaired)
                 return false;
 
+            if (testMode != _inTestMode)
+            {
+                // we're changing mode
+                _autoResolveEftposAddress();
+            }
+            
             _inTestMode = testMode;
-            ResolveEftposAddress();
-
             return true;
         }
 
@@ -306,7 +316,7 @@ namespace SPIClient
 
             if (string.IsNullOrWhiteSpace(_posId) || string.IsNullOrWhiteSpace(_eftposAddress))
             {
-                _log.Warn("Tried to Pair but missing posId or updatedEftposAddress");
+                _log.Warn("Tried to Pair but missing posId or eftposAddress");
                 return false;
             }
                 
@@ -1247,7 +1257,7 @@ namespace SPIClient
                     break;
 
                 case ConnectionState.Connected:
-                    _retrySinceLastDeviceIpAddressResolution = 0;
+                    _retriesSinceLastDeviceAddressResolution = 0;
 
                     if (CurrentFlow == SpiFlow.Pairing && CurrentStatus == SpiStatus.Unpaired)
                     {
@@ -1292,19 +1302,19 @@ namespace SPIClient
 
                             if (_autoAddressResolutionEnabled)
                             {
-                                if (_retrySinceLastDeviceIpAddressResolution >= _retryBeforeResolvingDeviceIpAddress)
+                                if (_retriesSinceLastDeviceAddressResolution >= _retriesBeforeResolvingDeviceAddress)
                                 {
-                                    ResolveEftposAddress();
-                                    _retrySinceLastDeviceIpAddressResolution = 0;
+                                    _autoResolveEftposAddress();
+                                    _retriesSinceLastDeviceAddressResolution = 0;
                                 }
                                 else
                                 {
-                                    _retrySinceLastDeviceIpAddressResolution += 1;
+                                    _retriesSinceLastDeviceAddressResolution += 1;
                                 }
                             }
 
-                            _log.Info($"Will try to reconnect in 5s...");
-                            Thread.Sleep(5000);
+                            _log.Info($"Will try to reconnect in {_sleepBeforeReconnectMs}ms ...");
+                            Thread.Sleep(_sleepBeforeReconnectMs);
                             if (CurrentStatus != SpiStatus.Unpaired)
                             {
                                 // This is non-blocking
@@ -1608,31 +1618,34 @@ namespace SPIClient
             return _eftposAddress != updatedEftposAddress;
         }
 
-        private async void ResolveEftposAddress()
+        private async void _autoResolveEftposAddress()
         {
             if (!_autoAddressResolutionEnabled)
                 return;
-
-            var service = new DeviceAddressService();
-            var ip = await service.RetrieveService(_serialNumber, _deviceApiKey, _inTestMode);
-
-            if (ip?.Ip == null)
+            
+            if (string.IsNullOrWhiteSpace(_serialNumber))
                 return;
 
-            if (!HasEftposAddressChanged(ip.Ip))
+            var service = new DeviceAddressService();
+            var addressResponse = await service.RetrieveService(_serialNumber, _deviceApiKey, _inTestMode);
+
+            if (addressResponse?.Address == null)
+                return;
+
+            if (!HasEftposAddressChanged(addressResponse.Address))
                 return;
 
             // update device and connection address
-            _eftposAddress = "ws://" + ip.Ip;
+            _eftposAddress = "ws://" + addressResponse.Address;
             _conn.Address = _eftposAddress;
 
             CurrentDeviceStatus = new DeviceAddressStatus
             {
-                Ip = ip.Ip,
-                Last_updated = ip.Last_updated
+                Address = addressResponse.Address,
+                LastUpdated = addressResponse.LastUpdated
             };
 
-            _deviceIpChanged(this, CurrentDeviceStatus);
+            _deviceAddressChanged(this, CurrentDeviceStatus);
         }
 
         #endregion
@@ -1670,7 +1683,7 @@ namespace SPIClient
 
         private SpiStatus _currentStatus;
         private EventHandler<SpiStatusEventArgs> _statusChanged;
-        private EventHandler<DeviceAddressStatus> _deviceIpChanged;
+        private EventHandler<DeviceAddressStatus> _deviceAddressChanged;
         private EventHandler<PairingFlowState> _pairingFlowStateChanged;
         internal EventHandler<TransactionFlowState> _txFlowStateChanged;
         private EventHandler<Secrets> _secretsChanged;
@@ -1679,15 +1692,16 @@ namespace SPIClient
         private DateTime _mostRecentPingSentTime;
         private Message _mostRecentPongReceived;
         private int _missedPongsCount;
-        private int _retrySinceLastDeviceIpAddressResolution = 0;
+        private int _retriesSinceLastDeviceAddressResolution = 0;
         private Thread _periodicPingThread;
 
         private readonly object _txLock = new Object();
         private readonly TimeSpan _txMonitorCheckFrequency = TimeSpan.FromSeconds(1);
         private readonly TimeSpan _checkOnTxFrequency = TimeSpan.FromSeconds(20.0);
         private readonly TimeSpan _maxWaitForCancelTx = TimeSpan.FromSeconds(10.0);
+        private readonly int _sleepBeforeReconnectMs = 5000;
         private readonly int _missedPongsToDisconnect = 2;
-        private readonly int _retryBeforeResolvingDeviceIpAddress = 5;
+        private readonly int _retriesBeforeResolvingDeviceAddress = 5;
 
         private SpiPayAtTable _spiPat;
         
