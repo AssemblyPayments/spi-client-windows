@@ -316,7 +316,7 @@ namespace SPIClient
 
             if (string.IsNullOrWhiteSpace(_posId) || string.IsNullOrWhiteSpace(_eftposAddress))
             {
-                _log.Warn("Tried to Pair but missing posId or updatedEftposAddress");
+                _log.Warn("Tried to Pair but missing posId or eftposAddress");
                 return false;
             }
                 
