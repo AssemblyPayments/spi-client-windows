@@ -247,6 +247,11 @@ namespace SPIClient
         public DateTime LastStateRequestTime { get; internal set; }
 
         /// <summary>
+        /// The id of the last glt request message that was sent. used to match with the response.
+        /// </summary>
+        public string LastGltRequestId { get; internal set; }
+        
+        /// <summary>
         /// Whether we're currently attempting to Cancel the transaction.
         /// </summary>
         public bool AttemptingToCancel { get; internal set; }
@@ -345,10 +350,11 @@ namespace SPIClient
             DisplayMessage = msg;
         }
 
-        internal void CallingGlt()
+        internal void CallingGlt(string gltRequestId)
         {
             AwaitingGltResponse = true;
             LastStateRequestTime = DateTime.Now;
+            LastGltRequestId = gltRequestId;
         }
 
         internal void GotGltResponse()
