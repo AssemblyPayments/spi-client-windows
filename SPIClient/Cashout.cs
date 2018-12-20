@@ -150,9 +150,9 @@ namespace SPIClient
             return _m.GetDataBoolValue("customer_receipt_printed", false);
         }
 
-        public string GetSurchargeAmount()
+        public int GetSurchargeAmount()
         {
-            return _m.GetDataStringValue("surcharge_amount");
+            return _m.GetDataIntValue("surcharge_amount");
         }
 
         public string GetResponseValue(string attribute)

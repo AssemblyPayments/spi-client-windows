@@ -49,18 +49,22 @@ namespace SPIClient
             _success = m.GetSuccessState() == Message.SuccessState.Success;
             _m = m;
         }
+
         public bool isSuccess()
         {
             return _success;
         }
+
         public String getErrorReason()
         {
             return _m.GetDataStringValue("error_reason");
         }
+
         public String getErrorDetail()
         {
             return _m.GetDataStringValue("error_detail");
         }
+
         public String getResponseValueWithAttribute(String attribute)
         {
             return _m.GetDataStringValue(attribute);

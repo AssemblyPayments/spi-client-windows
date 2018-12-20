@@ -71,6 +71,9 @@ namespace SPIClient
         public const string TerminalStatusRequest = "get_terminal_status";
         public const string TerminalStatusResponse = "terminal_status";
 
+        public const string TerminalConfigurationRequest = "get_terminal_configuration";
+        public const string TerminalConfigurationResponse = "terminal_configuration";
+
         public const string BatteryLevelChanged = "battery_level_changed";
     }
 

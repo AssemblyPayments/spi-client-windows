@@ -508,20 +508,35 @@ namespace SPIClient
         {
             _customerReceiptFooter = customerReceiptFooter;
         }
+
         public void SetMerchantReceiptHeader(String merchantReceiptHeader)
         {
             _merchantReceiptHeader = merchantReceiptHeader;
         }
+
         public void SetMerchantReceiptFooter(String merchantReceiptFooter)
         {
             _merchantReceiptFooter = merchantReceiptFooter;
         }
+
         public void AddOptions(JObject messageData)
         {
-            messageData.Add("customer_receipt_header", _customerReceiptHeader);
-            messageData.Add("customer_receipt_footer", _customerReceiptFooter);
-            messageData.Add("merchant_receipt_header", _merchantReceiptHeader);
-            messageData.Add("merchant_receipt_footer", _merchantReceiptFooter);
+            AddOptionObject(_customerReceiptHeader, "customer_receipt_header", messageData);
+            AddOptionObject(_customerReceiptFooter, "customer_receipt_footer", messageData);
+            AddOptionObject(_merchantReceiptHeader, "merchant_receipt_header", messageData);
+            AddOptionObject(_merchantReceiptFooter, "merchant_receipt_footer", messageData);
+        }
+
+        private void AddOptionObject(JToken value, string key, JObject messageData)
+        {
+            if (value != null)
+            {
+                messageData.Add(key, value);
+            }
+            else
+            {
+                messageData.Remove(key);
+            }
         }
     }
 }

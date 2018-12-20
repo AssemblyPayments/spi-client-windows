@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using SPIClient.Service;
 
 namespace SPIClient
 {
@@ -13,9 +14,14 @@ namespace SPIClient
     public delegate void SpiPrintingResponse(Message message);
 
     /// <summary>
-    /// Subscribe to this event to know when the Printing response
+    /// Subscribe to this event to know when the Terminal Status response
     /// </summary>
     public delegate void SpiTerminalStatusResponse(Message message);
+
+    /// <summary>
+    /// Subscribe to this event to know when the Terminal Configuration response
+    /// </summary>
+    public delegate void SpiTerminalConfigurationResponse(Message message);
 
     /// <summary>
     /// Subscribe to this event to know when the Battery level changed
@@ -56,6 +62,17 @@ namespace SPIClient
         {
             add => _statusChanged = _statusChanged + value;
             remove => _statusChanged = _statusChanged - value;
+        }
+
+        public DeviceAddressStatus CurrentDeviceStatus { get; internal set; }
+
+        /// <summary>
+        /// Subscribe to this event when you want to know if the address of the device have changed
+        /// </summary>
+        public event EventHandler<DeviceAddressStatus> DeviceAddressChanged
+        {
+            add => _deviceAddressChanged = _deviceAddressChanged + value;
+            remove => _deviceAddressChanged = _deviceAddressChanged - value;
         }
 
         /// <summary>
@@ -115,11 +132,13 @@ namespace SPIClient
         /// If you provide secrets, it will start in PairedConnecting status; Otherwise it will start in Unpaired status.
         /// </summary>
         /// <param name="posId">Uppercase AlphaNumeric string that Indentifies your POS instance. This value is displayed on the EFTPOS screen.</param>
+        /// <param name="serialNumber">Serial number of the EFTPOS device</param>
         /// <param name="eftposAddress">The IP address of the target EFTPOS.</param>
         /// <param name="secrets">The Pairing secrets, if you know it already, or null otherwise</param>
-        public Spi(string posId, string eftposAddress, Secrets secrets)
+        public Spi(string posId, string serialNumber, string eftposAddress, Secrets secrets)
         {
             _posId = posId;
+            _serialNumber = serialNumber;
             _secrets = secrets;
             _eftposAddress = "ws://" + eftposAddress;
 
@@ -136,6 +155,13 @@ namespace SPIClient
         public SpiPayAtTable EnablePayAtTable()
         {
             _spiPat = new SpiPayAtTable(this);
+            return _spiPat;
+        }
+
+        public SpiPayAtTable DisablePayAtTable()
+        {
+            _spiPat = new SpiPayAtTable(this);
+            _spiPat.Config.PayAtTabledEnabled = false;
             return _spiPat;
         }
 
@@ -176,6 +202,83 @@ namespace SPIClient
             }
         }
 
+
+        /// <summary>
+        /// Set the acquirer code of your bank, please contact Assembly's Integration Engineers for acquirer code.
+        /// </summary>
+        public bool SetAcquirerCode(string acquirerCode)
+        {
+            _acquirerCode = acquirerCode;
+            return true;
+        }
+
+        /// <summary>
+        /// Set the api key used for auto address discovery feature, please contact Assembly's Integration Engineers for Api key.
+        /// </summary>
+        /// <returns></returns>
+        public bool SetDeviceApiKey(string deviceApiKey)
+        {
+            _deviceApiKey = deviceApiKey;
+            return true;
+        }
+
+        /// <summary>
+        /// Allows you to set the serial number of the Eftpos
+        /// </summary>
+        public bool SetSerialNumber(string serialNumber)
+        {
+            if (CurrentStatus != SpiStatus.Unpaired)
+                return false;
+
+            var was = _serialNumber;
+            _serialNumber = serialNumber;
+            if (_autoAddressResolutionEnabled && HasSerialNumberChanged(was))
+                _autoResolveEftposAddress();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Allows you to set the auto address discovery feature. 
+        /// </summary>
+        /// <returns></returns>
+        public bool SetAutoAddressResolution(bool autoAddressResolutionEnable)
+        {
+            if (CurrentStatus == SpiStatus.PairedConnected)
+                return false;
+
+            var was = _autoAddressResolutionEnabled;
+            _autoAddressResolutionEnabled = autoAddressResolutionEnable;
+            if (autoAddressResolutionEnable && !was)
+            {
+                // we're turning it on
+                _autoResolveEftposAddress();
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Call this method to set the client library test mode.
+        /// Set it to true only while you are developing the integration. 
+        /// It defaults to false. For a real merchant, always leave it set to false. 
+        /// </summary>
+        /// <param name="testMode"></param>
+        /// <returns></returns>
+        public bool SetTestMode(bool testMode)
+        {
+            if (CurrentStatus != SpiStatus.Unpaired)
+                return false;
+
+            if (testMode == _inTestMode)
+                return true;
+
+            // we're changing mode
+            _inTestMode = testMode;
+            _autoResolveEftposAddress();
+            return true;
+        }
+
         /// <summary>
         /// Allows you to set the PosId which identifies this instance of your POS.
         /// Can only be called in thge Unpaired state. 
@@ -191,13 +294,13 @@ namespace SPIClient
         }
 
         /// <summary>
-        /// Allows you to set the PinPad address. Sometimes the PinPad might change IP address 
+        /// Allows you to set the PinPad address only if auto address is not enabled. Sometimes the PinPad might change IP address 
         /// (we recommend reserving static IPs if possible).
         /// Either way you need to allow your User to enter the IP address of the PinPad.
         /// </summary>
         public bool SetEftposAddress(string address)
         {
-            if (CurrentStatus == SpiStatus.PairedConnected)
+            if (CurrentStatus == SpiStatus.PairedConnected || _autoAddressResolutionEnabled)
                 return false;
             _eftposAddress = "ws://" + address;
             _conn.Address = _eftposAddress;
@@ -815,7 +918,7 @@ namespace SPIClient
             return GltMatch(gltResponse, posRefId);
         }
 
-        public void PrintReceipt(string key, string payload)
+        public void PrintReport(string key, string payload)
         {
             lock (_txLock)
             {
@@ -828,6 +931,14 @@ namespace SPIClient
             lock (_txLock)
             {
                 _send(new TerminalStatusRequest().ToMessage());
+            }
+        }
+
+        public void GetTerminalConfiguration()
+        {
+            lock (_txLock)
+            {
+                _send(new TerminalConfigurationRequest().ToMessage());
             }
         }
 
@@ -1209,6 +1320,14 @@ namespace SPIClient
                             return;
                         }
                     }
+                    else if (gtlResponse.WasTimeOutOfSyncError())
+                    {
+                        // Let's not give up based on a TOOS error.
+                        // Let's log it, and ignore it. 
+                        _log.Info($"Time-Out-Of-Sync error in Get Last Transaction response. Let's ignore it and we'll try again.");
+                        // No need to publish txFlowStateChanged. Can return;
+                        return;
+                    }
                     else
                     {
                         // TH-4X - Unexpected Response when recovering
@@ -1341,6 +1460,14 @@ namespace SPIClient
             }
         }
 
+        private void _handleTerminalConfigurationResponse(Message m)
+        {
+            lock (_txLock)
+            {
+                TerminalConfigurationResponse(m);
+            }
+        }
+
         private void _handleBatteryLevelChanged(Message m)
         {
             lock (_txLock)
@@ -1378,6 +1505,8 @@ namespace SPIClient
                     break;
 
                 case ConnectionState.Connected:
+                    _retriesSinceLastDeviceAddressResolution = 0;
+
                     if (CurrentFlow == SpiFlow.Pairing && CurrentStatus == SpiStatus.Unpaired)
                     {
                         CurrentPairingFlowState.Message = "Requesting to Pair...";
@@ -1418,8 +1547,22 @@ namespace SPIClient
                         Task.Factory.StartNew(() =>
                         {
                             if (_conn == null) return; // This means the instance has been disposed. Aborting.
-                            _log.Info($"Will try to reconnect in 5s...");
-                            Thread.Sleep(5000);
+
+                            if (_autoAddressResolutionEnabled)
+                            {
+                                if (_retriesSinceLastDeviceAddressResolution >= _retriesBeforeResolvingDeviceAddress)
+                                {
+                                    _autoResolveEftposAddress();
+                                    _retriesSinceLastDeviceAddressResolution = 0;
+                                }
+                                else
+                                {
+                                    _retriesSinceLastDeviceAddressResolution += 1;
+                                }
+                            }
+
+                            _log.Info($"Will try to reconnect in {_sleepBeforeReconnectMs}ms ...");
+                            Thread.Sleep(_sleepBeforeReconnectMs);
                             if (CurrentStatus != SpiStatus.Unpaired)
                             {
                                 // This is non-blocking
@@ -1696,6 +1839,9 @@ namespace SPIClient
                 case Events.TerminalStatusResponse:
                     _handleTerminalStatusResponse(m);
                     break;
+                case Events.TerminalConfigurationResponse:
+                    _handleTerminalConfigurationResponse(m);
+                    break;
                 case Events.BatteryLevelChanged:
                     _handleBatteryLevelChanged(m);
                     break;
@@ -1733,6 +1879,50 @@ namespace SPIClient
         }
         #endregion
 
+        #region Device Management 
+
+        private bool HasSerialNumberChanged(string updatedSerialNumber)
+        {
+            return _serialNumber != updatedSerialNumber;
+        }
+
+        private bool HasEftposAddressChanged(string updatedEftposAddress)
+        {
+            return _eftposAddress != updatedEftposAddress;
+        }
+
+        private async void _autoResolveEftposAddress()
+        {
+            if (!_autoAddressResolutionEnabled)
+                return;
+            
+            if (string.IsNullOrWhiteSpace(_serialNumber))
+                return;
+
+            var service = new DeviceAddressService();
+            var addressResponse = await service.RetrieveService(_serialNumber, _deviceApiKey, _acquirerCode, _inTestMode);
+
+            if (addressResponse?.Address == null)
+                return;
+
+            if (!HasEftposAddressChanged(addressResponse.Address))
+                return;
+
+            // update device and connection address
+            _eftposAddress = "ws://" + addressResponse.Address;
+            _conn.Address = _eftposAddress;
+
+            CurrentDeviceStatus = new DeviceAddressStatus
+            {
+                Address = addressResponse.Address,
+                LastUpdated = addressResponse.LastUpdated
+            };
+
+            _deviceAddressChanged(this, CurrentDeviceStatus);
+        }
+
+        #endregion
+
         #region IDisposable
 
         public void Dispose()
@@ -1755,6 +1945,11 @@ namespace SPIClient
 
         private string _posId;
         private string _eftposAddress;
+        private string _serialNumber;
+        private string _deviceApiKey;
+        private string _acquirerCode;
+        private bool _inTestMode;
+        private bool _autoAddressResolutionEnabled;
         private Secrets _secrets;
         private MessageStamp _spiMessageStamp;
         private string _posVendorId;
@@ -1767,25 +1962,30 @@ namespace SPIClient
 
         private SpiStatus _currentStatus;
         private EventHandler<SpiStatusEventArgs> _statusChanged;
+        private EventHandler<DeviceAddressStatus> _deviceAddressChanged;
         private EventHandler<PairingFlowState> _pairingFlowStateChanged;
         internal EventHandler<TransactionFlowState> _txFlowStateChanged;
         private EventHandler<Secrets> _secretsChanged;
 
         public SpiPrintingResponse PrintingResponse;
         public SpiTerminalStatusResponse TerminalStatusResponse;
+        public SpiTerminalConfigurationResponse TerminalConfigurationResponse;
         public SpiBatteryLevelChanged BatteryLevelChanged;
 
         private Message _mostRecentPingSent;
         private DateTime _mostRecentPingSentTime;
         private Message _mostRecentPongReceived;
         private int _missedPongsCount;
+        private int _retriesSinceLastDeviceAddressResolution = 0;
         private Thread _periodicPingThread;
 
         private readonly object _txLock = new Object();
         private readonly TimeSpan _txMonitorCheckFrequency = TimeSpan.FromSeconds(1);
         private readonly TimeSpan _checkOnTxFrequency = TimeSpan.FromSeconds(20.0);
         private readonly TimeSpan _maxWaitForCancelTx = TimeSpan.FromSeconds(10.0);
+        private readonly int _sleepBeforeReconnectMs = 5000;
         private readonly int _missedPongsToDisconnect = 2;
+        private readonly int _retriesBeforeResolvingDeviceAddress = 5;
 
         private SpiPayAtTable _spiPat;
 

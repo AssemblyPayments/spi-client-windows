@@ -313,6 +313,11 @@ namespace SPIClient
             return !string.IsNullOrEmpty(GetResponseCode());
         }
 
+        public bool WasTimeOutOfSyncError()
+        {
+            return _m.GetError().StartsWith("TIME_OUT_OF_SYNC");
+        }
+
         public bool WasOperationInProgressError()
         {
             return _m.GetError().StartsWith("OPERATION_IN_PROGRESS");
