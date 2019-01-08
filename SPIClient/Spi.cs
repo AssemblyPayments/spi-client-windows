@@ -123,6 +123,13 @@ namespace SPIClient
             return _spiPat;
         }
 
+        public SpiPayAtTable DisablePayAtTable()
+        {
+            _spiPat = new SpiPayAtTable(this);
+            _spiPat.Config.PayAtTabledEnabled = false;
+            return _spiPat;
+        }
+
         public SpiPreauth EnablePreauth()
         {
             _spiPreauth = new SpiPreauth(this, _txLock);
