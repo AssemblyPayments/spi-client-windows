@@ -432,8 +432,6 @@ namespace SPIClient
 
         internal SpiConfig Config = new SpiConfig();
 
-        internal TransactionOptions Options = new TransactionOptions();
-
         [Obsolete("Id is deprecated. Use PosRefId instead.")]
         public string Id { get; }
 
@@ -453,7 +451,6 @@ namespace SPIClient
                 new JProperty("suppress_merchant_password", IsSuppressMerchantPassword)
             );
             Config.addReceiptConfig(data);
-            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("refund"), Events.RefundRequest, data, true);
         }
     }

@@ -722,9 +722,14 @@ namespace SPIClient
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
-                var cashoutOnlyRequest = new CashoutOnlyRequest(amountCents, posRefId, surchargeAmount);
-                cashoutOnlyRequest.Config = Config;
+                var cashoutOnlyRequest = new CashoutOnlyRequest(amountCents, posRefId)
+                {
+                    SurchargeAmount = surchargeAmount,
+                    Config = Config
+                };
+
                 var cashoutMsg = cashoutOnlyRequest.ToMessage();
+
                 CurrentFlow = SpiFlow.Transaction;
                 CurrentTxFlowState = new TransactionFlowState(
                     posRefId, TransactionType.CashoutOnly, amountCents, cashoutMsg,
@@ -790,12 +795,18 @@ namespace SPIClient
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
-                var settleRequestMsg = new SettleRequest(RequestIdHelper.Id("settle")).ToMessage();
+                var settleRequest = new SettleRequest(RequestIdHelper.Id("settle"))
+                {
+                    Config = Config
+                };
+
+                var settleMessage = settleRequest.ToMessage();
+
                 CurrentFlow = SpiFlow.Transaction;
                 CurrentTxFlowState = new TransactionFlowState(
-                    posRefId, TransactionType.Settle, 0, settleRequestMsg,
+                    posRefId, TransactionType.Settle, 0, settleMessage,
                     $"Waiting for EFTPOS connection to make a settle request");
-                if (_send(settleRequestMsg))
+                if (_send(settleMessage))
                 {
                     CurrentTxFlowState.Sent($"Asked EFTPOS to settle.");
                 }
@@ -813,7 +824,13 @@ namespace SPIClient
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
-                var stlEnqMsg = new SettlementEnquiryRequest(RequestIdHelper.Id("stlenq")).ToMessage();
+                var stlEnqRequest = new SettlementEnquiryRequest(RequestIdHelper.Id("stlenq"))
+                {
+                    Config = Config
+                };
+
+                var stlEnqMsg = stlEnqRequest.ToMessage();
+
                 CurrentFlow = SpiFlow.Transaction;
                 CurrentTxFlowState = new TransactionFlowState(
                     posRefId, TransactionType.SettlementEnquiry, 0, stlEnqMsg,
@@ -1289,7 +1306,7 @@ namespace SPIClient
                     _log.Info($"received a glt response but the message id does not match the glt request that we sent. strange. ignoring.");
                     return;
                 }
-                
+
                 // TH-4 We were in the middle of a transaction.
                 // Let's attempt recovery. This is step 4 of Transaction Processing Handling
                 _log.Info($"Got Last Transaction..");
@@ -1895,7 +1912,7 @@ namespace SPIClient
         {
             if (!_autoAddressResolutionEnabled)
                 return;
-            
+
             if (string.IsNullOrWhiteSpace(_serialNumber))
                 return;
 

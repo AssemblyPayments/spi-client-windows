@@ -14,14 +14,19 @@ namespace SPIClient
     {
         public string Id { get; }
 
+        internal SpiConfig Config = new SpiConfig();
+
         public SettleRequest(string id)
         {
             Id = id;
         }
-        
+
         public Message ToMessage()
         {
-            return new Message(Id, Events.SettleRequest, null, true);
+            var data = new JObject();
+            Config.addReceiptConfig(data);
+
+            return new Message(Id, Events.SettleRequest, data, true);
         }
     }
 
@@ -50,7 +55,7 @@ namespace SPIClient
             _m = m;
             Success = m.GetSuccessState() == Message.SuccessState.Success;
         }
-        
+
         public int GetSettleByAcquirerCount()
         {
             return _m.GetDataIntValue("accumulated_settle_by_acquirer_count");
@@ -75,28 +80,28 @@ namespace SPIClient
         {
             var timeStr = _m.GetDataStringValue("settlement_period_start_time"); // "05:00"
             var dateStr = _m.GetDataStringValue("settlement_period_start_date"); // "05Oct17"
-            return DateTime.ParseExact(timeStr+dateStr, "HH:mmddMMMyy", CultureInfo.InvariantCulture);
+            return DateTime.ParseExact(timeStr + dateStr, "HH:mmddMMMyy", CultureInfo.InvariantCulture);
         }
 
         public DateTime GetPeriodEndTime()
         {
             var timeStr = _m.GetDataStringValue("settlement_period_end_time"); // "05:00"
             var dateStr = _m.GetDataStringValue("settlement_period_end_date"); // "05Oct17"
-            return DateTime.ParseExact(timeStr+dateStr, "HH:mmddMMMyy", CultureInfo.InvariantCulture);
+            return DateTime.ParseExact(timeStr + dateStr, "HH:mmddMMMyy", CultureInfo.InvariantCulture);
         }
 
         public DateTime GetTriggeredTime()
         {
             var timeStr = _m.GetDataStringValue("settlement_triggered_time"); // "05:00:45"
             var dateStr = _m.GetDataStringValue("settlement_triggered_date"); // "05Oct17"
-            return DateTime.ParseExact(timeStr+dateStr, "HH:mm:ssddMMMyy", CultureInfo.InvariantCulture);
+            return DateTime.ParseExact(timeStr + dateStr, "HH:mm:ssddMMMyy", CultureInfo.InvariantCulture);
         }
 
         public string GetResponseText()
         {
             return _m.GetDataStringValue("host_response_text");
         }
-        
+
         public string GetReceipt()
         {
             return _m.GetDataStringValue("merchant_receipt");
@@ -111,12 +116,17 @@ namespace SPIClient
         {
             return _m.GetDataStringValue("terminal_id");
         }
-        
+
+        public bool WasMerchantReceiptPrinted()
+        {
+            return _m.GetDataBoolValue("merchant_receipt_printed", false);
+        }
+
         public IEnumerable<SchemeSettlementEntry> GetSchemeSettlementEntries()
         {
             var found = _m.Data.TryGetValue("schemes", out var schemes);
             if (!found) return new List<SchemeSettlementEntry>();
-            return schemes.ToArray().Select(jToken => new SchemeSettlementEntry((JObject) jToken)).ToList();
+            return schemes.ToArray().Select(jToken => new SchemeSettlementEntry((JObject)jToken)).ToList();
         }
     }
 
@@ -156,25 +166,30 @@ namespace SPIClient
             var countStr = (string)jo.GetValue("total_count");
             int.TryParse(countStr, out TotalCount);
         }
-        
+
         public override string ToString()
         {
             return $"{nameof(SchemeName)}: {SchemeName}, {nameof(SettleByAcquirer)}: {SettleByAcquirer}, {nameof(TotalCount)}: {TotalCount}, {nameof(TotalValue)}: {TotalValue}";
         }
     }
-    
+
     public class SettlementEnquiryRequest
     {
         public string Id { get; }
+
+        internal SpiConfig Config = new SpiConfig();
 
         public SettlementEnquiryRequest(string id)
         {
             Id = id;
         }
-        
+
         public Message ToMessage()
         {
-            return new Message(Id, Events.SettlementEnquiryRequest, null, true);
+            var data = new JObject();
+            Config.addReceiptConfig(data);
+
+            return new Message(Id, Events.SettlementEnquiryRequest, data, true);
         }
     }
 }
