@@ -763,14 +763,33 @@ namespace SPIClient
         /// <returns>InitiateTxResult</returns>
         public InitiateTxResult InitiateMotoPurchaseTx(string posRefId, int amountCents, int surchargeAmount)
         {
+            return InitiateMotoPurchaseTx(posRefId, amountCents, surchargeAmount, false);
+        }
+
+        /// <summary>
+        /// Initiates a Mail Order / Telephone Order Purchase Transaction
+        /// </summary>
+        /// <param name="posRefId">Alphanumeric Identifier for your transaction.</param>
+        /// <param name="amountCents">Amount in Cents</param>
+        /// <param name="surchargeAmount">The Surcharge Amount in Cents</param>
+        /// <param name="isSuppressMerchantPassword">>Merchant Password control in VAA</param>
+        /// <returns>InitiateTxResult</returns>
+        public InitiateTxResult InitiateMotoPurchaseTx(string posRefId, int amountCents, int surchargeAmount, bool isSuppressMerchantPassword)
+        {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
-                var motoPurchaseRequest = new MotoPurchaseRequest(amountCents, posRefId, surchargeAmount);
-                motoPurchaseRequest.Config = Config;
+                var motoPurchaseRequest = new MotoPurchaseRequest(amountCents, posRefId)
+                {
+                    SurchargeAmount = surchargeAmount,
+                    IsSuppressMerchantPassword = isSuppressMerchantPassword,
+                    Config = Config
+                };
+
                 var cashoutMsg = motoPurchaseRequest.ToMessage();
+
                 CurrentFlow = SpiFlow.Transaction;
                 CurrentTxFlowState = new TransactionFlowState(
                     posRefId, TransactionType.MOTO, amountCents, cashoutMsg,

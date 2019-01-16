@@ -661,17 +661,15 @@ namespace SPIClient
     {
         public string PosRefId { get; }
         public int PurchaseAmount { get; }
-        public int SurchargeAmount { get; }
+        public int SurchargeAmount { get; set; }
+        public bool IsSuppressMerchantPassword { get; set; }
 
         internal SpiConfig Config = new SpiConfig();
 
-        internal TransactionOptions Options = new TransactionOptions();
-
-        public MotoPurchaseRequest(int amountCents, string posRefId, int surchargeAmount)
+        public MotoPurchaseRequest(int amountCents, string posRefId)
         {
             PosRefId = posRefId;
             PurchaseAmount = amountCents;
-            SurchargeAmount = surchargeAmount;
         }
 
         public Message ToMessage()
@@ -679,10 +677,10 @@ namespace SPIClient
             var data = new JObject(
                 new JProperty("pos_ref_id", PosRefId),
                 new JProperty("purchase_amount", PurchaseAmount),
-                new JProperty("surcharge_amount", SurchargeAmount)
+                new JProperty("surcharge_amount", SurchargeAmount),
+                new JProperty("suppress_merchant_password", IsSuppressMerchantPassword)
             );
             Config.addReceiptConfig(data);
-            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("moto"), Events.MotoPurchaseRequest, data, true);
         }
     }
