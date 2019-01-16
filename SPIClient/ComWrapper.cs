@@ -109,12 +109,15 @@ namespace SPIClient
             callBackStatus(status);
         }
 
-        private BillStatusResponse OnPayAtTableGetBillStatus(string billId, string tableId, string operatorId)
+        private BillStatusResponse OnPayAtTableGetBillStatus(string billId, string tableId, string operatorId, bool paymentFlowStarted)
         {
-            BillStatusInfo billStatusInfo = new BillStatusInfo();
-            billStatusInfo.BillId = billId;
-            billStatusInfo.TableId = tableId;
-            billStatusInfo.OperatorId = operatorId;
+            BillStatusInfo billStatusInfo = new BillStatusInfo
+            {
+                BillId = billId,
+                TableId = tableId,
+                OperatorId = operatorId,
+                PaymentFlowStarted = paymentFlowStarted
+            };
 
             BillStatusResponse billStatusResponse = new BillStatusResponse();
             callBackPayAtTableGetBillStatus(billStatusInfo, out billStatusResponse);
@@ -290,6 +293,8 @@ namespace SPIClient
         public string TableId { get; set; }
 
         public string OperatorId { get; set; }
+
+        public bool PaymentFlowStarted { get; set; }
     }
 
     /// <summary>

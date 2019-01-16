@@ -130,6 +130,7 @@ namespace SPIClient
         public string BillId { get; }
         public string TableId { get; }
         public string OperatorId { get; }
+        public bool PaymentFlowStarted { get; }
 
         public PaymentType PaymentType { get; }
 

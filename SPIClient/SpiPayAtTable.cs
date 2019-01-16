@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 namespace SPIClient
 {
 
-    public delegate BillStatusResponse PayAtTableGetBillStatus(string billId, string tableId, string operatorId);
+    public delegate BillStatusResponse PayAtTableGetBillStatus(string billId, string tableId, string operatorId, bool paymentFlowStarted);
 
     public delegate BillStatusResponse PayAtTableBillPaymentReceived(BillPayment billPayment, string updatedBillData);
 
@@ -69,9 +69,10 @@ namespace SPIClient
         {
             var operatorId = m.GetDataStringValue("operator_id");
             var tableId = m.GetDataStringValue("table_id");
+            var paymentFlowStarted = m.GetDataBoolValue("payment_flow_started", false);
 
             // Ask POS for Bill Details for this tableId, inluding encoded PaymentData
-            var billStatus = GetBillStatus("", tableId, operatorId);
+            var billStatus = GetBillStatus("", tableId, operatorId, paymentFlowStarted);
             billStatus.TableId = tableId;
             if (billStatus.TotalAmount <= 0)
             {
@@ -87,7 +88,7 @@ namespace SPIClient
             var billPayment = new BillPayment(m);
 
             // Ask POS for Bill Details, inluding encoded PaymentData
-            var existingBillStatus = GetBillStatus(billPayment.BillId, billPayment.TableId, billPayment.OperatorId);
+            var existingBillStatus = GetBillStatus(billPayment.BillId, billPayment.TableId, billPayment.OperatorId, billPayment.PaymentFlowStarted);
             if (existingBillStatus.Result != BillRetrievalResult.SUCCESS)
             {
                 _log.Warn("Could not retrieve Bill Status for Payment Advice. Sending Error to Eftpos.");
