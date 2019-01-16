@@ -722,13 +722,11 @@ namespace SPIClient
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
-                var cashoutOnlyRequest = new CashoutOnlyRequest(amountCents, posRefId)
+                var cashoutMsg = new CashoutOnlyRequest(amountCents, posRefId)
                 {
                     SurchargeAmount = surchargeAmount,
                     Config = Config
-                };
-
-                var cashoutMsg = cashoutOnlyRequest.ToMessage();
+                }.ToMessage();
 
                 CurrentFlow = SpiFlow.Transaction;
                 CurrentTxFlowState = new TransactionFlowState(
@@ -781,20 +779,18 @@ namespace SPIClient
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
-                var motoPurchaseRequest = new MotoPurchaseRequest(amountCents, posRefId)
+                var motoPurchaseMsg = new MotoPurchaseRequest(amountCents, posRefId)
                 {
                     SurchargeAmount = surchargeAmount,
                     IsSuppressMerchantPassword = isSuppressMerchantPassword,
                     Config = Config
-                };
-
-                var cashoutMsg = motoPurchaseRequest.ToMessage();
+                }.ToMessage();
 
                 CurrentFlow = SpiFlow.Transaction;
                 CurrentTxFlowState = new TransactionFlowState(
-                    posRefId, TransactionType.MOTO, amountCents, cashoutMsg,
+                    posRefId, TransactionType.MOTO, amountCents, motoPurchaseMsg,
                     $"Waiting for EFTPOS connection to send MOTO request for ${amountCents / 100.0:.00}");
-                if (_send(cashoutMsg))
+                if (_send(motoPurchaseMsg))
                 {
                     CurrentTxFlowState.Sent($"Asked EFTPOS do MOTO for ${amountCents / 100.0:.00}");
                 }
@@ -814,12 +810,10 @@ namespace SPIClient
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
-                var settleRequest = new SettleRequest(RequestIdHelper.Id("settle"))
+                var settleMessage = new SettleRequest(RequestIdHelper.Id("settle"))
                 {
                     Config = Config
-                };
-
-                var settleMessage = settleRequest.ToMessage();
+                }.ToMessage();
 
                 CurrentFlow = SpiFlow.Transaction;
                 CurrentTxFlowState = new TransactionFlowState(
@@ -843,12 +837,10 @@ namespace SPIClient
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
-                var stlEnqRequest = new SettlementEnquiryRequest(RequestIdHelper.Id("stlenq"))
+                var stlEnqMsg = new SettlementEnquiryRequest(RequestIdHelper.Id("stlenq"))
                 {
                     Config = Config
-                };
-
-                var stlEnqMsg = stlEnqRequest.ToMessage();
+                }.ToMessage();
 
                 CurrentFlow = SpiFlow.Transaction;
                 CurrentTxFlowState = new TransactionFlowState(

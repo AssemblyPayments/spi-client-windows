@@ -27,7 +27,7 @@ namespace SPIClient
                 new JProperty("cash_amount", CashoutAmount),
                 new JProperty("surcharge_amount", SurchargeAmount)
                 );
-            Config.addReceiptConfig(data);
+            Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("cshout"), Events.CashoutOnlyRequest, data, true);
         }
     }

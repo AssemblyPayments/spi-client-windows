@@ -54,7 +54,7 @@ namespace SPIClient
                 new JProperty("surcharge_amount", SurchargeAmount)
 
                 );
-            Config.addReceiptConfig(data);
+            Config.AddReceiptConfig(data);
             Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("prchs"), Events.PurchaseRequest, data, true);
         }
@@ -450,7 +450,7 @@ namespace SPIClient
                 new JProperty("pos_ref_id", PosRefId),
                 new JProperty("suppress_merchant_password", IsSuppressMerchantPassword)
             );
-            Config.addReceiptConfig(data);
+            Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("refund"), Events.RefundRequest, data, true);
         }
     }
@@ -680,7 +680,7 @@ namespace SPIClient
                 new JProperty("surcharge_amount", SurchargeAmount),
                 new JProperty("suppress_merchant_password", IsSuppressMerchantPassword)
             );
-            Config.addReceiptConfig(data);
+            Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("moto"), Events.MotoPurchaseRequest, data, true);
         }
     }

@@ -250,7 +250,7 @@ namespace SPIClient
         /// The id of the last glt request message that was sent. used to match with the response.
         /// </summary>
         public string LastGltRequestId { get; internal set; }
-        
+
         /// <summary>
         /// Whether we're currently attempting to Cancel the transaction.
         /// </summary>
@@ -469,7 +469,7 @@ namespace SPIClient
         /// </summary>
         public bool PrintMerchantCopy { get; set; }
 
-        internal void addReceiptConfig(JObject messageData)
+        internal void AddReceiptConfig(JObject messageData)
         {
             if (PromptForCustomerCopyOnEftpos)
             {
