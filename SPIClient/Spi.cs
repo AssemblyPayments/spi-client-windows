@@ -1861,6 +1861,9 @@ namespace SPIClient
                 case Events.PayAtTableBillPayment:
                     _spiPat?._handleBillPaymentAdvice(m);
                     break;
+                case Events.PayAtTableGetOpenTables:
+                    _spiPat?._handleGetOpenTablesRequest(m);
+                    break;
                 case Events.PrintingResponse:
                     _handlePrintingResponse(m);
                     break;

@@ -75,6 +75,9 @@ namespace SPIClient
         public const string TerminalConfigurationResponse = "terminal_configuration";
 
         public const string BatteryLevelChanged = "battery_level_changed";
+
+        public const string PayAtTableGetOpenTables = "get_open_tables";
+        public const string PayAtTableOpenTables = "open_tables";
     }
 
     /// <summary>

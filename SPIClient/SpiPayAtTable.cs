@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Newtonsoft.Json.Linq;
 
 namespace SPIClient
 {
@@ -8,6 +7,8 @@ namespace SPIClient
     public delegate BillStatusResponse PayAtTableGetBillStatus(string billId, string tableId, string operatorId, bool paymentFlowStarted);
 
     public delegate BillStatusResponse PayAtTableBillPaymentReceived(BillPayment billPayment, string updatedBillData);
+
+    public delegate GetOpenTablesResponse PayAtTableGetOpenTables(string operatorId);
 
     /// <summary>
     /// These attributes work for COM interop.
@@ -35,6 +36,8 @@ namespace SPIClient
         public PayAtTableGetBillStatus GetBillStatus;
 
         public PayAtTableBillPaymentReceived BillPaymentReceived;
+
+        public PayAtTableGetOpenTables GetOpenTables;
 
         /// <summary>
         /// This default stucture works for COM interop.
@@ -142,6 +145,20 @@ namespace SPIClient
         internal void _handleGetTableConfig(Message m)
         {
             _spi._send(Config.ToMessage(m.Id));
+        }
+
+        internal void _handleGetOpenTablesRequest(Message m)
+        {
+            var operatorId = m.GetDataStringValue("operator_id");
+
+            // Ask POS for Bill Details for this tableId, inluding encoded PaymentData
+            var openTablesResponse = GetOpenTables(operatorId);
+            if (openTablesResponse.TableData.Length <= 0)
+            {
+                _log.Info("There is no open table.");
+            }
+
+            _spi._send(openTablesResponse.ToMessage(m.Id));
         }
 
         private static readonly log4net.ILog _log = log4net.LogManager.GetLogger("spipat");
