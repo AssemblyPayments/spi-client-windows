@@ -14,6 +14,7 @@ namespace SPIClient
     {
         private readonly Spi _spi;
         private readonly object _txLock;
+        public readonly SpiConfig Config = new SpiConfig();
 
         /// <summary>
         /// This default stucture works for COM interop.
@@ -28,7 +29,11 @@ namespace SPIClient
 
         public InitiateTxResult InitiateAccountVerifyTx(string posRefId)
         {
-            var verifyMsg = new AccountVerifyRequest(posRefId).ToMessage();
+            var verifyMsg = new AccountVerifyRequest(posRefId)
+            {
+                Config = Config
+            }.ToMessage();
+
             var tfs = new TransactionFlowState(
                 posRefId, TransactionType.AccountVerify, 0, verifyMsg,
                 $"Waiting for EFTPOS connection to make account verify request");
@@ -38,7 +43,11 @@ namespace SPIClient
 
         public InitiateTxResult InitiateOpenTx(string posRefId, int amountCents)
         {
-            var msg = new PreauthOpenRequest(amountCents, posRefId).ToMessage();
+            var msg = new PreauthOpenRequest(amountCents, posRefId)
+            {
+                Config = Config
+            }.ToMessage();
+
             var tfs = new TransactionFlowState(
                 posRefId, TransactionType.Preauth, amountCents, msg,
                 $"Waiting for EFTPOS connection to make preauth request for ${amountCents / 100.0:.00}");
@@ -48,7 +57,11 @@ namespace SPIClient
 
         public InitiateTxResult InitiateTopupTx(string posRefId, string preauthId, int amountCents)
         {
-            var msg = new PreauthTopupRequest(preauthId, amountCents, posRefId).ToMessage();
+            var msg = new PreauthTopupRequest(preauthId, amountCents, posRefId)
+            {
+                Config = Config
+            }.ToMessage();
+
             var tfs = new TransactionFlowState(
                 posRefId, TransactionType.Preauth, amountCents, msg,
                 $"Waiting for EFTPOS connection to make preauth topup request for ${amountCents / 100.0:.00}");
@@ -58,7 +71,11 @@ namespace SPIClient
 
         public InitiateTxResult InitiatePartialCancellationTx(string posRefId, string preauthId, int amountCents)
         {
-            var msg = new PreauthPartialCancellationRequest(preauthId, amountCents, posRefId).ToMessage();
+            var msg = new PreauthPartialCancellationRequest(preauthId, amountCents, posRefId)
+            {
+                Config = Config
+            }.ToMessage();
+
             var tfs = new TransactionFlowState(
                 posRefId, TransactionType.Preauth, amountCents, msg,
                 $"Waiting for EFTPOS connection to make preauth partial cancellation request for ${amountCents / 100.0:.00}");
@@ -68,7 +85,11 @@ namespace SPIClient
 
         public InitiateTxResult InitiateExtendTx(string posRefId, string preauthId)
         {
-            var msg = new PreauthExtendRequest(preauthId, posRefId).ToMessage();
+            var msg = new PreauthExtendRequest(preauthId, posRefId)
+            {
+                Config = Config
+            }.ToMessage();
+
             var tfs = new TransactionFlowState(
                 posRefId, TransactionType.Preauth, 0, msg,
                 $"Waiting for EFTPOS connection to make preauth Extend request");
@@ -76,9 +97,19 @@ namespace SPIClient
             return _initiatePreauthTx(tfs, sentMsg);
         }
 
+        public InitiateTxResult InitiateCompletionTx(string posRefId, string preauthId, int amountCents)
+        {
+            return InitiateCompletionTx(posRefId, preauthId, amountCents, 0);
+        }
+
         public InitiateTxResult InitiateCompletionTx(string posRefId, string preauthId, int amountCents, int surchargeAmount)
         {
-            var msg = new PreauthCompletionRequest(preauthId, amountCents, posRefId, surchargeAmount).ToMessage();
+            var msg = new PreauthCompletionRequest(preauthId, amountCents, posRefId)
+            {
+                Config = Config,
+                SurchargeAmount = surchargeAmount
+            }.ToMessage();
+
             var tfs = new TransactionFlowState(
                 posRefId, TransactionType.Preauth, amountCents, msg,
                 $"Waiting for EFTPOS connection to make preauth completion request for ${amountCents / 100.0:.00}");
@@ -88,7 +119,11 @@ namespace SPIClient
 
         public InitiateTxResult InitiateCancelTx(string posRefId, string preauthId)
         {
-            var msg = new PreauthCancelRequest(preauthId, posRefId).ToMessage();
+            var msg = new PreauthCancelRequest(preauthId, posRefId)
+            {
+                Config = Config
+            }.ToMessage();
+
             var tfs = new TransactionFlowState(
                 posRefId, TransactionType.Preauth, 0, msg,
                 $"Waiting for EFTPOS connection to make preauth cancellation request");

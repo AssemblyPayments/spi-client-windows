@@ -32,6 +32,8 @@ namespace SPIClient
     {
         public string PosRefId { get; }
 
+        internal SpiConfig Config = new SpiConfig();
+
         public AccountVerifyRequest(string posRefId)
         {
             PosRefId = posRefId;
@@ -42,7 +44,7 @@ namespace SPIClient
             var data = new JObject(
                 new JProperty("pos_ref_id", PosRefId)
             );
-
+            Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prav"), PreauthEvents.AccountVerifyRequest, data, true);
         }
     }
@@ -78,6 +80,8 @@ namespace SPIClient
         public string PosRefId { get; }
         public int PreauthAmount { get; }
 
+        internal SpiConfig Config = new SpiConfig();
+
         public PreauthOpenRequest(int amountCents, string posRefId)
         {
             PosRefId = posRefId;
@@ -90,7 +94,7 @@ namespace SPIClient
                 new JProperty("pos_ref_id", PosRefId),
                 new JProperty("preauth_amount", PreauthAmount)
             );
-
+            Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prac"), PreauthEvents.PreauthOpenRequest, data, true);
         }
     }
@@ -100,6 +104,8 @@ namespace SPIClient
         public string PreauthId { get; }
         public int TopupAmount { get; }
         public string PosRefId { get; }
+
+        internal SpiConfig Config = new SpiConfig();
 
         public PreauthTopupRequest(string preauthId, int topupAmountCents, string posRefId)
         {
@@ -115,7 +121,7 @@ namespace SPIClient
                 new JProperty("preauth_id", PreauthId),
                 new JProperty("topup_amount", TopupAmount)
             );
-
+            Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prtu"), PreauthEvents.PreauthTopupRequest, data, true);
         }
     }
@@ -125,6 +131,8 @@ namespace SPIClient
         public string PreauthId { get; }
         public int PartialCancellationAmount { get; }
         public string PosRefId { get; }
+
+        internal SpiConfig Config = new SpiConfig();
 
         public PreauthPartialCancellationRequest(string preauthId, int partialCancellationAmountCents, string posRefId)
         {
@@ -140,7 +148,7 @@ namespace SPIClient
                 new JProperty("preauth_id", PreauthId),
                 new JProperty("preauth_cancel_amount", PartialCancellationAmount)
             );
-
+            Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prpc"), PreauthEvents.PreauthPartialCancellationRequest, data, true);
         }
     }
@@ -149,6 +157,8 @@ namespace SPIClient
     {
         public string PreauthId { get; }
         public string PosRefId { get; }
+
+        internal SpiConfig Config = new SpiConfig();
 
         public PreauthExtendRequest(string preauthId, string posRefId)
         {
@@ -162,7 +172,7 @@ namespace SPIClient
                 new JProperty("pos_ref_id", PosRefId),
                 new JProperty("preauth_id", PreauthId)
             );
-
+            Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prext"), PreauthEvents.PreauthExtendRequest, data, true);
         }
     }
@@ -171,6 +181,8 @@ namespace SPIClient
     {
         public string PreauthId { get; }
         public string PosRefId { get; }
+
+        internal SpiConfig Config = new SpiConfig();
 
         public PreauthCancelRequest(string preauthId, string posRefId)
         {
@@ -184,7 +196,7 @@ namespace SPIClient
                 new JProperty("pos_ref_id", PosRefId),
                 new JProperty("preauth_id", PreauthId)
             );
-
+            Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prac"), PreauthEvents.PreauthCancellationRequest, data, true);
         }
     }
@@ -194,14 +206,15 @@ namespace SPIClient
         public string PreauthId { get; }
         public int CompletionAmount { get; }
         public string PosRefId { get; }
-        public int SurchargeAmount { get; }
+        public int SurchargeAmount { get; set; }
 
-        public PreauthCompletionRequest(string preauthId, int completionAmountCents, string posRefId, int surchargeAmount)
+        internal SpiConfig Config = new SpiConfig();
+
+        public PreauthCompletionRequest(string preauthId, int completionAmountCents, string posRefId)
         {
             PreauthId = preauthId;
             CompletionAmount = completionAmountCents;
             PosRefId = posRefId;
-            SurchargeAmount = surchargeAmount;
         }
 
         public Message ToMessage()
@@ -212,7 +225,7 @@ namespace SPIClient
                 new JProperty("completion_amount", CompletionAmount),
                 new JProperty("surcharge_amount", SurchargeAmount)
             );
-
+            Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prac"), PreauthEvents.PreauthCompleteRequest, data, true);
         }
     }
@@ -315,6 +328,16 @@ namespace SPIClient
                 default:
                     return 0;
             }
+        }
+
+        public bool WasMerchantReceiptPrinted()
+        {
+            return _m.GetDataBoolValue("merchant_receipt_printed", false);
+        }
+
+        public bool WasCustomerReceiptPrinted()
+        {
+            return _m.GetDataBoolValue("customer_receipt_printed", false);
         }
     }
 }

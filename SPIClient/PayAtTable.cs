@@ -39,6 +39,8 @@ namespace SPIClient
         /// </summary>
         public string TableId { get; set; }
 
+        public string OperatorId { get; set; }
+
         /// <summary>
         /// The Total Amount on this bill, in cents.
         /// </summary>
@@ -55,6 +57,8 @@ namespace SPIClient
         /// WHenever you're asked for BillDetails, make sure you return this piece of data if you have it.
         /// </summary>
         public string BillData { get; set; }
+
+        public bool PaymentFlowStarted { get; set; }
 
         internal List<PaymentHistoryEntry> getBillPaymentHistory()
         {
@@ -281,7 +285,7 @@ namespace SPIClient
         }
     }
 
-    internal class OpenTablesEntry
+    public class OpenTablesEntry
     {
         [JsonProperty("table_id")]
         public string TableId;
@@ -289,10 +293,36 @@ namespace SPIClient
         [JsonProperty("label")]
         public string Label;
 
-        [JsonProperty("outstanding_amount")]
-        public int OutstandingAmount;
+        [JsonProperty("bill_outstanding_amount")]
+        public int BillOutstandingAmount;
 
         [JsonConstructor()]
         public OpenTablesEntry() { }
+    }
+
+    public class BillPaymentFlowEndedResponse
+    {
+        public string BillId { get; }
+        public int BillOutstandingAmount { get; }
+        public int BillTotalAmount { get; }
+        public string TableId { get; }
+        public string OperatorId { get; }
+        public int CardTotalCount { get; }
+        public int CardTotalAmount { get; }
+        public int CashTotalCount { get; }
+        public int CashTotalAmount { get; }
+
+        public BillPaymentFlowEndedResponse(Message m)
+        {
+            BillId = m.GetDataStringValue("bill_id");
+            BillOutstandingAmount = m.GetDataIntValue("bill_outstanding_amount");
+            BillTotalAmount = m.GetDataIntValue("bill_total_amount");
+            OperatorId = m.GetDataStringValue("operator_id");
+            TableId = m.GetDataStringValue("table_id");
+            CardTotalCount = m.GetDataIntValue("card_total_count");
+            CardTotalAmount = m.GetDataIntValue("card_total_amount");
+            CashTotalCount = m.GetDataIntValue("cash_total_count");
+            CashTotalAmount = m.GetDataIntValue("cash_total_amount");
+        }
     }
 }

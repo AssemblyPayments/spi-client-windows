@@ -10,6 +10,8 @@ namespace SPIClient
 
     public delegate GetOpenTablesResponse PayAtTableGetOpenTables(string operatorId);
 
+    public delegate void PayAtTableBillPaymentFlowEnded(Message message);
+
     /// <summary>
     /// These attributes work for COM interop.
     /// </summary>
@@ -38,6 +40,8 @@ namespace SPIClient
         public PayAtTableBillPaymentReceived BillPaymentReceived;
 
         public PayAtTableGetOpenTables GetOpenTables;
+
+        public PayAtTableBillPaymentFlowEnded BillPaymentFlowEnded;
 
         /// <summary>
         /// This default stucture works for COM interop.
@@ -159,6 +163,11 @@ namespace SPIClient
             }
 
             _spi._send(openTablesResponse.ToMessage(m.Id));
+        }
+
+        internal void _handleBillPaymentFlowEnded(Message m)
+        {
+            BillPaymentFlowEnded(m);
         }
 
         private static readonly log4net.ILog _log = log4net.LogManager.GetLogger("spipat");
