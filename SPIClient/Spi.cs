@@ -810,16 +810,16 @@ namespace SPIClient
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
-                var settleMessage = new SettleRequest(RequestIdHelper.Id("settle"))
+                var settleMsg = new SettleRequest(RequestIdHelper.Id("settle"))
                 {
                     Config = Config
                 }.ToMessage();
 
                 CurrentFlow = SpiFlow.Transaction;
                 CurrentTxFlowState = new TransactionFlowState(
-                    posRefId, TransactionType.Settle, 0, settleMessage,
+                    posRefId, TransactionType.Settle, 0, settleMsg,
                     $"Waiting for EFTPOS connection to make a settle request");
-                if (_send(settleMessage))
+                if (_send(settleMsg))
                 {
                     CurrentTxFlowState.Sent($"Asked EFTPOS to settle.");
                 }
