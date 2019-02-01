@@ -509,7 +509,7 @@ namespace SPIClient
         /// <returns>InitiateTxResult</returns>
         public InitiateTxResult InitiatePurchaseTxV2(string posRefId, int purchaseAmount, int tipAmount, int cashoutAmount, bool promptForCashout)
         {
-            return InitiatePurchaseTxV2(posRefId, purchaseAmount, tipAmount, cashoutAmount, promptForCashout, null);
+            return InitiatePurchaseTxV2(posRefId, purchaseAmount, tipAmount, cashoutAmount, promptForCashout, new TransactionOptions());
         }
 
         /// <summary>

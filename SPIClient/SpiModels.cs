@@ -494,10 +494,10 @@ namespace SPIClient
 
     public class TransactionOptions
     {
-        private string _customerReceiptHeader;
-        private string _customerReceiptFooter;
-        private string _merchantReceiptHeader;
-        private string _merchantReceiptFooter;
+        private string _customerReceiptHeader = "";
+        private string _customerReceiptFooter = "";
+        private string _merchantReceiptHeader = "";
+        private string _merchantReceiptFooter = "";
 
         public void SetCustomerReceiptHeader(String customerReceiptHeader)
         {
