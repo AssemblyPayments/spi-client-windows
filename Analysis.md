@@ -28,8 +28,7 @@
 * Checkout the extension functions
 * Have a look at the Messages class how smooth it became
 
-
-
+* Example folder structure
 ![alt text](folderstructure.png "Sample folder structure")
 
 

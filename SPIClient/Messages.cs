@@ -231,11 +231,23 @@ namespace SPIClient
 
         public SuccessState GetSuccessState()
         {
-            if (Data == null) return SuccessState.Unknown;
-            JToken success = null;
-            var found = Data.TryGetValue("success", out success);
-            if (found) return (bool)success ? SuccessState.Success : SuccessState.Failed;
-            return SuccessState.Unknown;
+            // Even without extension function: This is cleaner
+            JToken successToken;
+            if (Data == null || !Data.TryGetValue("success", out successToken))
+            {
+                return SuccessState.Unknown;
+            }
+            else
+            {
+                return (bool)successToken ? SuccessState.Success : SuccessState.Failed;
+            }
+
+            //Original
+            //if (Data == null) return SuccessState.Unknown;
+            //JToken success = null;
+            //var found = Data.TryGetValue("success", out success);
+            //if (found) return (bool)success ? SuccessState.Success : SuccessState.Failed;
+            //return SuccessState.Unknown;
         }
 
         public string GetError()
