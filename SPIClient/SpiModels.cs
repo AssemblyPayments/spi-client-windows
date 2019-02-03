@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json.Linq;
+using Dict = System.Collections.Generic.Dictionary<string, object>;
 
 namespace SPIClient
 {
@@ -468,6 +470,42 @@ namespace SPIClient
         /// 
         /// </summary>
         public bool PrintMerchantCopy { get; set; }
+
+
+        internal Dict GetReceiptConfig()
+        {
+            // Thats more to show off, not necessary for three entries,
+            // Point is to split different parts of the BL into distinct parts. Here: 
+            // * lambda to check value,
+            // * then the filtering
+            Func<object, bool> isSet = (o) => ((bool?)o) != null && ((bool?)o).Value;
+
+            return new Dict
+            {
+                { "prompt_for_customer_copy", PromptForCustomerCopyOnEftpos},
+                { "print_for_signature_required_transactions", SignatureFlowOnEftpos},
+                { "print_merchant_copy", PrintMerchantCopy},
+            }
+            .Where(p => isSet(p))
+            .ToDictionary(p => p.Key, q => q.Value);
+        }
+        //internal void addReceiptConfig(JObject messageData)
+        //{
+        //    if (PromptForCustomerCopyOnEftpos)
+        //    {
+        //        messageData.Add("prompt_for_customer_copy", PromptForCustomerCopyOnEftpos);
+        //    }
+        //    if (SignatureFlowOnEftpos)
+        //    {
+        //        messageData.Add("print_for_signature_required_transactions", SignatureFlowOnEftpos);
+        //    }
+        //    if (PrintMerchantCopy)
+        //    {
+        //        messageData.Add("print_merchant_copy", PrintMerchantCopy);
+        //    }
+
+        //}
+
 
         internal void addReceiptConfig(JObject messageData)
         {

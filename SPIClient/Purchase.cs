@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json.Linq;
+using SPIClient.Helpers;
+using Dict = System.Collections.Generic.Dictionary<string, object>;
 
 namespace SPIClient
 {
@@ -25,12 +28,13 @@ namespace SPIClient
 
         internal TransactionOptions Options = new TransactionOptions();
 
+
+        [SuppressMessage("Microsoft.TODO??", "CS0618:??", Justification = "Library backwards Compatibility")]
         public PurchaseRequest(int amountCents, string posRefId)
         {
             PosRefId = posRefId;
             PurchaseAmount = amountCents;
 
-            // Library Backwards Compatibility
             Id = posRefId;
             AmountCents = amountCents;
         }
@@ -44,19 +48,20 @@ namespace SPIClient
 
         public Message ToMessage()
         {
-            var data = new JObject(
-                new JProperty("pos_ref_id", PosRefId),
+            var data = new Dict
+            {
+                { "pos_ref_id", PosRefId},
+                { "purchase_amount", PurchaseAmount},
+                { "tip_amount", TipAmount},
+                { "cash_amount", CashoutAmount},
+                { "prompt_for_cashout", PromptForCashout},
+                { "surcharge_amount", SurchargeAmount},
+            };
 
-                new JProperty("purchase_amount", PurchaseAmount),
-                new JProperty("tip_amount", TipAmount),
-                new JProperty("cash_amount", CashoutAmount),
-                new JProperty("prompt_for_cashout", PromptForCashout),
-                new JProperty("surcharge_amount", SurchargeAmount)
-
-                );
-            Config.addReceiptConfig(data);
-            Options.AddOptions(data);
-            return new Message(RequestIdHelper.Id("prchs"), Events.PurchaseRequest, data, true);
+            // Original lines do not add to Config/Options! This ist just plain wrong. I would not merge code like this.
+            data.AddRange(Config.GetReceiptConfig());
+            //Options.AddOptions(data);
+            return new Message(RequestIdHelper.Id("prchs"), Events.PurchaseRequest, data, true, dummyParameterForDifferentSignature: true);
         }
     }
 

@@ -84,6 +84,9 @@
     <Compile Include="Crypto.cs" />
     <Compile Include="Device.cs" />
     <Compile Include="DiffieHellman.cs" />
+    <Compile Include="Entities\IMessageable.cs" />
+    <Compile Include="Helpers\DictionaryExtension.cs" />
+    <Compile Include="Helpers\JObjectExtensions.cs" />
     <Compile Include="KeyRollingHelper.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="Pairing.cs" />

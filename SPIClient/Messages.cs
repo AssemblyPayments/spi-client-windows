@@ -2,9 +2,15 @@
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SPIClient.Helpers;
+using Dict = System.Collections.Generic.Dictionary<string, object>;
 
 namespace SPIClient
 {
+    // I would make this class the only one referencing Newtonsoft library
+
+    // How does the filename Messages correlate classes with name Events, MessageStamp, ... Rule of thumb: one class one file
+    // This are not events, this are names of events
     /// <summary>
     /// Events statically declares the various event names in messages.
     /// </summary>
@@ -203,6 +209,16 @@ namespace SPIClient
         public string DecryptedJson { get; private set; }
 
         [JsonConstructor]
+        public Message(string id, string eventName, Dict data, bool needsEncryption, bool dummyParameterForDifferentSignature )
+        {
+            // My advice: Get rid of ctor with JObject: public Message(string id, string eventName, JObject data, bool needsEncryption)
+            Id = id;
+            EventName = eventName;
+            Data = JObject.FromObject(data);
+            _needsEncryption = needsEncryption;
+        }
+
+        [JsonConstructor]
         public Message(string id, string eventName, JObject data, bool needsEncryption)
         {
             Id = id;
@@ -224,10 +240,7 @@ namespace SPIClient
 
         public string GetError()
         {
-            JToken e = null;
-            var found = Data.TryGetValue("error_reason", out e);
-            if (found) return (string)e;
-            return null;
+            return Data.GetValueOrDefault<string>("error_reason", null);
         }
 
         public string GetErrorDetail()
@@ -237,20 +250,12 @@ namespace SPIClient
 
         public string GetDataStringValue(string attribute)
         {
-            JToken v;
-            var found = Data.TryGetValue(attribute, out v);
-            if (found) return (string)v;
-            return "";
+            return Data.GetValueOrDefault(attribute, "");
         }
 
         public int GetDataIntValue(string attribute)
         {
-            JToken v;
-            var value = 0;
-
-            var found = Data.TryGetValue(attribute, out v);
-            var parse = v != null && int.TryParse(v.ToString(), out value);
-            return found ? value : 0;
+            return Data.GetValueOrDefault(attribute, 0);
         }
 
         public bool GetDataBoolValue(string attribute, bool defaultIfNotFound)
@@ -311,6 +316,7 @@ namespace SPIClient
 
         public string ToJson(MessageStamp stamp)
         {
+            // Violation separation of concerns; not unit testable -> Inject DateTime. Consider UTC time.
             var now = DateTime.Now;
             var adjustedTime = now.Add(stamp.ServerTimeDelta);
             DateTimeStamp = adjustedTime.ToString("yyyy-MM-ddTHH:mm:ss.fff");
