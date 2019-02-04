@@ -208,7 +208,8 @@ namespace SPIClient
         [JsonIgnore]
         public string DecryptedJson { get; private set; }
 
-        [JsonConstructor]
+        // Commented out for appveyor compliance: Requires single JsonConstructorAttribute
+        // [JsonConstructor]
         public Message(string id, string eventName, Dict data, bool needsEncryption, bool dummyParameterForDifferentSignature )
         {
             // My advice: Get rid of ctor with JObject: public Message(string id, string eventName, JObject data, bool needsEncryption)
