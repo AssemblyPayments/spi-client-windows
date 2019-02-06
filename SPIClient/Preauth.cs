@@ -32,8 +32,6 @@ namespace SPIClient
     {
         public string PosRefId { get; }
 
-        internal SpiConfig Config = new SpiConfig();
-
         public AccountVerifyRequest(string posRefId)
         {
             PosRefId = posRefId;
@@ -44,11 +42,6 @@ namespace SPIClient
             var data = new JObject(
                 new JProperty("pos_ref_id", PosRefId)
             );
-
-            Config.EnabledPrintMerchantCopy = true;
-            Config.EnabledPromptForCustomerCopyOnEftpos = true;
-            Config.EnabledSignatureFlowOnEftpos = true;
-            Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prav"), PreauthEvents.AccountVerifyRequest, data, true);
         }
     }

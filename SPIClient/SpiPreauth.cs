@@ -29,10 +29,7 @@ namespace SPIClient
 
         public InitiateTxResult InitiateAccountVerifyTx(string posRefId)
         {
-            var verifyMsg = new AccountVerifyRequest(posRefId)
-            {
-                Config = Config
-            }.ToMessage();
+            var verifyMsg = new AccountVerifyRequest(posRefId).ToMessage();
 
             var tfs = new TransactionFlowState(
                 posRefId, TransactionType.AccountVerify, 0, verifyMsg,
