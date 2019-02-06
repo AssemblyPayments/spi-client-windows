@@ -27,6 +27,10 @@ namespace SPIClient
                 new JProperty("cash_amount", CashoutAmount),
                 new JProperty("surcharge_amount", SurchargeAmount)
                 );
+
+            Config.EnabledPrintMerchantCopy = true;
+            Config.EnabledPromptForCustomerCopyOnEftpos = true;
+            Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("cshout"), Events.CashoutOnlyRequest, data, true);
         }

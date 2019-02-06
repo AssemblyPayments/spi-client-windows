@@ -44,6 +44,10 @@ namespace SPIClient
             var data = new JObject(
                 new JProperty("pos_ref_id", PosRefId)
             );
+
+            Config.EnabledPrintMerchantCopy = true;
+            Config.EnabledPromptForCustomerCopyOnEftpos = true;
+            Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prav"), PreauthEvents.AccountVerifyRequest, data, true);
         }
@@ -94,6 +98,10 @@ namespace SPIClient
                 new JProperty("pos_ref_id", PosRefId),
                 new JProperty("preauth_amount", PreauthAmount)
             );
+
+            Config.EnabledPrintMerchantCopy = true;
+            Config.EnabledPromptForCustomerCopyOnEftpos = true;
+            Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prac"), PreauthEvents.PreauthOpenRequest, data, true);
         }
@@ -121,6 +129,10 @@ namespace SPIClient
                 new JProperty("preauth_id", PreauthId),
                 new JProperty("topup_amount", TopupAmount)
             );
+
+            Config.EnabledPrintMerchantCopy = true;
+            Config.EnabledPromptForCustomerCopyOnEftpos = true;
+            Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prtu"), PreauthEvents.PreauthTopupRequest, data, true);
         }
@@ -148,6 +160,10 @@ namespace SPIClient
                 new JProperty("preauth_id", PreauthId),
                 new JProperty("preauth_cancel_amount", PartialCancellationAmount)
             );
+
+            Config.EnabledPrintMerchantCopy = true;
+            Config.EnabledPromptForCustomerCopyOnEftpos = true;
+            Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prpc"), PreauthEvents.PreauthPartialCancellationRequest, data, true);
         }
@@ -172,6 +188,10 @@ namespace SPIClient
                 new JProperty("pos_ref_id", PosRefId),
                 new JProperty("preauth_id", PreauthId)
             );
+
+            Config.EnabledPrintMerchantCopy = true;
+            Config.EnabledPromptForCustomerCopyOnEftpos = true;
+            Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prext"), PreauthEvents.PreauthExtendRequest, data, true);
         }
@@ -196,6 +216,10 @@ namespace SPIClient
                 new JProperty("pos_ref_id", PosRefId),
                 new JProperty("preauth_id", PreauthId)
             );
+
+            Config.EnabledPrintMerchantCopy = true;
+            Config.EnabledPromptForCustomerCopyOnEftpos = true;
+            Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prac"), PreauthEvents.PreauthCancellationRequest, data, true);
         }
@@ -225,6 +249,10 @@ namespace SPIClient
                 new JProperty("completion_amount", CompletionAmount),
                 new JProperty("surcharge_amount", SurchargeAmount)
             );
+
+            Config.EnabledPrintMerchantCopy = true;
+            Config.EnabledPromptForCustomerCopyOnEftpos = true;
+            Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
             return new Message(RequestIdHelper.Id("prac"), PreauthEvents.PreauthCompleteRequest, data, true);
         }

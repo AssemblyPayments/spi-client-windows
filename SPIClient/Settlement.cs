@@ -24,6 +24,10 @@ namespace SPIClient
         public Message ToMessage()
         {
             var data = new JObject();
+
+            Config.EnabledPrintMerchantCopy = true;
+            Config.EnabledPromptForCustomerCopyOnEftpos = false;
+            Config.EnabledSignatureFlowOnEftpos = false;
             Config.AddReceiptConfig(data);
 
             return new Message(Id, Events.SettleRequest, data, true);
@@ -187,6 +191,10 @@ namespace SPIClient
         public Message ToMessage()
         {
             var data = new JObject();
+
+            Config.EnabledPrintMerchantCopy = true;
+            Config.EnabledPromptForCustomerCopyOnEftpos = false;
+            Config.EnabledSignatureFlowOnEftpos = false;
             Config.AddReceiptConfig(data);
 
             return new Message(Id, Events.SettlementEnquiryRequest, data, true);
