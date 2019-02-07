@@ -232,7 +232,7 @@ namespace SPIClient
 
             var was = _serialNumber;
             _serialNumber = serialNumber;
-            if (_autoAddressResolutionEnabled && HasSerialNumberChanged(was))
+            if (HasSerialNumberChanged(was))
                 _autoResolveEftposAddress();
 
             return true;
@@ -249,7 +249,7 @@ namespace SPIClient
 
             var was = _autoAddressResolutionEnabled;
             _autoAddressResolutionEnabled = autoAddressResolutionEnable;
-            if (autoAddressResolutionEnable && !was)
+            if (!was)
             {
                 // we're turning it on
                 _autoResolveEftposAddress();
@@ -276,6 +276,7 @@ namespace SPIClient
             // we're changing mode
             _inTestMode = testMode;
             _autoResolveEftposAddress();
+
             return true;
         }
 
@@ -1895,9 +1896,12 @@ namespace SPIClient
         {
             if (!_autoAddressResolutionEnabled)
                 return;
-            
-            if (string.IsNullOrWhiteSpace(_serialNumber))
+
+            if (string.IsNullOrWhiteSpace(_serialNumber) || string.IsNullOrWhiteSpace(_deviceApiKey))
+            {
+                _log.Warn("Missing serialNumber and/or deviceApiKey. Need to set them before for Auto Address to work.");
                 return;
+            }
 
             var service = new DeviceAddressService();
             var addressResponse = await service.RetrieveService(_serialNumber, _deviceApiKey, _acquirerCode, _inTestMode);
