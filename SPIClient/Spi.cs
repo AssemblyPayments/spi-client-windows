@@ -249,7 +249,7 @@ namespace SPIClient
 
             var was = _autoAddressResolutionEnabled;
             _autoAddressResolutionEnabled = autoAddressResolutionEnable;
-            if (!was)
+            if (autoAddressResolutionEnable && !was)
             {
                 // we're turning it on
                 _autoResolveEftposAddress();
