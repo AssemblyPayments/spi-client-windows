@@ -58,8 +58,6 @@ namespace SPIClient
         /// </summary>
         public string BillData { get; set; }
 
-        public bool PaymentFlowStarted { get; set; }
-
         internal List<PaymentHistoryEntry> getBillPaymentHistory()
         {
             if (string.IsNullOrWhiteSpace(BillData))
