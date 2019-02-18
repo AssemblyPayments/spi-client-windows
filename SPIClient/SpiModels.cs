@@ -121,10 +121,8 @@ namespace SPIClient
         Settle,
         SettlementEnquiry,
         GetLastTransaction,
-
         Preauth,
         AccountVerify
-
     }
 
     /// <summary>
@@ -492,7 +490,6 @@ namespace SPIClient
             {
                 messageData.Add("print_merchant_copy", PrintMerchantCopy);
             }
-
         }
 
         public override string ToString()

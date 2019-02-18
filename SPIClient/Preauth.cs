@@ -79,6 +79,8 @@ namespace SPIClient
 
         internal SpiConfig Config = new SpiConfig();
 
+        internal TransactionOptions Options = new TransactionOptions();
+
         public PreauthOpenRequest(int amountCents, string posRefId)
         {
             PosRefId = posRefId;
@@ -96,6 +98,7 @@ namespace SPIClient
             Config.EnabledPromptForCustomerCopyOnEftpos = true;
             Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
+            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("prac"), PreauthEvents.PreauthOpenRequest, data, true);
         }
     }
@@ -107,6 +110,8 @@ namespace SPIClient
         public string PosRefId { get; }
 
         internal SpiConfig Config = new SpiConfig();
+
+        internal TransactionOptions Options = new TransactionOptions();
 
         public PreauthTopupRequest(string preauthId, int topupAmountCents, string posRefId)
         {
@@ -127,6 +132,7 @@ namespace SPIClient
             Config.EnabledPromptForCustomerCopyOnEftpos = true;
             Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
+            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("prtu"), PreauthEvents.PreauthTopupRequest, data, true);
         }
     }
@@ -138,6 +144,8 @@ namespace SPIClient
         public string PosRefId { get; }
 
         internal SpiConfig Config = new SpiConfig();
+
+        internal TransactionOptions Options = new TransactionOptions();
 
         public PreauthPartialCancellationRequest(string preauthId, int partialCancellationAmountCents, string posRefId)
         {
@@ -158,6 +166,7 @@ namespace SPIClient
             Config.EnabledPromptForCustomerCopyOnEftpos = true;
             Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
+            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("prpc"), PreauthEvents.PreauthPartialCancellationRequest, data, true);
         }
     }
@@ -168,6 +177,8 @@ namespace SPIClient
         public string PosRefId { get; }
 
         internal SpiConfig Config = new SpiConfig();
+
+        internal TransactionOptions Options = new TransactionOptions();
 
         public PreauthExtendRequest(string preauthId, string posRefId)
         {
@@ -186,6 +197,7 @@ namespace SPIClient
             Config.EnabledPromptForCustomerCopyOnEftpos = true;
             Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
+            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("prext"), PreauthEvents.PreauthExtendRequest, data, true);
         }
     }
@@ -196,6 +208,8 @@ namespace SPIClient
         public string PosRefId { get; }
 
         internal SpiConfig Config = new SpiConfig();
+
+        internal TransactionOptions Options = new TransactionOptions();
 
         public PreauthCancelRequest(string preauthId, string posRefId)
         {
@@ -214,6 +228,7 @@ namespace SPIClient
             Config.EnabledPromptForCustomerCopyOnEftpos = true;
             Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
+            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("prac"), PreauthEvents.PreauthCancellationRequest, data, true);
         }
     }
@@ -226,6 +241,8 @@ namespace SPIClient
         public int SurchargeAmount { get; set; }
 
         internal SpiConfig Config = new SpiConfig();
+
+        internal TransactionOptions Options = new TransactionOptions();
 
         public PreauthCompletionRequest(string preauthId, int completionAmountCents, string posRefId)
         {
@@ -247,6 +264,7 @@ namespace SPIClient
             Config.EnabledPromptForCustomerCopyOnEftpos = true;
             Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
+            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("prac"), PreauthEvents.PreauthCompleteRequest, data, true);
         }
     }

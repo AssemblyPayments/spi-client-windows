@@ -19,9 +19,9 @@
             return pr;
         }
 
-        public static RefundRequest CreateRefundRequest(int amountCents, string purchaseId, bool isSuppressMerchantPassword)
+        public static RefundRequest CreateRefundRequest(int amountCents, string purchaseId, bool suppressMerchantPassword)
         {
-            return new RefundRequest(amountCents, purchaseId, isSuppressMerchantPassword);
+            return new RefundRequest(amountCents, purchaseId, suppressMerchantPassword);
         }
 
     }

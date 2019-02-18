@@ -14,6 +14,8 @@ namespace SPIClient
 
         internal SpiConfig Config = new SpiConfig();
 
+        internal TransactionOptions Options = new TransactionOptions();
+
         public CashoutOnlyRequest(int amountCents, string posRefId)
         {
             PosRefId = posRefId;
@@ -32,6 +34,7 @@ namespace SPIClient
             Config.EnabledPromptForCustomerCopyOnEftpos = true;
             Config.EnabledSignatureFlowOnEftpos = true;
             Config.AddReceiptConfig(data);
+            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("cshout"), Events.CashoutOnlyRequest, data, true);
         }
     }

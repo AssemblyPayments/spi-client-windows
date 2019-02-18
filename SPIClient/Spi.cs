@@ -586,15 +586,29 @@ namespace SPIClient
         /// <param name="amountCents">Amount in Cents to charge</param>
         /// <param name="isSuppressMerchantPassword">Merchant Password control in VAA</param>
         /// <returns>InitiateTxResult</returns>
-        public InitiateTxResult InitiateRefundTx(string posRefId, int amountCents, bool isSuppressMerchantPassword)
+        public InitiateTxResult InitiateRefundTx(string posRefId, int amountCents, bool suppressMerchantPassword)
+        {
+            return InitiateRefundTx(posRefId, amountCents, suppressMerchantPassword, new TransactionOptions());
+        }
+
+        /// <summary>
+        /// Initiates a refund transaction. Be subscribed to TxFlowStateChanged event to get updates on the process.
+        /// </summary>
+        /// <param name="posRefId">Alphanumeric Identifier for your refund.</param>
+        /// <param name="amountCents">Amount in Cents to charge</param>
+        /// <param name="suppressMerchantPassword">Merchant Password control in VAA</param>
+        /// <param name="options">The Setting to set Header and Footer for the Receipt</param>
+        /// <returns>InitiateTxResult</returns>
+        public InitiateTxResult InitiateRefundTx(string posRefId, int amountCents, bool suppressMerchantPassword, TransactionOptions options)
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
-                var refundRequest = PurchaseHelper.CreateRefundRequest(amountCents, posRefId, isSuppressMerchantPassword);
+                var refundRequest = PurchaseHelper.CreateRefundRequest(amountCents, posRefId, suppressMerchantPassword);
                 refundRequest.Config = Config;
+                refundRequest.Options = options;
                 var refundMsg = refundRequest.ToMessage();
                 CurrentFlow = SpiFlow.Transaction;
                 CurrentTxFlowState = new TransactionFlowState(
@@ -717,6 +731,19 @@ namespace SPIClient
         /// <returns>InitiateTxResult</returns>
         public InitiateTxResult InitiateCashoutOnlyTx(string posRefId, int amountCents, int surchargeAmount)
         {
+            return InitiateCashoutOnlyTx(posRefId, amountCents, surchargeAmount, new TransactionOptions());
+        }
+
+        /// <summary>
+        /// Initiates a cashout only transaction. Be subscribed to TxFlowStateChanged event to get updates on the process.
+        /// </summary>
+        /// <param name="posRefId">Alphanumeric Identifier for your transaction.</param>
+        /// <param name="amountCents">Amount in Cents to cash out</param>
+        /// <param name="surchargeAmount">The Surcharge Amount in Cents</param>
+        /// <param name="options">The Setting to set Header and Footer for the Receipt</param>
+        /// <returns>InitiateTxResult</returns>
+        public InitiateTxResult InitiateCashoutOnlyTx(string posRefId, int amountCents, int surchargeAmount, TransactionOptions options)
+        {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
             lock (_txLock)
@@ -774,6 +801,20 @@ namespace SPIClient
         /// <returns>InitiateTxResult</returns>
         public InitiateTxResult InitiateMotoPurchaseTx(string posRefId, int amountCents, int surchargeAmount, bool isSuppressMerchantPassword)
         {
+            return InitiateMotoPurchaseTx(posRefId, amountCents, surchargeAmount, false);
+        }
+
+        /// <summary>
+        /// Initiates a Mail Order / Telephone Order Purchase Transaction
+        /// </summary>
+        /// <param name="posRefId">Alphanumeric Identifier for your transaction.</param>
+        /// <param name="amountCents">Amount in Cents</param>
+        /// <param name="surchargeAmount">The Surcharge Amount in Cents</param>
+        /// <param name="isSuppressMerchantPassword">>Merchant Password control in VAA</param>
+        /// <param name="options">The Setting to set Header and Footer for the Receipt</param>
+        /// <returns>InitiateTxResult</returns>
+        public InitiateTxResult InitiateMotoPurchaseTx(string posRefId, int amountCents, int surchargeAmount, bool suppressMerchantPassword, TransactionOptions options)
+        {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
             lock (_txLock)
@@ -782,8 +823,9 @@ namespace SPIClient
                 var motoPurchaseMsg = new MotoPurchaseRequest(amountCents, posRefId)
                 {
                     SurchargeAmount = surchargeAmount,
-                    IsSuppressMerchantPassword = isSuppressMerchantPassword,
-                    Config = Config
+                    SuppressMerchantPassword = suppressMerchantPassword,
+                    Config = Config,
+                    Options = options
                 }.ToMessage();
 
                 CurrentFlow = SpiFlow.Transaction;
@@ -805,6 +847,16 @@ namespace SPIClient
         /// </summary>
         public InitiateTxResult InitiateSettleTx(string posRefId)
         {
+            return InitiateSettleTx(posRefId, new TransactionOptions());
+        }
+
+        /// <summary>
+        /// Initiates a settlement transaction.
+        /// Be subscribed to TxFlowStateChanged event to get updates on the process.
+        /// <param name="options">The Setting to set Header and Footer for the Receipt</param>
+        /// </summary>
+        public InitiateTxResult InitiateSettleTx(string posRefId, TransactionOptions options)
+        {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
             lock (_txLock)
@@ -812,7 +864,8 @@ namespace SPIClient
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
                 var settleMsg = new SettleRequest(RequestIdHelper.Id("settle"))
                 {
-                    Config = Config
+                    Config = Config,
+                    Options = options
                 }.ToMessage();
 
                 CurrentFlow = SpiFlow.Transaction;
@@ -831,6 +884,14 @@ namespace SPIClient
         /// <summary>
         /// </summary>
         public InitiateTxResult InitiateSettlementEnquiry(string posRefId)
+        {
+            return InitiateSettlementEnquiry(posRefId, new TransactionOptions());
+        }
+
+        /// <summary>
+        /// <param name="options">The Setting to set Header and Footer for the Receipt</param>
+        /// </summary>
+        public InitiateTxResult InitiateSettlementEnquiry(string posRefId, TransactionOptions options)
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 

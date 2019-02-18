@@ -40,9 +40,15 @@ namespace SPIClient
 
         public InitiateTxResult InitiateOpenTx(string posRefId, int amountCents)
         {
+            return InitiateOpenTx(posRefId, amountCents, new TransactionOptions());
+        }
+
+        public InitiateTxResult InitiateOpenTx(string posRefId, int amountCents, TransactionOptions options)
+        {
             var msg = new PreauthOpenRequest(amountCents, posRefId)
             {
-                Config = Config
+                Config = Config,
+                Options = options
             }.ToMessage();
 
             var tfs = new TransactionFlowState(
@@ -54,9 +60,15 @@ namespace SPIClient
 
         public InitiateTxResult InitiateTopupTx(string posRefId, string preauthId, int amountCents)
         {
+            return InitiateTopupTx(posRefId, preauthId, amountCents, new TransactionOptions());
+        }
+
+        public InitiateTxResult InitiateTopupTx(string posRefId, string preauthId, int amountCents, TransactionOptions options)
+        {
             var msg = new PreauthTopupRequest(preauthId, amountCents, posRefId)
             {
-                Config = Config
+                Config = Config,
+                Options = options
             }.ToMessage();
 
             var tfs = new TransactionFlowState(
@@ -68,9 +80,15 @@ namespace SPIClient
 
         public InitiateTxResult InitiatePartialCancellationTx(string posRefId, string preauthId, int amountCents)
         {
+            return InitiatePartialCancellationTx(posRefId, preauthId, amountCents, new TransactionOptions());
+        }
+
+        public InitiateTxResult InitiatePartialCancellationTx(string posRefId, string preauthId, int amountCents, TransactionOptions options)
+        {
             var msg = new PreauthPartialCancellationRequest(preauthId, amountCents, posRefId)
             {
-                Config = Config
+                Config = Config,
+                Options = options
             }.ToMessage();
 
             var tfs = new TransactionFlowState(
@@ -82,9 +100,15 @@ namespace SPIClient
 
         public InitiateTxResult InitiateExtendTx(string posRefId, string preauthId)
         {
+            return InitiateExtendTx(posRefId, preauthId, new TransactionOptions());
+        }
+
+        public InitiateTxResult InitiateExtendTx(string posRefId, string preauthId, TransactionOptions options)
+        {
             var msg = new PreauthExtendRequest(preauthId, posRefId)
             {
-                Config = Config
+                Config = Config,
+                Options = options
             }.ToMessage();
 
             var tfs = new TransactionFlowState(
@@ -101,10 +125,16 @@ namespace SPIClient
 
         public InitiateTxResult InitiateCompletionTx(string posRefId, string preauthId, int amountCents, int surchargeAmount)
         {
+            return InitiateCompletionTx(posRefId, preauthId, amountCents, surchargeAmount, new TransactionOptions());
+        }
+
+        public InitiateTxResult InitiateCompletionTx(string posRefId, string preauthId, int amountCents, int surchargeAmount, TransactionOptions options)
+        {
             var msg = new PreauthCompletionRequest(preauthId, amountCents, posRefId)
             {
                 Config = Config,
-                SurchargeAmount = surchargeAmount
+                SurchargeAmount = surchargeAmount,
+                Options = options
             }.ToMessage();
 
             var tfs = new TransactionFlowState(
@@ -116,9 +146,15 @@ namespace SPIClient
 
         public InitiateTxResult InitiateCancelTx(string posRefId, string preauthId)
         {
+            return InitiateCancelTx(posRefId, preauthId, new TransactionOptions());
+        }
+
+        public InitiateTxResult InitiateCancelTx(string posRefId, string preauthId, TransactionOptions options)
+        {
             var msg = new PreauthCancelRequest(preauthId, posRefId)
             {
-                Config = Config
+                Config = Config,
+                Options = options
             }.ToMessage();
 
             var tfs = new TransactionFlowState(

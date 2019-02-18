@@ -16,6 +16,8 @@ namespace SPIClient
 
         internal SpiConfig Config = new SpiConfig();
 
+        internal TransactionOptions Options = new TransactionOptions();
+
         public SettleRequest(string id)
         {
             Id = id;
@@ -29,7 +31,7 @@ namespace SPIClient
             Config.EnabledPromptForCustomerCopyOnEftpos = false;
             Config.EnabledSignatureFlowOnEftpos = false;
             Config.AddReceiptConfig(data);
-
+            Options.AddOptions(data);
             return new Message(Id, Events.SettleRequest, data, true);
         }
     }
@@ -183,6 +185,8 @@ namespace SPIClient
 
         internal SpiConfig Config = new SpiConfig();
 
+        internal TransactionOptions Options = new TransactionOptions();
+
         public SettlementEnquiryRequest(string id)
         {
             Id = id;
@@ -196,7 +200,7 @@ namespace SPIClient
             Config.EnabledPromptForCustomerCopyOnEftpos = false;
             Config.EnabledSignatureFlowOnEftpos = false;
             Config.AddReceiptConfig(data);
-
+            Options.AddOptions(data);
             return new Message(Id, Events.SettlementEnquiryRequest, data, true);
         }
     }
