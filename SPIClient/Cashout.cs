@@ -14,8 +14,6 @@ namespace SPIClient
 
         internal SpiConfig Config = new SpiConfig();
 
-        internal TransactionOptions Options = new TransactionOptions();
-
         public CashoutOnlyRequest(int amountCents, string posRefId, int surchargeAmount)
         {
             PosRefId = posRefId;
@@ -31,7 +29,6 @@ namespace SPIClient
                 new JProperty("surcharge_amount", SurchargeAmount)
                 );
             Config.addReceiptConfig(data);
-            Options.AddOptions(data);
             return new Message(RequestIdHelper.Id("cshout"), Events.CashoutOnlyRequest, data, true);
         }
     }
