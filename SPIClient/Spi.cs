@@ -1449,7 +1449,7 @@ namespace SPIClient
         {
             lock (_txLock)
             {
-                PrintingResponse(m);
+                PrintingResponse?.Invoke(m);
             }
         }
 
@@ -1457,7 +1457,7 @@ namespace SPIClient
         {
             lock (_txLock)
             {
-                TerminalStatusResponse(m);
+                TerminalStatusResponse?.Invoke(m);
             }
         }
 
@@ -1465,7 +1465,7 @@ namespace SPIClient
         {
             lock (_txLock)
             {
-                TerminalConfigurationResponse(m);
+                TerminalConfigurationResponse?.Invoke(m);
             }
         }
 
@@ -1473,7 +1473,7 @@ namespace SPIClient
         {
             lock (_txLock)
             {
-                BatteryLevelChanged(m);
+                BatteryLevelChanged?.Invoke(m);
             }
         }
 

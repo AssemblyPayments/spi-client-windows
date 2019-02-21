@@ -76,6 +76,11 @@ namespace SPIClient
             return _initiatePreauthTx(tfs, sentMsg);
         }
 
+        public InitiateTxResult InitiateCompletionTx(string posRefId, string preauthId, int amountCents)
+        {
+            return InitiateCompletionTx(posRefId, preauthId, amountCents, 0);
+        }
+
         public InitiateTxResult InitiateCompletionTx(string posRefId, string preauthId, int amountCents, int surchargeAmount)
         {
             var msg = new PreauthCompletionRequest(preauthId, amountCents, posRefId, surchargeAmount).ToMessage();
