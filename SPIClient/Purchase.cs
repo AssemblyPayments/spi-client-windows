@@ -436,6 +436,8 @@ namespace SPIClient
 
         internal SpiConfig Config = new SpiConfig();
 
+        internal TransactionOptions Options = new TransactionOptions();
+
         [Obsolete("Id is deprecated. Use PosRefId instead.")]
         public string Id { get; }
 
