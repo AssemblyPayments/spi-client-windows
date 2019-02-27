@@ -752,6 +752,7 @@ namespace SPIClient
                 var cashoutMsg = new CashoutOnlyRequest(amountCents, posRefId)
                 {
                     SurchargeAmount = surchargeAmount,
+                    Options = options,
                     Config = Config
                 }.ToMessage();
 
@@ -799,9 +800,9 @@ namespace SPIClient
         /// <param name="surchargeAmount">The Surcharge Amount in Cents</param>
         /// <param name="isSuppressMerchantPassword">>Merchant Password control in VAA</param>
         /// <returns>InitiateTxResult</returns>
-        public InitiateTxResult InitiateMotoPurchaseTx(string posRefId, int amountCents, int surchargeAmount, bool isSuppressMerchantPassword)
+        public InitiateTxResult InitiateMotoPurchaseTx(string posRefId, int amountCents, int surchargeAmount, bool suppressMerchantPassword)
         {
-            return InitiateMotoPurchaseTx(posRefId, amountCents, surchargeAmount, false);
+            return InitiateMotoPurchaseTx(posRefId, amountCents, surchargeAmount, suppressMerchantPassword, new TransactionOptions());
         }
 
         /// <summary>
@@ -900,7 +901,8 @@ namespace SPIClient
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
                 var stlEnqMsg = new SettlementEnquiryRequest(RequestIdHelper.Id("stlenq"))
                 {
-                    Config = Config
+                    Config = Config,
+                    Options = options
                 }.ToMessage();
 
                 CurrentFlow = SpiFlow.Transaction;
