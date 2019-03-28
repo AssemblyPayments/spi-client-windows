@@ -49,8 +49,6 @@ namespace SPIClient
     /// <summary>
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("99DC8D6B-E7E3-4480-84EB-B0913F35B551")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class AccountVerifyResponse
     {
@@ -272,8 +270,6 @@ namespace SPIClient
     /// <summary>
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("CFF63B28-71BA-4891-9EF0-037896A08C1D")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class PreauthResponse
     {

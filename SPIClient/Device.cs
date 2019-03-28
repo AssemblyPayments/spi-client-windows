@@ -6,6 +6,6 @@ namespace SPIClient
     {
         public string DeviceAddress { get; set; }
 
-        public DeviceAddressChangedEventArgs() {}
+        public DeviceAddressChangedEventArgs() { }
     }
 }

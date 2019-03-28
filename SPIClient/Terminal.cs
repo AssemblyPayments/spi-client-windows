@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace SPIClient
@@ -18,10 +19,16 @@ namespace SPIClient
         }
     }
 
+    /// <summary>
+    /// These attributes work for COM interop.
+    /// </summary>
+    [ClassInterface(ClassInterfaceType.AutoDual)]
     public class TerminalStatusResponse
     {
         private bool _success;
         private Message _m;
+
+        public TerminalStatusResponse() { }
 
         public TerminalStatusResponse(Message m)
         {
@@ -50,9 +57,16 @@ namespace SPIClient
         }
     }
 
+    /// <summary>
+    /// These attributes work for COM interop.
+    /// </summary>
+
+    [ClassInterface(ClassInterfaceType.AutoDual)]
     public class TerminalBattery
     {
         public string BatteryLevel { get; }
+
+        public TerminalBattery() { }
 
         public TerminalBattery(Message m)
         {
@@ -72,10 +86,16 @@ namespace SPIClient
         }
     }
 
+    /// <summary>
+    /// These attributes work for COM interop.
+    /// </summary>
+    [ClassInterface(ClassInterfaceType.AutoDual)]
     public class TerminalConfigurationResponse
     {
         private bool _success;
         private Message _m;
+
+        public TerminalConfigurationResponse() { }
 
         public TerminalConfigurationResponse(Message m)
         {

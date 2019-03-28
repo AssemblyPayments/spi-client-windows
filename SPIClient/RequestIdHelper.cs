@@ -5,8 +5,6 @@
     /// <summary>
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("585C0CFB-0124-47EE-B566-A9DF211BFA32")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public static class RequestIdHelper
     {

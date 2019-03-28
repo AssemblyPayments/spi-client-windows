@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace SPIClient
 {
@@ -11,8 +11,6 @@ namespace SPIClient
     /// <summary>
     /// This class represents the BillDetails that the POS will be asked for throughout a PayAtTable flow.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("F3190296-2734-42FC-B534-27695295D2B0")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class BillStatusResponse
     {
@@ -124,8 +122,6 @@ namespace SPIClient
     /// <summary>
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("2CE8031B-EF7E-4C79-8F98-DD0451FA91EA")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class BillPayment
     {
@@ -192,8 +188,6 @@ namespace SPIClient
     /// <summary>
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("4AD0D23D-0C3C-4B3A-A3F7-55DD6F1089CC")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class PayAtTableConfig
     {
@@ -215,6 +209,8 @@ namespace SPIClient
 
         public string LabelTableId { get; set; }
 
+        public bool TableRetrievalEnabled { get; set; }
+
         // 
         /// <summary>
         /// Fill in with operator ids that the eftpos terminal will validate against. 
@@ -234,7 +230,8 @@ namespace SPIClient
                 new JProperty("pay_button_label", LabelPayButton),
                 new JProperty("operator_id_label", LabelOperatorId),
                 new JProperty("table_id_label", LabelTableId),
-                new JProperty("operator_id_list", AllowedOperatorIds)
+                new JProperty("operator_id_list", AllowedOperatorIds),
+                new JProperty("table_retrieval_enabled", TableRetrievalEnabled)
             );
 
             return new Message(messageId, Events.PayAtTableSetTableConfig, data, true);
@@ -254,6 +251,10 @@ namespace SPIClient
         public PayAtTableConfig() { }
     }
 
+    /// <summary>
+    /// These attributes work for COM interop.
+    /// </summary>
+    [ClassInterface(ClassInterfaceType.AutoDual)]
     public class GetOpenTablesResponse
     {
         /// <summary>
@@ -262,6 +263,8 @@ namespace SPIClient
         /// Whenever you're asked for OpenTables, make sure you return this piece of data if you have it.
         /// </summary>
         public string TableData { get; set; }
+
+        public GetOpenTablesResponse() { }
 
         internal List<OpenTablesEntry> GetOpenTables()
         {
@@ -283,6 +286,10 @@ namespace SPIClient
         }
     }
 
+    /// <summary>
+    /// These attributes work for COM interop.
+    /// </summary>
+    [ClassInterface(ClassInterfaceType.AutoDual)]
     public class OpenTablesEntry
     {
         [JsonProperty("table_id")]
@@ -298,6 +305,10 @@ namespace SPIClient
         public OpenTablesEntry() { }
     }
 
+    /// <summary>
+    /// These attributes work for COM interop.
+    /// </summary>
+    [ClassInterface(ClassInterfaceType.AutoDual)]
     public class BillPaymentFlowEndedResponse
     {
         public string BillId { get; }
@@ -309,6 +320,8 @@ namespace SPIClient
         public int CardTotalAmount { get; }
         public int CashTotalCount { get; }
         public int CashTotalAmount { get; }
+
+        public BillPaymentFlowEndedResponse() { }
 
         public BillPaymentFlowEndedResponse(Message m)
         {

@@ -42,8 +42,6 @@ namespace SPIClient
     /// <summary>
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("C9CED586-31DF-449B-BF13-69E1ACE9399F")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class CashoutOnlyResponse
     {

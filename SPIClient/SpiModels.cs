@@ -28,8 +28,6 @@ namespace SPIClient
     /// <summary>
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("D52C1A3E-5218-4845-AA26-07B40C98D1D6")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class SpiStatusEventArgs : EventArgs
     {
@@ -68,8 +66,6 @@ namespace SPIClient
     /// Represents the Pairing Flow State during the pairing process 
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("0A444143-BED1-466A-BD8D-E853316B420F")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class PairingFlowState : EventArgs
     {
@@ -130,8 +126,6 @@ namespace SPIClient
     /// the transaction was initiated or not, and a reason to go with it.
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("F6FB5459-D62E-4E81-8D8B-2EADA40AA673")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class InitiateTxResult
     {
@@ -164,9 +158,7 @@ namespace SPIClient
     /// whether the call was valid or not.
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("68C59568-6221-409E-8EF6-7A2B99B213FD")]
-    [ClassInterface(ClassInterfaceType.AutoDual)]
+     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class MidTxResult
     {
         /// <summary>
@@ -197,8 +189,6 @@ namespace SPIClient
     /// Represents the State during a TransactionFlow
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("4D05B90F-95C0-4458-B85A-ADEF9FEE9CC7")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class TransactionFlowState : EventArgs
     {
@@ -442,8 +432,6 @@ namespace SPIClient
     /// Represents the State during a TransactionFlow
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("C7F686FE-E437-4DDB-914D-364AC0386051")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class SpiConfig
     {
@@ -498,12 +486,19 @@ namespace SPIClient
         }
     }
 
+    /// <summary>
+    /// Represents the State during a TransactionFlow
+    /// These attributes work for COM interop.
+    /// </summary>
+    [ClassInterface(ClassInterfaceType.AutoDual)]
     public class TransactionOptions
     {
         private string _customerReceiptHeader = "";
         private string _customerReceiptFooter = "";
         private string _merchantReceiptHeader = "";
         private string _merchantReceiptFooter = "";
+
+        public TransactionOptions() { }
 
         public void SetCustomerReceiptHeader(String customerReceiptHeader)
         {

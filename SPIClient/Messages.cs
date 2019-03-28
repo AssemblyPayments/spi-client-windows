@@ -160,8 +160,6 @@ namespace SPIClient
     /// See http://www.simplepaymentapi.com/#/api/message-encryption
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("37434A4B-FE9B-4392-ADF5-7BF222C03B51")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class Message
     {

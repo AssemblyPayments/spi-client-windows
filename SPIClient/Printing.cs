@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace SPIClient
@@ -28,10 +29,16 @@ namespace SPIClient
         }
     }
 
+    /// <summary>
+    /// These attributes work for COM interop.
+    /// </summary>
+    [ClassInterface(ClassInterfaceType.AutoDual)]
     public class PrintingResponse
     {
         private bool _success;
         private Message _m;
+
+        public PrintingResponse() { }
 
         public PrintingResponse(Message m)
         {

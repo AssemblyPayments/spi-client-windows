@@ -15,8 +15,6 @@ namespace SPIClient
     /// <summary>
     /// These attributes work for COM interop.
     /// </summary>
-    [ComVisible(true)]
-    [Guid("9C77D435-D69D-4403-9DEA-9DCEAC66E450")]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class SpiPayAtTable
     {
@@ -63,7 +61,8 @@ namespace SPIClient
                 TippingEnabled = true,
                 LabelOperatorId = "Operator ID",
                 LabelPayButton = "Pay at Table",
-                LabelTableId = "Table Number"
+                LabelTableId = "Table Number",
+                TableRetrievalEnabled = true
             };
         }
 

@@ -1,9 +1,14 @@
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using RestSharp;
 using RestSharp.Deserializers;
 
 namespace SPIClient.Service
 {
+    /// <summary>
+    /// These attributes work for COM interop.
+    /// </summary>
+    [ClassInterface(ClassInterfaceType.AutoDual)]
     public class DeviceAddressStatus
     {
         [DeserializeAs(Name = "ip")]
