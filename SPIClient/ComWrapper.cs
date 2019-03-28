@@ -436,9 +436,7 @@ namespace SPIClient
     }
 
     public static class LogManagerWrapper
-    {
-        private static readonly string LOG_CONFIG_FILE = @"path\to\log4net.config";
-
+    { 
         public static ILog GetLogger(string type)
         {
             // If no loggers have been created, load our own.
@@ -451,8 +449,8 @@ namespace SPIClient
 
         private static void LoadConfig()
         {
-            //// TODO: Do exception handling for File access issues and supply sane defaults if it's unavailable.   
-            XmlConfigurator.ConfigureAndWatch(new FileInfo(LOG_CONFIG_FILE));
+            //// TODO: Do exception handling for File access issues and supply sane defaults if it's unavailable.
+            XmlConfigurator.ConfigureAndWatch(new FileInfo("SPIClient.dll.config"));
         }
     }
 
