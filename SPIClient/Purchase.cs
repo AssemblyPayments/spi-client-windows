@@ -335,7 +335,7 @@ namespace SPIClient
 
         public bool IsStillInProgress(string posRefId)
         {
-            return WasOperationInProgressError() && GetPosRefId().Equals(posRefId);
+            return WasOperationInProgressError() && (GetPosRefId().Equals(posRefId) || GetPosRefId() == null);
         }
 
         public Message.SuccessState GetSuccessState()
