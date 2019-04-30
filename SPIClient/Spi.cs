@@ -1465,7 +1465,6 @@ namespace SPIClient
                     else
                     {
                         // TH-4A - Let's try to match the received last transaction against the current transaction
-                        //var successState = GltMatch(gtlResponse, txState.PosRefId);
                         var successState = GltMatch(gtlResponse, txState.PosRefId, txState.AmountCents, txState.RequestTime);
                         if (successState == Message.SuccessState.Unknown)
                         {

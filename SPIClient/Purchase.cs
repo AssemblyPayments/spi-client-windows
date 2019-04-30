@@ -387,7 +387,6 @@ namespace SPIClient
             return _m.GetDataIntValue("amount_transaction_type");
         }
 
-        //[Obsolete("Should not need to look at this in a GLT Response")]
         public string GetBankDateTimeString()
         {
 
