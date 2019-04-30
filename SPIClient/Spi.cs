@@ -1022,7 +1022,7 @@ namespace SPIClient
                 return Message.SuccessState.Unknown;
             }
 
-            if (gltResponse.GetTxType() == "Purchase" && gltResponse.GetBankNonCashAmount() != expectedAmount && compare > 0)
+            if (gltResponse.GetTxType().ToUpper() == "PURCHASE" && gltResponse.GetBankNonCashAmount() != expectedAmount && compare > 0)
             {
                 return Message.SuccessState.Unknown;
             }
