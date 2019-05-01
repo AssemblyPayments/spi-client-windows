@@ -358,6 +358,11 @@ namespace SPIClient
             return _m.GetDataStringValue("pos_ref_id");
         }
 
+        public int GetBankNonCashAmount()
+        {
+            return _m.GetDataIntValue("bank_noncash_amount");
+        }
+
         [Obsolete("Should not need to look at this in a GLT Response")]
         public string GetSchemeApp()
         {
@@ -382,7 +387,6 @@ namespace SPIClient
             return _m.GetDataIntValue("amount_transaction_type");
         }
 
-        [Obsolete("Should not need to look at this in a GLT Response")]
         public string GetBankDateTimeString()
         {
 

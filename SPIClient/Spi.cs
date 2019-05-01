@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -1002,6 +1002,34 @@ namespace SPIClient
             return gltResponse.GetSuccessState();
         }
 
+        /// <summary>
+        /// See GltMatch. VSV-2277 This prevents issue with PosRefId associated with the wrong transaction
+        /// </summary>
+        /// <param name="gltResponse">The GetLastTransactionResponse message to check</param>
+        /// <param name="posRefId">The Reference Id that you passed in with the original request</param>
+        /// <param name="expectedAmount">The total amount in the original request</param>
+        /// <param name="requestTime">The request time</param>
+        /// <returns></returns>
+        public Message.SuccessState GltMatch(GetLastTransactionResponse gltResponse, string posRefId, int expectedAmount, DateTime requestTime)
+        {
+            _log.Info($"GLT CHECK: PosRefId: {posRefId}->{gltResponse.GetPosRefId()}");
+
+            var gltBankDateTime = DateTime.ParseExact(gltResponse.GetBankDateTimeString(), "ddMMyyyyHHmmss", System.Globalization.CultureInfo.InvariantCulture);
+            var compare = DateTime.Compare(requestTime, gltBankDateTime);
+
+            if (!posRefId.Equals(gltResponse.GetPosRefId()))
+            {
+                return Message.SuccessState.Unknown;
+            }
+
+            if (gltResponse.GetTxType().ToUpper() == "PURCHASE" && gltResponse.GetBankNonCashAmount() != expectedAmount && compare > 0)
+            {
+                return Message.SuccessState.Unknown;
+            }
+
+            return gltResponse.GetSuccessState();
+        }
+
         [Obsolete("Use GltMatch(GetLastTransactionResponse gltResponse, string posRefId, TransactionType expectedType)")]
         public Message.SuccessState GltMatch(GetLastTransactionResponse gltResponse, TransactionType expectedType, int expectedAmount, DateTime requestTime, string posRefId)
         {
@@ -1437,7 +1465,7 @@ namespace SPIClient
                     else
                     {
                         // TH-4A - Let's try to match the received last transaction against the current transaction
-                        var successState = GltMatch(gtlResponse, txState.PosRefId);
+                        var successState = GltMatch(gtlResponse, txState.PosRefId, txState.AmountCents, txState.RequestTime);
                         if (successState == Message.SuccessState.Unknown)
                         {
                             // TH-4N: Didn't Match our transaction. Consider Unknown State.
