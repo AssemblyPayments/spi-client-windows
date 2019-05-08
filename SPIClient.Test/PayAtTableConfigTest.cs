@@ -82,7 +82,7 @@ namespace Test
         }
 
         [Fact]
-        public void testSetLabelOperatorId()
+        public void TestSetLabelOperatorId()
         {
             PayAtTableConfig config = new PayAtTableConfig();
             config.LabelOperatorId = "12";
@@ -92,7 +92,7 @@ namespace Test
         }
 
         [Fact]
-        public void testSetLabelTableId()
+        public void TestSetLabelTableId()
         {
             PayAtTableConfig config = new PayAtTableConfig();
             config.LabelTableId = "12";
@@ -102,22 +102,24 @@ namespace Test
         }
 
         [Fact]
-        public void testSetAllowedOperatorIds()
+        public void TestSetAllowedOperatorIds()
         {
             PayAtTableConfig config = new PayAtTableConfig();
-            List<string> allowedStringList = new List<string>();
-            allowedStringList.Add("1");
-            allowedStringList.Add("2");
-            config.AllowedOperatorIds = allowedStringList;
+            List<string> allowedOperatorIdList = new List<string>();
+            allowedOperatorIdList.Add("1");
+            allowedOperatorIdList.Add("2");
+            config.AllowedOperatorIds = allowedOperatorIdList;
 
             Message msg = config.ToMessage("111");
-            JObject zipDataJson = JObject.Parse(msg.Data.GetValue("operator_id_list")).ToString().ToList<string>());
-            Assert.Equal(config.AllowedOperatorIds, );
+            //var operatorIdList = JObject.Parse(msg.Data.GetValue("operator_id_list").ToString());
+            JArray operatorIdArray = (JArray)msg.Data["operator_id_list"];
+            IList<string> operatorIdList = operatorIdArray.ToObject<IList<string>>();
+            Assert.Equal(config.AllowedOperatorIds, operatorIdList);
             Assert.Equal(config.AllowedOperatorIds.Count, 2);
         }
 
         [Fact]
-        public void testSetTableRetrievalEnabled()
+        public void TestSetTableRetrievalEnabled()
         {
             PayAtTableConfig config = new PayAtTableConfig();
             config.TableRetrievalEnabled = true;
