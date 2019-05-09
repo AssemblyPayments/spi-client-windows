@@ -129,11 +129,10 @@ namespace SPIClient
         public string TableId { get; }
         public string OperatorId { get; }
         public bool PaymentFlowStarted { get; }
-
         public PaymentType PaymentType { get; }
-
         public int PurchaseAmount { get; }
         public int TipAmount { get; }
+        public int SurchargeAmount { get; }
 
         public PurchaseResponse PurchaseResponse { get; }
 
@@ -160,6 +159,7 @@ namespace SPIClient
 
             PurchaseAmount = PurchaseResponse.GetPurchaseAmount();
             TipAmount = PurchaseResponse.GetTipAmount();
+            SurchargeAmount = PurchaseResponse.GetSurchargeAmount();
         }
     }
 
