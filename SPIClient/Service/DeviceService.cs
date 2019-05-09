@@ -16,6 +16,16 @@ namespace SPIClient.Service
 
         [DeserializeAs(Name = "last_udpated")]
         public string LastUpdated { get; set; }
+
+        public ResponseCode ResponseCode { get; set; }
+    }
+
+    public enum ResponseCode
+    {
+        SUCCESS,
+        ERROR,
+        ADDRESS_NOT_CHANGED,
+        SERIAL_NUMBER_NOT_CHANGED
     }
 
     public class DeviceAddressService

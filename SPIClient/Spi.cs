@@ -218,7 +218,14 @@ namespace SPIClient
             var was = _serialNumber;
             _serialNumber = serialNumber;
             if (HasSerialNumberChanged(was))
-                _autoResolveEftposAddress();
+            {
+                _autoResolveEftposAddress();                
+            }
+            else
+            {
+                CurrentDeviceStatus.ResponseCode = ResponseCode.SERIAL_NUMBER_NOT_CHANGED;
+                _deviceAddressChanged(this, CurrentDeviceStatus);
+            }
 
             return true;
         }
@@ -2017,10 +2024,24 @@ namespace SPIClient
             var addressResponse = await service.RetrieveService(_serialNumber, _deviceApiKey, _acquirerCode, _inTestMode);
 
             if (addressResponse?.Address == null)
+            {
+                CurrentDeviceStatus = new DeviceAddressStatus
+                {
+                    Address = null,
+                    LastUpdated = null,
+                    ResponseCode = ResponseCode.ERROR
+                };
+
+                _deviceAddressChanged(this, CurrentDeviceStatus);
                 return;
+            }
 
             if (!HasEftposAddressChanged(addressResponse.Address))
+            {
+                CurrentDeviceStatus.ResponseCode = ResponseCode.ADDRESS_NOT_CHANGED;
+                _deviceAddressChanged(this, CurrentDeviceStatus);
                 return;
+            }
 
             // update device and connection address
             _eftposAddress = "ws://" + addressResponse.Address;
@@ -2029,7 +2050,8 @@ namespace SPIClient
             CurrentDeviceStatus = new DeviceAddressStatus
             {
                 Address = addressResponse.Address,
-                LastUpdated = addressResponse.LastUpdated
+                LastUpdated = addressResponse.LastUpdated,
+                ResponseCode = ResponseCode.SUCCESS
             };
 
             _deviceAddressChanged(this, CurrentDeviceStatus);
