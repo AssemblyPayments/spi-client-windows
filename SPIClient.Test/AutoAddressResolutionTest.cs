@@ -14,7 +14,7 @@ namespace Test
         [Fact]
         public void TestSetSerialNumber()
         {
-            string serialnumber = "111-111-111";
+            string serialNumber = "111-111-111";
             Spi spi = new Spi("", "", "", null);
             SpiClientTestUtils.SetInstanceField(spi, "_currentStatus", SpiStatus.Unpaired);
             spi.SetSerialNumber(serialnumber);

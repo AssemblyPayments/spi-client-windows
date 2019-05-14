@@ -2033,8 +2033,6 @@ namespace SPIClient
             {
                 CurrentDeviceStatus = new DeviceAddressStatus
                 {
-                    Address = null,
-                    LastUpdated = null,
                     ResponseCode = ResponseCode.ERROR
                 };
 
