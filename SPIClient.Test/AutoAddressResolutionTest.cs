@@ -17,8 +17,8 @@ namespace Test
             string serialNumber = "111-111-111";
             Spi spi = new Spi("", "", "", null);
             SpiClientTestUtils.SetInstanceField(spi, "_currentStatus", SpiStatus.Unpaired);
-            spi.SetSerialNumber(serialnumber);
-            Assert.Equal(serialnumber, SpiClientTestUtils.GetInstanceField(typeof(Spi), spi, "_serialNumber"));
+            spi.SetSerialNumber(serialNumber);
+            Assert.Equal(serialNumber, SpiClientTestUtils.GetInstanceField(typeof(Spi), spi, "_serialNumber"));
         }
 
         [Fact]
