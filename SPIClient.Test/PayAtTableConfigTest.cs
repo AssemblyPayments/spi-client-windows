@@ -111,7 +111,6 @@ namespace Test
             config.AllowedOperatorIds = allowedOperatorIdList;
 
             Message msg = config.ToMessage("111");
-            //var operatorIdList = JObject.Parse(msg.Data.GetValue("operator_id_list").ToString());
             JArray operatorIdArray = (JArray)msg.Data["operator_id_list"];
             IList<string> operatorIdList = operatorIdArray.ToObject<IList<string>>();
             Assert.Equal(config.AllowedOperatorIds, operatorIdList);
