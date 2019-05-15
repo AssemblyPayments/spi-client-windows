@@ -7,7 +7,7 @@ using RestSharp;
 
 namespace SPIClient.Service
 {
-    public class HttpBaseService : IHttpBaseService
+    public class HttpBaseService
     {
         private static readonly ILog Log = LogManager.GetLogger("Http base service");
 
@@ -24,19 +24,21 @@ namespace SPIClient.Service
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         }
 
-        public async Task<T> SendRequest<T>(IRestRequest request) where T : new()
+        public async Task<IRestResponse<T>> SendRequest<T>(IRestRequest request) where T : new()
         {
             var cancellationTokenSource = new CancellationTokenSource(_timeOut);
             var response = await RestClient.ExecuteTaskAsync<T>(request, cancellationTokenSource.Token);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                Log.Error($"Status code {(int)response.StatusCode} received from {Url} - Exception {response.ErrorException}");
-                return default(T);
+                Log.Error($"Status code {(int)response.StatusCode} received from {Url} - Exception {response.ErrorException}");                
             }
-
-            Log.Info($"Response received from {Url} - {response.Content}");
-            return response.Data;
+            else
+            {
+                Log.Info($"Response received from {Url} - {response.Content}");
+            }
+            
+            return response;
         }
     }
 

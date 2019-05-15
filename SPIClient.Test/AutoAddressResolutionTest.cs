@@ -39,7 +39,7 @@ namespace Test
             string serialNumber = "111-111-111";
 
             DeviceAddressService deviceService = new DeviceAddressService();
-            DeviceAddressStatus addressResponse = await deviceService.RetrieveService(serialNumber, apiKey, acquirerCode, true);
+            var addressResponse = await deviceService.RetrieveService(serialNumber, apiKey, acquirerCode, true);
 
             Assert.Null(addressResponse);
         }
@@ -52,10 +52,10 @@ namespace Test
             string serialNumber = "321-404-842";//should be valid serial number
 
             DeviceAddressService deviceService = new DeviceAddressService();
-            DeviceAddressStatus addressResponse = await deviceService.RetrieveService(serialNumber, apiKey, acquirerCode, true);
+            var addressResponse = await deviceService.RetrieveService(serialNumber, apiKey, acquirerCode, true);
 
             Assert.NotNull(addressResponse);
-            Assert.NotNull(addressResponse.Address);
+            Assert.NotNull(addressResponse.Data.Address);
         }
     }
 }

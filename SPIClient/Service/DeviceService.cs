@@ -1,3 +1,4 @@
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using RestSharp;
@@ -18,21 +19,26 @@ namespace SPIClient.Service
         public string LastUpdated { get; set; }
 
         public ResponseCode ResponseCode { get; set; }
+
+        public string ResponseStatusDescription { get; set; }
+
+        public string ResponseMessage { get; set; }                
     }
 
     public enum ResponseCode
     {
         SUCCESS,
-        ERROR,
+        INVALID_SERIAL_NUMBER,
         ADDRESS_NOT_CHANGED,
-        SERIAL_NUMBER_NOT_CHANGED
+        SERIAL_NUMBER_NOT_CHANGED,
+        DEVICE_SERVICE_ERROR
     }
 
     public class DeviceAddressService
     {
         private const string ApiKeyHeader = "ASM-MSP-DEVICE-ADDRESS-API-KEY";
 
-        public async Task<DeviceAddressStatus> RetrieveService(string serialNumber, string apiKey, string acquirerCode, bool isTestMode)
+        public async Task<IRestResponse<DeviceAddressStatus>> RetrieveService(string serialNumber, string apiKey, string acquirerCode, bool isTestMode)
         {
             var deviceAddressUri = isTestMode ? $"https://device-address-api-sb.{acquirerCode}.msp.assemblypayments.com/v1/{serialNumber}/ip" : $"https://device-address-api.{acquirerCode}.msp.assemblypayments.com/v1/{serialNumber}/ip";
 
