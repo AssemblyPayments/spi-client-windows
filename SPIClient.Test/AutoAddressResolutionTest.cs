@@ -41,7 +41,8 @@ namespace Test
             DeviceAddressService deviceService = new DeviceAddressService();
             var addressResponse = await deviceService.RetrieveService(serialNumber, apiKey, acquirerCode, true);
 
-            Assert.Null(addressResponse);
+            Assert.NotNull(addressResponse);
+            Assert.Equal(addressResponse.StatusDescription, "Not Found");
         }
 
         [Fact]
