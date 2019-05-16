@@ -229,6 +229,11 @@ namespace SPIClient
             }
             else
             {
+                if (CurrentDeviceStatus == null)
+                {
+                    CurrentDeviceStatus = new DeviceAddressStatus();
+                }
+
                 CurrentDeviceStatus.ResponseCode = ResponseCode.SERIAL_NUMBER_NOT_CHANGED;
                 _deviceAddressChanged(this, CurrentDeviceStatus);
             }
