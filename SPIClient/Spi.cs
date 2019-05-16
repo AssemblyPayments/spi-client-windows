@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -234,7 +235,7 @@ namespace SPIClient
                     CurrentDeviceStatus = new DeviceAddressStatus();
                 }
 
-                CurrentDeviceStatus.ResponseCode = ResponseCode.SERIAL_NUMBER_NOT_CHANGED;
+                CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.SERIAL_NUMBER_NOT_CHANGED;
                 _deviceAddressChanged(this, CurrentDeviceStatus);
             }
 
@@ -2038,7 +2039,7 @@ namespace SPIClient
             {
                 CurrentDeviceStatus = new DeviceAddressStatus
                 {
-                    ResponseCode = ResponseCode.DEVICE_SERVICE_ERROR
+                    DeviceAddressResponseCode = DeviceAddressResponseCode.DEVICE_SERVICE_ERROR
                 };
 
                 _deviceAddressChanged(this, CurrentDeviceStatus);
@@ -2049,7 +2050,7 @@ namespace SPIClient
             {
                 CurrentDeviceStatus = new DeviceAddressStatus
                 {
-                    ResponseCode = ResponseCode.DEVICE_SERVICE_ERROR,
+                    DeviceAddressResponseCode = DeviceAddressResponseCode.DEVICE_SERVICE_ERROR,
                     ResponseStatusDescription = addressResponse.StatusDescription,
                     ResponseMessage = addressResponse.ErrorMessage
                 };
@@ -2060,12 +2061,25 @@ namespace SPIClient
 
             if (addressResponse.Data.Address == null)
             {
-                CurrentDeviceStatus = new DeviceAddressStatus
+                if (addressResponse.StatusCode == HttpStatusCode.NotFound)
                 {
-                    ResponseCode = ResponseCode.INVALID_SERIAL_NUMBER,
-                    ResponseStatusDescription = addressResponse.StatusDescription,
-                    ResponseMessage = addressResponse.ErrorMessage
-                };
+                    CurrentDeviceStatus = new DeviceAddressStatus
+                    {
+                        DeviceAddressResponseCode = DeviceAddressResponseCode.INVALID_SERIAL_NUMBER,
+                        ResponseStatusDescription = addressResponse.StatusDescription,
+                        ResponseMessage = addressResponse.ErrorMessage
+                    };
+                }
+                else
+                {
+                    CurrentDeviceStatus = new DeviceAddressStatus
+                    {
+                        DeviceAddressResponseCode = DeviceAddressResponseCode.DEVICE_SERVICE_ERROR,
+                        ResponseStatusDescription = addressResponse.StatusDescription,
+                        ResponseMessage = addressResponse.ErrorMessage
+                    };
+
+                }
 
                 _deviceAddressChanged(this, CurrentDeviceStatus);
                 return;
@@ -2073,7 +2087,7 @@ namespace SPIClient
 
             if (!HasEftposAddressChanged(addressResponse.Data.Address))
             {
-                CurrentDeviceStatus.ResponseCode = ResponseCode.ADDRESS_NOT_CHANGED;
+                CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.ADDRESS_NOT_CHANGED;
                 _deviceAddressChanged(this, CurrentDeviceStatus);
                 return;
             }
@@ -2086,7 +2100,7 @@ namespace SPIClient
             {
                 Address = addressResponse.Data.Address,
                 LastUpdated = addressResponse.Data.LastUpdated,
-                ResponseCode = ResponseCode.SUCCESS
+                DeviceAddressResponseCode = DeviceAddressResponseCode.SUCCESS
             };
 
             _deviceAddressChanged(this, CurrentDeviceStatus);

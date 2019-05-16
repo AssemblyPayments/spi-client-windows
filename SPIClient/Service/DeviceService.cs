@@ -18,14 +18,14 @@ namespace SPIClient.Service
         [DeserializeAs(Name = "last_udpated")]
         public string LastUpdated { get; set; }
 
-        public ResponseCode ResponseCode { get; set; }
+        public DeviceAddressResponseCode DeviceAddressResponseCode { get; set; }
 
         public string ResponseStatusDescription { get; set; }
 
         public string ResponseMessage { get; set; }                
     }
 
-    public enum ResponseCode
+    public enum DeviceAddressResponseCode
     {
         SUCCESS,
         INVALID_SERIAL_NUMBER,
