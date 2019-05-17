@@ -2036,26 +2036,41 @@ namespace SPIClient
             var addressResponse = await service.RetrieveService(_serialNumber, _deviceApiKey, _acquirerCode, _inTestMode);
 
             DeviceAddressStatus CurrentDeviceStatus = new DeviceAddressStatus();
-            
-            if (addressResponse?.Data?.Address == null)
+
+            if (addressResponse?.Data == null)
             {
-                CurrentDeviceStatus = new DeviceAddressStatus
+                CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.DEVICE_SERVICE_ERROR;
+                CurrentDeviceStatus.ResponseStatusDescription = addressResponse.StatusDescription;
+                CurrentDeviceStatus.ResponseMessage = addressResponse.ErrorMessage;
+
+                _deviceAddressChanged(this, CurrentDeviceStatus);
+                return;
+            }
+            else
+            {
+                if (addressResponse.Data.Address == null)
                 {
-                    DeviceAddressResponseCode = DeviceAddressResponseCode.DEVICE_SERVICE_ERROR,
-                };
+                    if (addressResponse.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.INVALID_SERIAL_NUMBER;
+                        CurrentDeviceStatus.ResponseStatusDescription = addressResponse.StatusDescription;
+                        CurrentDeviceStatus.ResponseMessage = addressResponse.ErrorMessage;
 
-                _deviceAddressChanged(this, CurrentDeviceStatus);
-                return;
-            }
-                       
-            if (addressResponse.StatusCode == HttpStatusCode.NotFound)
-            {
-                CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.INVALID_SERIAL_NUMBER;
+                        _deviceAddressChanged(this, CurrentDeviceStatus);
+                        return;
+                    }
+                    else
+                    {
+                        CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.DEVICE_SERVICE_ERROR;
+                        CurrentDeviceStatus.ResponseStatusDescription = addressResponse.StatusDescription;
+                        CurrentDeviceStatus.ResponseMessage = addressResponse.ErrorMessage;
 
-                _deviceAddressChanged(this, CurrentDeviceStatus);
-                return;
+                        _deviceAddressChanged(this, CurrentDeviceStatus);
+                        return;
+                    }
+                }
             }
-            
+
             if (!HasEftposAddressChanged(addressResponse.Data.Address))
             {
                 CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.ADDRESS_NOT_CHANGED;
