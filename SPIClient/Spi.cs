@@ -2037,7 +2037,17 @@ namespace SPIClient
 
             DeviceAddressStatus CurrentDeviceStatus = new DeviceAddressStatus();
 
-            if (addressResponse?.Data == null)
+            if (addressResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.INVALID_SERIAL_NUMBER;
+                CurrentDeviceStatus.ResponseStatusDescription = addressResponse.StatusDescription;
+                CurrentDeviceStatus.ResponseMessage = addressResponse.ErrorMessage;
+
+                _deviceAddressChanged(this, CurrentDeviceStatus);
+                return;
+            }
+
+            if (addressResponse?.Data?.Address == null)
             {
                 CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.DEVICE_SERVICE_ERROR;
                 CurrentDeviceStatus.ResponseStatusDescription = addressResponse.StatusDescription;
@@ -2045,30 +2055,6 @@ namespace SPIClient
 
                 _deviceAddressChanged(this, CurrentDeviceStatus);
                 return;
-            }
-            else
-            {
-                if (addressResponse.Data.Address == null)
-                {
-                    if (addressResponse.StatusCode == HttpStatusCode.NotFound)
-                    {
-                        CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.INVALID_SERIAL_NUMBER;
-                        CurrentDeviceStatus.ResponseStatusDescription = addressResponse.StatusDescription;
-                        CurrentDeviceStatus.ResponseMessage = addressResponse.ErrorMessage;
-
-                        _deviceAddressChanged(this, CurrentDeviceStatus);
-                        return;
-                    }
-                    else
-                    {
-                        CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.DEVICE_SERVICE_ERROR;
-                        CurrentDeviceStatus.ResponseStatusDescription = addressResponse.StatusDescription;
-                        CurrentDeviceStatus.ResponseMessage = addressResponse.ErrorMessage;
-
-                        _deviceAddressChanged(this, CurrentDeviceStatus);
-                        return;
-                    }
-                }
             }
 
             if (!HasEftposAddressChanged(addressResponse.Data.Address))
