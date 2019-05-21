@@ -2110,7 +2110,7 @@ namespace SPIClient
         private readonly TimeSpan _txMonitorCheckFrequency = TimeSpan.FromSeconds(1);
         private readonly TimeSpan _checkOnTxFrequency = TimeSpan.FromSeconds(20.0);
         private readonly TimeSpan _maxWaitForCancelTx = TimeSpan.FromSeconds(10.0);
-        private readonly int _sleepBeforeReconnectMs = 5000;
+        private readonly int _sleepBeforeReconnectMs = 3000;
         private readonly int _missedPongsToDisconnect = 2;
         private readonly int _retriesBeforeResolvingDeviceAddress = 5;
 

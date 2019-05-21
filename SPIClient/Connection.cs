@@ -85,7 +85,7 @@ namespace SPIClient
             new Thread(() =>
             {
                 Thread.CurrentThread.IsBackground = true;
-                Thread.Sleep(8000);
+                Thread.Sleep(4000);
                 if (State == ConnectionState.Connecting)
                 {
                     Disconnect();
