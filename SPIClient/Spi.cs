@@ -1449,8 +1449,8 @@ namespace SPIClient
                     else
                     {
                         // TH-4X - Unexpected Response when recovering
-                        _log.Info($"Unexpected Response in Get Last Transaction during - Received posRefId:{gtlResponse.GetPosRefId()} Error:{m.GetError()}");
-                        txState.UnknownCompleted("Unexpected Error when recovering Transaction Status. Check EFTPOS. ");
+                        _log.Info($"Unexpected Response in Get Last Transaction during - Received posRefId:{gtlResponse.GetPosRefId()} Error:{m.GetError()}. Ignoring.");
+                        return;
                     }
                 }
                 else
