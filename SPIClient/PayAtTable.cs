@@ -262,18 +262,29 @@ namespace SPIClient
         /// It is just a piece of string that you save against your operatorId.
         /// Whenever you're asked for OpenTables, make sure you return this piece of data if you have it.
         /// </summary>
-        public string TableData { get; set; }
+        public List<OpenTablesEntry> OpenTablesEntries { get; set; }
 
         public GetOpenTablesResponse() { }
 
+        internal static string ToOpenTablesData(List<OpenTablesEntry> ph)
+        {
+            if (ph.Count < 1)
+            {
+                return "";
+            }
+
+            var bphStr = JsonConvert.SerializeObject(ph);
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(bphStr));
+        }
+
         internal List<OpenTablesEntry> GetOpenTables()
         {
-            if (string.IsNullOrWhiteSpace(TableData))
+            if (OpenTablesEntries.Count == 0)
             {
                 return new List<OpenTablesEntry>();
             }
 
-            var bdArray = Convert.FromBase64String(TableData);
+            var bdArray = Convert.FromBase64String(ToOpenTablesData(OpenTablesEntries));
             var bdStr = Encoding.UTF8.GetString(bdArray);
             var jsonSerializerSettings = new JsonSerializerSettings() { DateParseHandling = DateParseHandling.None };
             return JsonConvert.DeserializeObject<List<OpenTablesEntry>>(bdStr, jsonSerializerSettings);
