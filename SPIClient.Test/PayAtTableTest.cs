@@ -8,7 +8,7 @@ namespace Test
     public class PayAtTableTest
     {
         [Fact]
-        public void TestHandleGetOpenTablesRequest()
+        public void TestGetOpenTablesResponse()
         {
             List<OpenTablesEntry> openTablesEntries = new List<OpenTablesEntry>();
             OpenTablesEntry openTablesEntry = new OpenTablesEntry();
