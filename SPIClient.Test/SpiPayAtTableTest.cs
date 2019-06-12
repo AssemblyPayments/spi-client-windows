@@ -4,12 +4,7 @@ using SPIClient;
 namespace Test
 {
     public class PatTest
-    {
-        private int Bla()
-        {
-            return 42;
-        }
-        
+    { 
         [Fact]
         public void TestBillSTatusResponseToMessage()
         {
