@@ -67,7 +67,7 @@ namespace SPIClient
             
             //Create a new socket instance specifying the url, SPI protocol and Websocket to use.
             //The will create a TCP/IP socket connection to the provided URL and perform HTTP websocket negotiation
-            _ws = new WebSocket(Address, "spi.2.5.0", WebSocketVersion.Rfc6455);
+            _ws = new WebSocket(Address, "spi.2.6.0", WebSocketVersion.Rfc6455);
 
             // Setup event handling
             _ws.Opened += _onOpened;
@@ -85,7 +85,7 @@ namespace SPIClient
             new Thread(() =>
             {
                 Thread.CurrentThread.IsBackground = true;
-                Thread.Sleep(8000);
+                Thread.Sleep(4000);
                 if (State == ConnectionState.Connecting)
                 {
                     Disconnect();

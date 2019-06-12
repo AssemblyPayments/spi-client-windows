@@ -49,21 +49,7 @@ namespace SPIClient
         internal SpiPayAtTable(Spi spi)
         {
             _spi = spi;
-
-            Config = new PayAtTableConfig
-            {
-                PayAtTabledEnabled = true,
-                OperatorIdEnabled = true,
-                AllowedOperatorIds = new List<string>(),
-                EqualSplitEnabled = true,
-                SplitByAmountEnabled = true,
-                SummaryReportEnabled = true,
-                TippingEnabled = true,
-                LabelOperatorId = "Operator ID",
-                LabelPayButton = "Pay at Table",
-                LabelTableId = "Table Number",
-                TableRetrievalEnabled = true
-            };
+            Config = new PayAtTableConfig();
         }
 
         public void PushPayAtTableConfig()
@@ -156,9 +142,18 @@ namespace SPIClient
 
             // Ask POS for Bill Details for this tableId, inluding encoded PaymentData
             var openTablesResponse = GetOpenTables(operatorId);
-            if (openTablesResponse.TableData.Length <= 0)
+            if (openTablesResponse.OpenTablesEntries.Count <= 0)
             {
                 _log.Info("There is no open table.");
+            }
+
+            foreach (var openTablesEntry in openTablesResponse.OpenTablesEntries)
+            {
+                if (openTablesEntry.TableId.Length > 20)
+                {
+                    _log.Warn(openTablesEntry.TableId + "Table Id is greater than 20 characters!");
+                    openTablesEntry.TableId = openTablesEntry.TableId.Substring(0, 20);
+                }
             }
 
             _spi._send(openTablesResponse.ToMessage(m.Id));

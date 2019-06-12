@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -156,13 +157,6 @@ namespace SPIClient
             return _spiPat;
         }
 
-        public SpiPayAtTable DisablePayAtTable()
-        {
-            _spiPat = new SpiPayAtTable(this);
-            _spiPat.Config.PayAtTabledEnabled = false;
-            return _spiPat;
-        }
-
         public SpiPreauth EnablePreauth()
         {
             _spiPreauth = new SpiPreauth(this, _txLock);
@@ -231,7 +225,19 @@ namespace SPIClient
             var was = _serialNumber;
             _serialNumber = serialNumber;
             if (HasSerialNumberChanged(was))
+            {
                 _autoResolveEftposAddress();
+            }
+            else
+            {
+                if (CurrentDeviceStatus == null)
+                {
+                    CurrentDeviceStatus = new DeviceAddressStatus();
+                }
+
+                CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.SERIAL_NUMBER_NOT_CHANGED;
+                _deviceAddressChanged(this, CurrentDeviceStatus);
+            }
 
             return true;
         }
@@ -1449,8 +1455,8 @@ namespace SPIClient
                     else
                     {
                         // TH-4X - Unexpected Response when recovering
-                        _log.Info($"Unexpected Response in Get Last Transaction during - Received posRefId:{gtlResponse.GetPosRefId()} Error:{m.GetError()}");
-                        txState.UnknownCompleted("Unexpected Error when recovering Transaction Status. Check EFTPOS. ");
+                        _log.Info($"Unexpected Response in Get Last Transaction during - Received posRefId:{gtlResponse.GetPosRefId()} Error:{m.GetError()}. Ignoring.");
+                        return;
                     }
                 }
                 else
@@ -2029,20 +2035,45 @@ namespace SPIClient
             var service = new DeviceAddressService();
             var addressResponse = await service.RetrieveService(_serialNumber, _deviceApiKey, _acquirerCode, _inTestMode);
 
-            if (addressResponse?.Address == null)
-                return;
+            DeviceAddressStatus CurrentDeviceStatus = new DeviceAddressStatus();
 
-            if (!HasEftposAddressChanged(addressResponse.Address))
+            if (addressResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.INVALID_SERIAL_NUMBER;
+                CurrentDeviceStatus.ResponseStatusDescription = addressResponse.StatusDescription;
+                CurrentDeviceStatus.ResponseMessage = addressResponse.ErrorMessage;
+
+                _deviceAddressChanged(this, CurrentDeviceStatus);
                 return;
+            }
+
+            if (addressResponse?.Data?.Address == null)
+            {
+                CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.DEVICE_SERVICE_ERROR;
+                CurrentDeviceStatus.ResponseStatusDescription = addressResponse.StatusDescription;
+                CurrentDeviceStatus.ResponseMessage = addressResponse.ErrorMessage;
+
+                _deviceAddressChanged(this, CurrentDeviceStatus);
+                return;
+            }
+
+            if (!HasEftposAddressChanged(addressResponse.Data.Address))
+            {
+                CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.ADDRESS_NOT_CHANGED;
+
+                _deviceAddressChanged(this, CurrentDeviceStatus);
+                return;
+            }
 
             // update device and connection address
-            _eftposAddress = "ws://" + addressResponse.Address;
+            _eftposAddress = "ws://" + addressResponse.Data.Address;
             _conn.Address = _eftposAddress;
 
             CurrentDeviceStatus = new DeviceAddressStatus
             {
-                Address = addressResponse.Address,
-                LastUpdated = addressResponse.LastUpdated
+                Address = addressResponse.Data.Address,
+                LastUpdated = addressResponse.Data.LastUpdated,
+                DeviceAddressResponseCode = DeviceAddressResponseCode.SUCCESS
             };
 
             _deviceAddressChanged(this, CurrentDeviceStatus);
@@ -2110,7 +2141,7 @@ namespace SPIClient
         private readonly TimeSpan _txMonitorCheckFrequency = TimeSpan.FromSeconds(1);
         private readonly TimeSpan _checkOnTxFrequency = TimeSpan.FromSeconds(20.0);
         private readonly TimeSpan _maxWaitForCancelTx = TimeSpan.FromSeconds(10.0);
-        private readonly int _sleepBeforeReconnectMs = 5000;
+        private readonly int _sleepBeforeReconnectMs = 3000;
         private readonly int _missedPongsToDisconnect = 2;
         private readonly int _retriesBeforeResolvingDeviceAddress = 5;
 

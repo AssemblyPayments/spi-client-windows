@@ -129,11 +129,10 @@ namespace SPIClient
         public string TableId { get; }
         public string OperatorId { get; }
         public bool PaymentFlowStarted { get; }
-
         public PaymentType PaymentType { get; }
-
         public int PurchaseAmount { get; }
         public int TipAmount { get; }
+        public int SurchargeAmount { get; }
 
         public PurchaseResponse PurchaseResponse { get; }
 
@@ -160,6 +159,7 @@ namespace SPIClient
 
             PurchaseAmount = PurchaseResponse.GetPurchaseAmount();
             TipAmount = PurchaseResponse.GetTipAmount();
+            SurchargeAmount = PurchaseResponse.GetSurchargeAmount();
         }
     }
 
@@ -191,7 +191,7 @@ namespace SPIClient
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class PayAtTableConfig
     {
-        public bool PayAtTabledEnabled { get; set; }
+        public bool PayAtTableEnabled { get; set; }
 
         public bool OperatorIdEnabled { get; set; }
 
@@ -221,7 +221,7 @@ namespace SPIClient
         public Message ToMessage(string messageId)
         {
             var data = new JObject(
-                new JProperty("pay_at_table_enabled", PayAtTabledEnabled),
+                new JProperty("pay_at_table_enabled", PayAtTableEnabled),
                 new JProperty("operator_id_enabled", OperatorIdEnabled),
                 new JProperty("split_by_amount_enabled", SplitByAmountEnabled),
                 new JProperty("equal_split_enabled", EqualSplitEnabled),
@@ -262,18 +262,29 @@ namespace SPIClient
         /// It is just a piece of string that you save against your operatorId.
         /// Whenever you're asked for OpenTables, make sure you return this piece of data if you have it.
         /// </summary>
-        public string TableData { get; set; }
+        public List<OpenTablesEntry> OpenTablesEntries { get; set; }
 
         public GetOpenTablesResponse() { }
 
+        internal static string ToOpenTablesData(List<OpenTablesEntry> ph)
+        {
+            if (ph.Count < 1)
+            {
+                return "";
+            }
+
+            var bphStr = JsonConvert.SerializeObject(ph);
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(bphStr));
+        }
+
         internal List<OpenTablesEntry> GetOpenTables()
         {
-            if (string.IsNullOrWhiteSpace(TableData))
+            if (OpenTablesEntries.Count == 0)
             {
                 return new List<OpenTablesEntry>();
             }
 
-            var bdArray = Convert.FromBase64String(TableData);
+            var bdArray = Convert.FromBase64String(ToOpenTablesData(OpenTablesEntries));
             var bdStr = Encoding.UTF8.GetString(bdArray);
             var jsonSerializerSettings = new JsonSerializerSettings() { DateParseHandling = DateParseHandling.None };
             return JsonConvert.DeserializeObject<List<OpenTablesEntry>>(bdStr, jsonSerializerSettings);
