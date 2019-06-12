@@ -129,11 +129,10 @@ namespace SPIClient
         public string TableId { get; }
         public string OperatorId { get; }
         public bool PaymentFlowStarted { get; }
-
         public PaymentType PaymentType { get; }
-
         public int PurchaseAmount { get; }
         public int TipAmount { get; }
+        public int SurchargeAmount { get; }
 
         public PurchaseResponse PurchaseResponse { get; }
 
@@ -160,6 +159,7 @@ namespace SPIClient
 
             PurchaseAmount = PurchaseResponse.GetPurchaseAmount();
             TipAmount = PurchaseResponse.GetTipAmount();
+            SurchargeAmount = PurchaseResponse.GetSurchargeAmount();
         }
     }
 
@@ -191,7 +191,7 @@ namespace SPIClient
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class PayAtTableConfig
     {
-        public bool PayAtTabledEnabled { get; set; }
+        public bool PayAtTableEnabled { get; set; }
 
         public bool OperatorIdEnabled { get; set; }
 
@@ -221,7 +221,7 @@ namespace SPIClient
         public Message ToMessage(string messageId)
         {
             var data = new JObject(
-                new JProperty("pay_at_table_enabled", PayAtTabledEnabled),
+                new JProperty("pay_at_table_enabled", PayAtTableEnabled),
                 new JProperty("operator_id_enabled", OperatorIdEnabled),
                 new JProperty("split_by_amount_enabled", SplitByAmountEnabled),
                 new JProperty("equal_split_enabled", EqualSplitEnabled),

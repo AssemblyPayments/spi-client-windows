@@ -49,21 +49,7 @@ namespace SPIClient
         internal SpiPayAtTable(Spi spi)
         {
             _spi = spi;
-
-            Config = new PayAtTableConfig
-            {
-                PayAtTabledEnabled = true,
-                OperatorIdEnabled = true,
-                AllowedOperatorIds = new List<string>(),
-                EqualSplitEnabled = true,
-                SplitByAmountEnabled = true,
-                SummaryReportEnabled = true,
-                TippingEnabled = true,
-                LabelOperatorId = "Operator ID",
-                LabelPayButton = "Pay at Table",
-                LabelTableId = "Table Number",
-                TableRetrievalEnabled = true
-            };
+            Config = new PayAtTableConfig();
         }
 
         public void PushPayAtTableConfig()

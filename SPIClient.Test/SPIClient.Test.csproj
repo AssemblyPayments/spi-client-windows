@@ -42,6 +42,7 @@
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
       <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="RestSharp, Version=100.0.0.0, Culture=neutral, PublicKeyToken=598062e77f915f75" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -61,13 +62,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AutoAddressResolutionTest.cs" />
     <Compile Include="DiffieHellmanTest.cs" />
     <Compile Include="KeyRollingTest.cs" />
     <Compile Include="MessagesTest.cs" />
     <Compile Include="PairingTest.cs" />
     <Compile Include="PayAtTableTest.cs" />
+    <Compile Include="PayAtTableConfigTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SettlementTest.cs" />
+    <Compile Include="SpiClientTestUtils.cs" />
     <Compile Include="SpiPayAtTableTest.cs" />
   </ItemGroup>
   <ItemGroup>
