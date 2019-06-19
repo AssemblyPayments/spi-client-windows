@@ -1,6 +1,6 @@
-﻿using System.Numerics;
+﻿using SPIClient;
+using System.Numerics;
 using Xunit;
-using SPIClient;
 
 namespace Test
 {
@@ -13,8 +13,8 @@ namespace Test
             Secrets secrets = null;
 
             // We've just received a message from the server
-            var incomingMessageJsonStr = incomingKeyRequestJson();
-            
+            var incomingMessageJsonStr = IncomingKeyRequestJson();
+
             // Let's parse it
             var incomingMessage = Message.FromJson(incomingMessageJsonStr, secrets);
 
@@ -36,8 +36,8 @@ namespace Test
             // Let's now prepare to send the key_response back to the server.
             var msgToSend = keyResponse.ToMessage();
             Assert.Equal("62", msgToSend.Id);
-            Assert.NotEmpty((string) msgToSend.Data["enc"]["B"]);
-            Assert.NotEmpty((string) msgToSend.Data["hmac"]["B"]);
+            Assert.NotEmpty((string)msgToSend.Data["enc"]["B"]);
+            Assert.NotEmpty((string)msgToSend.Data["hmac"]["B"]);
         }
 
         [Fact]
@@ -69,24 +69,80 @@ namespace Test
         [Fact]
         public void TestSecretConversion()
         {
-            
+
             var dhSecretBI = BigInteger.Parse("17574532284595554228770542578145458081719781058045063175688772743423924399411406200223997425795977226735712284391179978852253613346926080761628802664085045531796220784085311215093471160914442692274980632286568900367895454304533334450617380428362254473222831478193415222881689923861172428575632214297967550826460508634891791127942687630353829719246724903147169063379750256523005309264102997944008112551383251560153285483075803832550164760264165682355751637761390244202226339540318827287797180863284173748514677579269180126947721499144727772986832223499738071139796968492815538042908414723947769999062186130240163854083");
             var expectedSecret = "7D3895D92143692B46AEB66C66D7023C008093F2D8E272954898918DF12AAAD7";
             var calculatedSecret = PairingHelper.DHSecretToSPISecret(dhSecretBI);
             Assert.Equal(expectedSecret, calculatedSecret);
         }
-        
+
         [Fact]
         public void TestSecretConversion2()
         {
-            
+
             var dhSecretBI = BigInteger.Parse("17574532284595554228770542578145458081719781058045063175688772743423924399411406200223997425795977226735712284391179978852253613");
             var expectedSecret = "238A19795053605B1995E678C7785FB1E2137E6F49F13CCAFFAC0CB9773AF3B1";
             var calculatedSecret = PairingHelper.DHSecretToSPISecret(dhSecretBI);
             Assert.Equal(expectedSecret, calculatedSecret);
         }
 
-        private string incomingKeyRequestJson()
+        [Fact]
+        public void TestDropKeysRequest()
+        {
+            DropKeysRequest request = new DropKeysRequest();
+            Message msg = request.ToMessage();
+
+            Assert.Equal(msg.EventName, "drop_keys");
+        }
+
+        [Fact]
+        public void TestPairRequest()
+        {
+            PairRequest request = new PairRequest();
+            Message msg = request.ToMessage();
+
+            Assert.Equal(msg.EventName, "pair_request");
+        }
+
+        [Fact]
+        public void TestKeyCheck()
+        {
+            Secrets secrets = SpiClientTestUtils.SetTestSecrets("3DFC835E5A24C63F3DD04E0BCC54FDBB441339A4D26589D1558D2C10A18AEE4F", "F2AEAC7AA7776D7178F0AC4F0F6D4EF1B5F22630EA93C309620E44ABA5A82D32");
+
+            string keyResponseJsonStr = @"{""enc"":""6A45A1F6E746CCE3FA470BEAC479F79783C03331DE10A795A859F6D5564168C956557BCCD3EDA55BBEACF34916269537"",""hmac"":""75B56FE4978AC9A22B2D56DDF952983CE8BECE1B6CEC8A7EEEE6ABF9CA2CB471""}";
+
+            var msg = Message.FromJson(keyResponseJsonStr, secrets);
+
+            KeyCheck request = new KeyCheck(msg);
+
+            Assert.Equal(msg.EventName, "key_check");
+            Assert.Equal(request.ConfirmationCode, msg.IncomingHmac.Substring(0, 6));
+        }
+
+        [Fact]
+        public void TestNewPairRequest()
+        {
+            PairRequest pairRequest = PairingHelper.NewPairequest();
+
+            Assert.Equal(pairRequest.ToMessage().EventName, "pair_request");
+        }
+
+        [Fact]
+        public void TestPairResponse()
+        {
+            Secrets secrets = SpiClientTestUtils.SetTestSecrets();
+
+            string jsonStr = @"{""message"":{""data"":{""success"":true},""event"":""pair_response"",""id"":""pr1""}}";
+
+            Message msg = Message.FromJson(jsonStr, secrets);
+            PairResponse pairResponse = new PairResponse(msg);
+
+            Assert.True(pairResponse.Success);
+            Assert.Equal(msg.EventName, "pair_response");
+            Assert.Equal(msg.Id, "pr1");
+        }
+
+        private string IncomingKeyRequestJson()
         {
             return @"
                 {

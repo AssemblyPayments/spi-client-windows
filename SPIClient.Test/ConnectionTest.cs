@@ -1,5 +1,4 @@
-﻿using Moq;
-using SPIClient;
+﻿using SPIClient;
 using System;
 using System.Collections.Generic;
 using System.Threading;

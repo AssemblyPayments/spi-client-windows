@@ -82,20 +82,26 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CashoutTest.cs" />
+    <Compile Include="ComWrapperTest.cs" />
     <Compile Include="ConnectionTest.cs" />
     <Compile Include="AutoAddressResolutionTest.cs" />
     <Compile Include="DiffieHellmanTest.cs" />
     <Compile Include="KeyRollingTest.cs" />
     <Compile Include="MessagesTest.cs" />
     <Compile Include="PairingTest.cs" />
+    <Compile Include="PingHelperTest.cs" />
+    <Compile Include="PosInfoTest.cs" />
     <Compile Include="PreauthTest.cs" />
-    <Compile Include="PayAtTableTest.cs" />
+    <Compile Include="PrintingTest.cs" />
+    <Compile Include="SpiModelsTest.cs" />
+    <Compile Include="SpiPayAtTableTest.cs" />
     <Compile Include="PayAtTableConfigTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PurchaseTest.cs" />
     <Compile Include="SettlementTest.cs" />
     <Compile Include="SpiClientTestUtils.cs" />
-    <Compile Include="SpiPayAtTableTest.cs" />
+    <Compile Include="SpiTest.cs" />
+    <Compile Include="TerminalTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -1,10 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using SPIClient;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Test
@@ -125,6 +121,16 @@ namespace Test
 
             Message msg = config.ToMessage("111");
             Assert.Equal(config.TableRetrievalEnabled, msg.GetDataBoolValue("table_retrieval_enabled", false));
+        }
+
+        [Fact]
+        public void TestFeatureDisableMessage()
+        {
+            PayAtTableConfig config = new PayAtTableConfig();
+            Message msg = PayAtTableConfig.FeatureDisableMessage("111");
+
+            Assert.False(config.PayAtTableEnabled);
+            Assert.Equal(msg.EventName, "set_table_config");
         }
     }
 }

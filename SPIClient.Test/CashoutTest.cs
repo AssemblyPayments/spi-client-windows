@@ -73,6 +73,9 @@ namespace Test
             Assert.True(response.WasCustomerReceiptPrinted());
             Assert.True(response.WasMerchantReceiptPrinted());
             Assert.Equal(response.GetResponseValue("pos_ref_id"), response.PosRefId);
+
+            response = new CashoutOnlyResponse();
+            Assert.Null(response.PosRefId);
         }
     }
 }

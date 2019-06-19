@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using SPIClient;
+using SPIClient.Service;
 using System.Threading.Tasks;
 using Xunit;
-using SPIClient;
-using SPIClient.Service;
 
 namespace Test
 {
@@ -46,7 +42,7 @@ namespace Test
         }
 
         [Fact]
-        public async Task testAutoResolveEftposAddressWithValidSerialNumberAsync()
+        public async Task TestAutoResolveEftposAddressWithValidSerialNumberAsync()
         {
             string apiKey = "RamenPosDeviceAddressApiKey";
             string acquirerCode = "wbc";
@@ -57,6 +53,10 @@ namespace Test
 
             Assert.NotNull(addressResponse);
             Assert.NotNull(addressResponse.Data.Address);
+            Assert.Equal(addressResponse.Data.DeviceAddressResponseCode, DeviceAddressResponseCode.SUCCESS);
+            Assert.Null(addressResponse.Data.LastUpdated);
+            Assert.Null(addressResponse.Data.ResponseMessage);
+            Assert.Null(addressResponse.Data.ResponseStatusDescription);
         }
     }
 }

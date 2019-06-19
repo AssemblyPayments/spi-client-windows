@@ -19,6 +19,9 @@ namespace Test
             Assert.Equal(msg.EventName, "purchase");
             Assert.Equal(purchaseAmount, msg.GetDataIntValue("purchase_amount"));
             Assert.Equal(posRefId, msg.GetDataStringValue("pos_ref_id"));
+            Assert.Equal(request.AmountCents, purchaseAmount);
+            Assert.NotNull(request.Id);
+            Assert.Equal(request.AmountSummary(), "Purchase: $10.00; Tip: $.00; Cashout: $.00;");
         }
 
         [Fact]
@@ -143,6 +146,10 @@ namespace Test
             Assert.False(response.WasMerchantReceiptPrinted());
             Assert.Equal(response.GetSettlementDate(), DateTime.ParseExact(msg.GetDataStringValue("bank_settlement_date"), "ddMMyyyy", CultureInfo.InvariantCulture).Date);
             Assert.Equal(response.GetResponseValue("pos_ref_id"), response.PosRefId);
+
+            response = new PurchaseResponse();
+            Assert.Null(SpiClientTestUtils.GetInstanceField(response.GetType(), response, "_m"));
+            Assert.Null(response.PosRefId);
         }
 
         [Fact]
@@ -171,6 +178,11 @@ namespace Test
             Assert.Equal(response.GetErrorReason(), "txn_past_point_of_no_return");
             Assert.NotNull(response.GetErrorDetail());
             Assert.Equal(response.GetResponseValueWithAttribute("pos_ref_id"), response.PosRefId);
+
+
+            response = new CancelTransactionResponse();
+            Assert.Null(SpiClientTestUtils.GetInstanceField(response.GetType(), response, "_m"));
+            Assert.Null(response.PosRefId);
         }
 
         [Fact]
@@ -188,22 +200,32 @@ namespace Test
         {
             Secrets secrets = SpiClientTestUtils.SetTestSecrets();
 
-            string jsonStr = @"{""message"":{""data"":{""account_type"":""NOT-SET"",""bank_date"":""07062019"",""bank_settlement_date"":""06062019"",""bank_time"":""143821"",""card_entry"":""NOT-SET"",""error_detail"":""see 'host_response_text' for details"",""error_reason"":""HOST_DECLINED"",""host_response_code"":""511"",""host_response_text"":""TRANS CANCELLED"",""pos_ref_id"":""prchs-07-06-2019-14-38-20"",""rrn"":""190606000000"",""scheme_name"":""TOTAL"",""stan"":""000000"",""success"":false,""terminal_ref_id"":""12348842_07062019144136""},""datetime"":""2019-06-07T14:41:36.857"",""event"":""last_transaction"",""id"":""glt18""}}";
+            string jsonStr = @"{""message"":{""data"":{""account_type"":""CREDIT"",""auth_code"":""139059"",""bank_date"":""14062019"",""bank_noncash_amount"":1000,""bank_settlement_date"":""14062019"",""bank_time"":""153747"",""card_entry"":""EMV_CTLS"",""currency"":""AUD"",""customer_receipt"":"""",""customer_receipt_printed"":false,""emv_actioncode"":""ARP"",""emv_actioncode_values"":""9BDDE227547B41F43030"",""emv_pix"":""1010"",""emv_rid"":""A000000003"",""emv_tsi"":""0000"",""emv_tvr"":""0000000000"",""expiry_date"":""1122"",""host_response_code"":""000"",""host_response_text"":""APPROVED"",""informative_text"":""                "",""masked_pan"":""............3952"",""merchant_acquirer"":""EFTPOS FROM BANK SA"",""merchant_addr"":""213 Miller Street"",""merchant_city"":""Sydney"",""merchant_country"":""Australia"",""merchant_id"":""22341842"",""merchant_name"":""Merchant4"",""merchant_postcode"":""2060"",""merchant_receipt"":""EFTPOS FROM BANK SA\r\nMerchant4\r\n213 Miller Street\r\nSydney 2060\r\nAustralia\r\n\r\nTIME 14JUN19   15:37\r\nMID         22341842\r\nTSP     100612348842\r\nRRN     190614001137\r\nVisa Credit     \r\nVisa(C)           CR\r\nCARD............3952\r\nAID   A0000000031010\r\nTVR       0000000000\r\nAUTH          139059\r\n\r\nPURCHASE    AUD10.00\r\n\r\n   (000) APPROVED\r\n\r\n*DUPLICATE  RECEIPT*\r\n\r\n\r\n\r\n\r\n\r\n\r\n"",""merchant_receipt_printed"":false,""online_indicator"":""Y"",""pos_ref_id"":""prchs-14-06-2019-15-37-49"",""purchase_amount"":1000,""rrn"":""190614001137"",""scheme_app_name"":""Visa Credit"",""scheme_name"":""Visa"",""stan"":""001137"",""success"":true,""terminal_id"":""100612348842"",""terminal_ref_id"":""12348842_14062019153831"",""transaction_type"":""PURCHASE""},""datetime"":""2019-06-14T15:38:31.620"",""event"":""last_transaction"",""id"":""glt10""}}";
 
             Message msg = Message.FromJson(jsonStr, secrets);
             GetLastTransactionResponse response = new GetLastTransactionResponse(msg);
 
             Assert.Equal(msg.EventName, "last_transaction");
             Assert.True(response.WasRetrievedSuccessfully());
-            Assert.Equal(response.GetSuccessState(), Message.SuccessState.Failed);
-            Assert.False(response.WasSuccessfulTx());
-            Assert.Equal(response.GetPosRefId(), "prchs-07-06-2019-14-38-20");
-            Assert.Equal(response.GetBankNonCashAmount(), 0);
-            Assert.Equal(response.GetSchemeName(), "TOTAL");
-            Assert.Equal(response.GetBankDateTimeString(), "07062019143821");
-            Assert.Equal(response.GetRRN(), "190606000000");
-            Assert.Equal(response.GetResponseText(), "TRANS CANCELLED");
-            Assert.Equal(response.GetResponseCode(), "511");
+            Assert.Equal(response.GetSuccessState(), Message.SuccessState.Success);
+            Assert.True(response.WasSuccessfulTx());
+            Assert.Equal(response.GetTxType(), "PURCHASE");
+            Assert.Equal(response.GetPosRefId(), "prchs-14-06-2019-15-37-49");
+            Assert.Equal(response.GetBankNonCashAmount(), 1000);
+            Assert.Equal(response.GetSchemeName(), "Visa");
+            Assert.Equal(response.GetSchemeApp(), "Visa");
+            Assert.Equal(response.GetAmount(), 0);
+            Assert.Equal(response.GetTransactionAmount(), 0);
+            Assert.Equal(response.GetBankDateTimeString(), "14062019153747");
+            Assert.Equal(response.GetRRN(), "190614001137");
+            Assert.Equal(response.GetResponseText(), "APPROVED");
+            Assert.Equal(response.GetResponseCode(), "000");
+
+            response.CopyMerchantReceiptToCustomerReceipt();
+            Assert.Equal(msg.GetDataStringValue("customer_receipt"), msg.GetDataStringValue("merchant_receipt"));
+
+            response = new GetLastTransactionResponse();
+            Assert.Null(SpiClientTestUtils.GetInstanceField(response.GetType(), response, "_m"));
         }
 
         [Fact]
@@ -217,6 +239,7 @@ namespace Test
             GetLastTransactionResponse response = new GetLastTransactionResponse(msg);
 
             Assert.Equal(msg.EventName, "last_transaction");
+            Assert.Equal(msg.GetErrorDetail(), "see 'host_response_text' for details");
             Assert.True(response.WasTimeOutOfSyncError());
             Assert.True(response.WasRetrievedSuccessfully());
             Assert.Equal(response.GetSuccessState(), Message.SuccessState.Failed);
@@ -340,6 +363,7 @@ namespace Test
             Assert.Equal(refundAmount, msg.GetDataIntValue("refund_amount"));
             Assert.Equal(posRefId, msg.GetDataStringValue("pos_ref_id"));
             Assert.Equal(suppressMerchantPassword, msg.GetDataBoolValue("suppress_merchant_password", false));
+            Assert.NotNull(request.Id);
         }
 
         [Fact]
@@ -420,6 +444,7 @@ namespace Test
             Assert.Equal(response.RequestId, "refund150");
             Assert.Equal(response.PosRefId, "rfnd-06-06-2019-11-49-05");
             Assert.Equal(response.SchemeName, "Visa");
+            Assert.Equal(response.SchemeAppName, "Visa");
             Assert.Equal(response.GetRRN(), "190606001105");
             Assert.Equal(response.GetRefundAmount(), 1000);
             Assert.NotNull(response.GetCustomerReceipt());
@@ -438,6 +463,10 @@ namespace Test
             Assert.False(response.WasMerchantReceiptPrinted());
             Assert.Equal(response.GetSettlementDate(), DateTime.ParseExact(msg.GetDataStringValue("bank_settlement_date"), "ddMMyyyy", CultureInfo.InvariantCulture).Date);
             Assert.Equal(response.GetResponseValue("pos_ref_id"), response.PosRefId);
+
+            response = new RefundResponse();
+            Assert.Null(SpiClientTestUtils.GetInstanceField(response.GetType(), response, "_m"));
+            Assert.Null(response.PosRefId);
         }
 
         [Fact]
@@ -603,6 +632,10 @@ namespace Test
             Assert.False(response.PurchaseResponse.WasCustomerReceiptPrinted());
             Assert.False(response.PurchaseResponse.WasMerchantReceiptPrinted());
             Assert.Equal(response.PurchaseResponse.GetResponseValue("pos_ref_id"), response.PosRefId);
+
+            response = new MotoPurchaseResponse();
+            Assert.Null(response.PurchaseResponse);
+            Assert.Null(response.PurchaseResponse?.PosRefId);
         }
 
         [Fact]
