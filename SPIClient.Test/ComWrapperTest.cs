@@ -10,10 +10,6 @@ namespace Test
 {
     public class ComWrapperTest
     {
-        private void OnTxFlowStateChanged()
-        {
-        }
-
         [Fact]
         public void TestGetOpenTablesCom()
         {

@@ -11,14 +11,10 @@ namespace Test
             string posRefId = "123";
             int amountCents = 1000;
 
-            CashoutOnlyRequest request = new CashoutOnlyRequest(amountCents, posRefId);
-            request.SurchargeAmount = 100;
-
             SpiConfig config = new SpiConfig();
             config.PrintMerchantCopy = true;
             config.PromptForCustomerCopyOnEftpos = false;
             config.SignatureFlowOnEftpos = true;
-            SpiClientTestUtils.SetInstanceField(request, "Config", config);
 
             TransactionOptions options = new TransactionOptions();
             string receiptHeader = "Receipt Header";
@@ -27,7 +23,11 @@ namespace Test
             options.SetCustomerReceiptFooter(receiptFooter);
             options.SetMerchantReceiptHeader(receiptHeader);
             options.SetMerchantReceiptFooter(receiptFooter);
-            SpiClientTestUtils.SetInstanceField(request, "Options", options);
+
+            CashoutOnlyRequest request = new CashoutOnlyRequest(amountCents, posRefId);
+            request.SurchargeAmount = 100;
+            request.Config = config;
+            request.Options = options;
 
             Message msg = request.ToMessage();
 

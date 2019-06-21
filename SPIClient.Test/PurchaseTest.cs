@@ -54,13 +54,13 @@ namespace Test
             int purchaseAmount = 1000;
             string posRefId = "test";
 
-            PurchaseRequest request = new PurchaseRequest(purchaseAmount, posRefId);
-
             SpiConfig config = new SpiConfig();
             config.PrintMerchantCopy = true;
             config.PromptForCustomerCopyOnEftpos = false;
             config.SignatureFlowOnEftpos = true;
-            SpiClientTestUtils.SetInstanceField(request, "Config", config);
+
+            PurchaseRequest request = new PurchaseRequest(purchaseAmount, posRefId);
+            request.Config = config;
 
             Message msg = request.ToMessage();
 
@@ -84,7 +84,7 @@ namespace Test
             options.SetCustomerReceiptHeader(customerReceiptHeader);
 
             PurchaseRequest request = new PurchaseRequest(purchaseAmount, posRefId);
-            SpiClientTestUtils.SetInstanceField(request, "Options", options);
+            request.Options = options;
             Message msg = request.ToMessage();
 
             Assert.Equal(merchantReceiptHeader, msg.GetDataStringValue("merchant_receipt_header"));
@@ -373,13 +373,13 @@ namespace Test
             string posRefId = "test";
             bool suppressMerchantPassword = true;
 
-            RefundRequest request = new RefundRequest(refundAmount, posRefId, suppressMerchantPassword);
-
             SpiConfig config = new SpiConfig();
             config.PrintMerchantCopy = true;
             config.PromptForCustomerCopyOnEftpos = false;
             config.SignatureFlowOnEftpos = true;
-            SpiClientTestUtils.SetInstanceField(request, "Config", config);
+
+            RefundRequest request = new RefundRequest(refundAmount, posRefId, suppressMerchantPassword);
+            request.Config = config;
 
             Message msg = request.ToMessage();
 
@@ -404,7 +404,7 @@ namespace Test
             options.SetCustomerReceiptHeader(customerReceiptHeader);
 
             RefundRequest request = new RefundRequest(refundAmount, posRefId, suppressMerchantPassword);
-            SpiClientTestUtils.SetInstanceField(request, "Options", options);
+            request.Options = options;
             Message msg = request.ToMessage();
 
             Assert.Equal(merchantReceiptHeader, msg.GetDataStringValue("merchant_receipt_header"));
@@ -544,13 +544,13 @@ namespace Test
             int purchaseAmount = 1000;
             string posRefId = "test";
 
-            MotoPurchaseRequest request = new MotoPurchaseRequest(purchaseAmount, posRefId);
-
             SpiConfig config = new SpiConfig();
             config.PrintMerchantCopy = true;
             config.PromptForCustomerCopyOnEftpos = false;
             config.SignatureFlowOnEftpos = true;
-            SpiClientTestUtils.SetInstanceField(request, "Config", config);
+
+            MotoPurchaseRequest request = new MotoPurchaseRequest(purchaseAmount, posRefId);
+            request.Config = config;
 
             Message msg = request.ToMessage();
 
@@ -574,7 +574,7 @@ namespace Test
             options.SetCustomerReceiptHeader(customerReceiptHeader);
 
             MotoPurchaseRequest request = new MotoPurchaseRequest(purchaseAmount, posRefId);
-            SpiClientTestUtils.SetInstanceField(request, "Options", options);
+            request.Options = options;
             Message msg = request.ToMessage();
 
             Assert.Equal(merchantReceiptHeader, msg.GetDataStringValue("merchant_receipt_header"));

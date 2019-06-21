@@ -6,7 +6,7 @@ namespace Test
     public class PingHelperTest
     {
         [Fact]
-        public void GeneratePingRequestTest()
+        public void TestGeneratePingRequest()
         {
             Message msg = PingHelper.GeneratePingRequest();
 
@@ -14,7 +14,7 @@ namespace Test
         }
 
         [Fact]
-        public void GeneratePongRessponseTest()
+        public void TestGeneratePongRessponse()
         {
             Secrets secrets = SpiClientTestUtils.SetTestSecrets();
 

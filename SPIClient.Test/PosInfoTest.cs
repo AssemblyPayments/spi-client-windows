@@ -7,7 +7,7 @@ namespace Test
     public class PosInfoTest
     {
         [Fact]
-        public void SetPosInfoRequest()
+        public void TestSetPosInfoRequest()
         {
             string version = "2.6.0";
             string vendorId = "25";
@@ -25,7 +25,7 @@ namespace Test
         }
 
         [Fact]
-        public void SetPosInfoResponse()
+        public void TestSetPosInfoResponse()
         {
             Secrets secrets = SpiClientTestUtils.SetTestSecrets();
 

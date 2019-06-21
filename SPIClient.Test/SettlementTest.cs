@@ -53,13 +53,13 @@ namespace Test
         {
             string posRefId = "test";
 
-            SettleRequest request = new SettleRequest(posRefId);
-
             SpiConfig config = new SpiConfig();
             config.PrintMerchantCopy = true;
             config.PromptForCustomerCopyOnEftpos = true;
             config.SignatureFlowOnEftpos = true;
-            SpiClientTestUtils.SetInstanceField(request, "Config", config);
+
+            SettleRequest request = new SettleRequest(posRefId);
+            request.Config = config;
 
             Message msg = request.ToMessage();
 
@@ -82,7 +82,7 @@ namespace Test
             options.SetCustomerReceiptHeader(customerReceiptHeader);
 
             SettleRequest request = new SettleRequest(posRefId);
-            SpiClientTestUtils.SetInstanceField(request, "Options", options);
+            request.Options = options;
             Message msg = request.ToMessage();
 
             Assert.Equal(merchantReceiptHeader, msg.GetDataStringValue("merchant_receipt_header"));
@@ -157,13 +157,13 @@ namespace Test
         {
             string posRefId = "test";
 
-            SettlementEnquiryRequest request = new SettlementEnquiryRequest(posRefId);
-
             SpiConfig config = new SpiConfig();
             config.PrintMerchantCopy = true;
             config.PromptForCustomerCopyOnEftpos = true;
             config.SignatureFlowOnEftpos = false;
-            SpiClientTestUtils.SetInstanceField(request, "Config", config);
+
+            SettlementEnquiryRequest request = new SettlementEnquiryRequest(posRefId);
+            request.Config = config;
 
             Message msg = request.ToMessage();
 
@@ -186,7 +186,7 @@ namespace Test
             options.SetCustomerReceiptHeader(customerReceiptHeader);
 
             SettlementEnquiryRequest request = new SettlementEnquiryRequest(posRefId);
-            SpiClientTestUtils.SetInstanceField(request, "Options", options);
+            request.Options = options;
             Message msg = request.ToMessage();
 
             Assert.Equal(merchantReceiptHeader, msg.GetDataStringValue("merchant_receipt_header"));

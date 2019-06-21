@@ -48,7 +48,7 @@ namespace Test
         }
 
         [Fact]
-        public void testSetTippingEnabled()
+        public void TestSetTippingEnabled()
         {
             PayAtTableConfig config = new PayAtTableConfig();
             config.TippingEnabled = true;

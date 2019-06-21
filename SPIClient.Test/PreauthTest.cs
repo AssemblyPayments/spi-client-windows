@@ -74,13 +74,13 @@ namespace Test
             int preauthAmount = 1000;
             string posRefId = "test";
 
-            PreauthOpenRequest request = new PreauthOpenRequest(preauthAmount, posRefId);
-
             SpiConfig config = new SpiConfig();
             config.PrintMerchantCopy = true;
             config.PromptForCustomerCopyOnEftpos = false;
             config.SignatureFlowOnEftpos = true;
-            SpiClientTestUtils.SetInstanceField(request, "Config", config);
+
+            PreauthOpenRequest request = new PreauthOpenRequest(preauthAmount, posRefId);
+            request.Config = config;
 
             Message msg = request.ToMessage();
 
@@ -104,7 +104,7 @@ namespace Test
             options.SetCustomerReceiptHeader(customerReceiptHeader);
 
             PreauthOpenRequest request = new PreauthOpenRequest(preauthAmount, posRefId);
-            SpiClientTestUtils.SetInstanceField(request, "Options", options);
+            request.Options = options;
             Message msg = request.ToMessage();
 
             Assert.Equal(merchantReceiptHeader, msg.GetDataStringValue("merchant_receipt_header"));
@@ -192,13 +192,13 @@ namespace Test
             string posRefId = "test";
             string preauthId = "123456";
 
-            PreauthTopupRequest request = new PreauthTopupRequest(preauthId, topupAmount, posRefId);
-
             SpiConfig config = new SpiConfig();
             config.PrintMerchantCopy = true;
             config.PromptForCustomerCopyOnEftpos = false;
             config.SignatureFlowOnEftpos = true;
-            SpiClientTestUtils.SetInstanceField(request, "Config", config);
+
+            PreauthTopupRequest request = new PreauthTopupRequest(preauthId, topupAmount, posRefId);
+            request.Config = config;
 
             Message msg = request.ToMessage();
 
@@ -223,7 +223,7 @@ namespace Test
             options.SetCustomerReceiptHeader(customerReceiptHeader);
 
             PreauthTopupRequest request = new PreauthTopupRequest(preauthId, topupAmount, posRefId);
-            SpiClientTestUtils.SetInstanceField(request, "Options", options);
+            request.Options = options;
             Message msg = request.ToMessage();
 
             Assert.Equal(merchantReceiptHeader, msg.GetDataStringValue("merchant_receipt_header"));
@@ -309,13 +309,13 @@ namespace Test
             string posRefId = "test";
             string preauthId = "123456";
 
-            PreauthPartialCancellationRequest request = new PreauthPartialCancellationRequest(preauthId, partialCancellationAmount, posRefId);
-
             SpiConfig config = new SpiConfig();
             config.PrintMerchantCopy = true;
             config.PromptForCustomerCopyOnEftpos = false;
             config.SignatureFlowOnEftpos = true;
-            SpiClientTestUtils.SetInstanceField(request, "Config", config);
+
+            PreauthPartialCancellationRequest request = new PreauthPartialCancellationRequest(preauthId, partialCancellationAmount, posRefId);
+            request.Config = config;
 
             Message msg = request.ToMessage();
 
@@ -340,7 +340,7 @@ namespace Test
             options.SetCustomerReceiptHeader(customerReceiptHeader);
 
             PreauthPartialCancellationRequest request = new PreauthPartialCancellationRequest(preauthId, partialCancellationAmount, posRefId);
-            SpiClientTestUtils.SetInstanceField(request, "Options", options);
+            request.Options = options;
             Message msg = request.ToMessage();
 
             Assert.Equal(merchantReceiptHeader, msg.GetDataStringValue("merchant_receipt_header"));
@@ -423,13 +423,13 @@ namespace Test
             string posRefId = "test";
             string preauthId = "123456";
 
-            PreauthExtendRequest request = new PreauthExtendRequest(preauthId, posRefId);
-
             SpiConfig config = new SpiConfig();
             config.PrintMerchantCopy = true;
             config.PromptForCustomerCopyOnEftpos = false;
             config.SignatureFlowOnEftpos = true;
-            SpiClientTestUtils.SetInstanceField(request, "Config", config);
+
+            PreauthExtendRequest request = new PreauthExtendRequest(preauthId, posRefId);
+            request.Config = config;
 
             Message msg = request.ToMessage();
 
@@ -453,7 +453,7 @@ namespace Test
             options.SetCustomerReceiptHeader(customerReceiptHeader);
 
             PreauthExtendRequest request = new PreauthExtendRequest(preauthId, posRefId);
-            SpiClientTestUtils.SetInstanceField(request, "Options", options);
+            request.Options = options;
             Message msg = request.ToMessage();
 
             Assert.Equal(merchantReceiptHeader, msg.GetDataStringValue("merchant_receipt_header"));
@@ -536,13 +536,13 @@ namespace Test
             string posRefId = "test";
             string preauthId = "123456";
 
-            PreauthCancelRequest request = new PreauthCancelRequest(preauthId, posRefId);
-
             SpiConfig config = new SpiConfig();
             config.PrintMerchantCopy = true;
             config.PromptForCustomerCopyOnEftpos = false;
             config.SignatureFlowOnEftpos = true;
-            SpiClientTestUtils.SetInstanceField(request, "Config", config);
+
+            PreauthCancelRequest request = new PreauthCancelRequest(preauthId, posRefId);
+            request.Config = config;
 
             Message msg = request.ToMessage();
 
@@ -566,7 +566,7 @@ namespace Test
             options.SetCustomerReceiptHeader(customerReceiptHeader);
 
             PreauthCancelRequest request = new PreauthCancelRequest(preauthId, posRefId);
-            SpiClientTestUtils.SetInstanceField(request, "Options", options);
+            request.Options = options;
             Message msg = request.ToMessage();
 
             Assert.Equal(merchantReceiptHeader, msg.GetDataStringValue("merchant_receipt_header"));
@@ -647,13 +647,13 @@ namespace Test
             string posRefId = "test";
             string preauthId = "123456";
 
-            PreauthCompletionRequest request = new PreauthCompletionRequest(preauthId, completionAmount, posRefId);
-
             SpiConfig config = new SpiConfig();
             config.PrintMerchantCopy = true;
             config.PromptForCustomerCopyOnEftpos = false;
             config.SignatureFlowOnEftpos = true;
-            SpiClientTestUtils.SetInstanceField(request, "Config", config);
+
+            PreauthCompletionRequest request = new PreauthCompletionRequest(preauthId, completionAmount, posRefId);
+            request.Config = config;
 
             Message msg = request.ToMessage();
 
@@ -678,7 +678,7 @@ namespace Test
             options.SetCustomerReceiptHeader(customerReceiptHeader);
 
             PreauthCompletionRequest request = new PreauthCompletionRequest(preauthId, completionAmount, posRefId);
-            SpiClientTestUtils.SetInstanceField(request, "Options", options);
+            request.Options = options;
             Message msg = request.ToMessage();
 
             Assert.Equal(merchantReceiptHeader, msg.GetDataStringValue("merchant_receipt_header"));
