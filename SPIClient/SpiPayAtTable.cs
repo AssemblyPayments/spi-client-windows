@@ -142,7 +142,7 @@ namespace SPIClient
 
             // Ask POS for Bill Details for this tableId, inluding encoded PaymentData
             var openTablesResponse = GetOpenTables(operatorId);
-            if (openTablesResponse.OpenTablesEntries.Count <= 0)
+            if (openTablesResponse?.OpenTablesEntries?.Count <= 0)
             {
                 _log.Info("There is no open table.");
             }
