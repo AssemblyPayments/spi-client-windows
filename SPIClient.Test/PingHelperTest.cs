@@ -14,7 +14,7 @@ namespace Test
         }
 
         [Fact]
-        public void TestGeneratePongRessponse()
+        public void TestGeneratePongResponse()
         {
             Secrets secrets = SpiClientTestUtils.SetTestSecrets();
 

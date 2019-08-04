@@ -6,15 +6,18 @@ namespace Test
     public class PrintingTest
     {
         [Fact]
-        public void TestPrintingRequest()
+        public void PrintingRequest_OnValidRequest_ReturnsObject()
         {
-            string key = "test";
-            string payload = "test";
+            // arrange
+            const string key = "test";
+            const string payload = "test";
 
-            PrintingRequest request = new PrintingRequest(key, payload);
-            Message msg = request.ToMessage();
+            // act
+            var request = new PrintingRequest(key, payload);
+            var msg = request.ToMessage();
 
-            Assert.Equal(msg.EventName, "print");
+            // assert
+            Assert.Equal("print", msg.EventName);
             Assert.Equal(key, msg.GetDataStringValue("key"));
             Assert.Equal(payload, msg.GetDataStringValue("payload"));
         }
@@ -22,19 +25,20 @@ namespace Test
         [Fact]
         public void TestPrintingResponse()
         {
-            Secrets secrets = SpiClientTestUtils.SetTestSecrets();
+            // arrange
+            var secrets = SpiClientTestUtils.SetTestSecrets();
+            const string jsonStr = @"{""message"":{""data"":{""success"":true},""datetime"":""2019-06-14T18:51:00.948"",""event"":""print_response"",""id"":""C24.0""}}";
+            var msg = Message.FromJson(jsonStr, secrets);
 
-            string jsonStr = @"{""message"":{""data"":{""success"":true},""datetime"":""2019-06-14T18:51:00.948"",""event"":""print_response"",""id"":""C24.0""}}";
+            // act
+            var response = new PrintingResponse(msg);
 
-            Message msg = Message.FromJson(jsonStr, secrets);
-            PrintingResponse response = new PrintingResponse(msg);
-
-            Assert.Equal(msg.EventName, "print_response");
+            Assert.Equal("print_response", msg.EventName);
             Assert.True(response.IsSuccess());
-            Assert.Equal(msg.Id, "C24.0");
-            Assert.Equal(response.GetErrorReason(), "");
-            Assert.Equal(response.GetErrorDetail(), "");
-            Assert.Equal(response.GetResponseValueWithAttribute("error_detail"), "");
+            Assert.Equal("C24.0", msg.Id);
+            Assert.Equal("", response.GetErrorReason());
+            Assert.Equal("", response.GetErrorDetail());
+            Assert.Equal("", response.GetResponseValueWithAttribute("error_detail"));
         }
     }
 }
