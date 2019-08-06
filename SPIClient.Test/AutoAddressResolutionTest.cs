@@ -1,62 +1,78 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
 using SPIClient;
 using SPIClient.Service;
+using System.Net;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace Test
 {
     public class AutoAddressResolutionTest
     {
         [Fact]
-        public void TestSetSerialNumber()
+        public void SetSerialNumber_ValidSerialNumber_IsSet()
         {
-            string serialNumber = "111-111-111";
-            Spi spi = new Spi("", "", "", null);
+            // arrange
+            const string serialNumber = "111-111-111";
+            var spi = new Spi("", "", "", null);
             SpiClientTestUtils.SetInstanceField(spi, "_currentStatus", SpiStatus.Unpaired);
+
+            // act
             spi.SetSerialNumber(serialNumber);
+
+            // assert
             Assert.Equal(serialNumber, SpiClientTestUtils.GetInstanceField(typeof(Spi), spi, "_serialNumber"));
         }
 
         [Fact]
-        public void TestSetAutoAddressResolution()
+        public void SetAutoAddressResolution_TurnOnAutoAddress_Enabled()
         {
-            bool autoAddressResolutionEnable = true;
-            Spi spi = new Spi("", "", "", null);
+            // arrange
+            const bool autoAddressResolutionEnable = true;
+            var spi = new Spi("", "", "", null);
             SpiClientTestUtils.SetInstanceField(spi, "_currentStatus", SpiStatus.Unpaired);
+
+            // act
             spi.SetAutoAddressResolution(autoAddressResolutionEnable);
+
+            // assert
             Assert.Equal(autoAddressResolutionEnable, SpiClientTestUtils.GetInstanceField(typeof(Spi), spi, "_autoAddressResolutionEnabled"));
         }
 
         [Fact]
-        public async void TestAutoResolveEftposAddressWithIncorectSerialNumberAsync()
+        public async void RetrieveService_SerialNumberNotRegistered_NotFound()
         {
-            string apiKey = "RamenPosDeviceAddressApiKey";
-            string acquirerCode = "wbc";
-            string serialNumber = "111-111-111";
+            // arrange
+            const string apiKey = "RamenPosDeviceAddressApiKey";
+            const string acquirerCode = "wbc";
+            const string serialNumber = "111-111-111"; // invalid serial number
+            var deviceService = new DeviceAddressService();
 
-            DeviceAddressService deviceService = new DeviceAddressService();
+            // act
             var addressResponse = await deviceService.RetrieveService(serialNumber, apiKey, acquirerCode, true);
 
+            // assert
             Assert.NotNull(addressResponse);
-            Assert.Equal(addressResponse.StatusDescription, "Not Found");
+            Assert.Equal(DeviceAddressResponseCode.SUCCESS, addressResponse.Data.DeviceAddressResponseCode);
+            Assert.Equal(HttpStatusCode.NotFound, addressResponse.StatusCode);
+            Assert.Equal("Not Found", addressResponse.StatusDescription);
         }
 
         [Fact]
-        public async Task testAutoResolveEftposAddressWithValidSerialNumberAsync()
+        public async Task RetrieveService_SerialNumberRegistered_Found()
         {
-            string apiKey = "RamenPosDeviceAddressApiKey";
-            string acquirerCode = "wbc";
-            string serialNumber = "321-404-842";//should be valid serial number
+            // arrange
+            const string apiKey = "RamenPosDeviceAddressApiKey";
+            const string acquirerCode = "wbc";
+            const string serialNumber = "321-404-842";
+            var deviceService = new DeviceAddressService();
 
-            DeviceAddressService deviceService = new DeviceAddressService();
+            // act
             var addressResponse = await deviceService.RetrieveService(serialNumber, apiKey, acquirerCode, true);
 
+            // assert
             Assert.NotNull(addressResponse);
             Assert.NotNull(addressResponse.Data.Address);
+            Assert.Equal(DeviceAddressResponseCode.SUCCESS, addressResponse.Data.DeviceAddressResponseCode);
         }
     }
 }
