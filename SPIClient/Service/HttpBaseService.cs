@@ -14,7 +14,7 @@ namespace SPIClient.Service
         public DataFormat DataFormat { get; set; }
         private string Url { get; }
         private IRestClient RestClient { get; set; }
-        private readonly TimeSpan _timeOut = TimeSpan.FromSeconds(3);
+        private readonly TimeSpan _timeOut = TimeSpan.FromSeconds(8);
 
         public HttpBaseService(string url)
         {
