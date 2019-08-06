@@ -1,8 +1,8 @@
+using SPIClient;
+using SPIClient.Service;
 using System.Net;
 using System.Threading.Tasks;
 using Xunit;
-using SPIClient;
-using SPIClient.Service;
 
 namespace Test
 {

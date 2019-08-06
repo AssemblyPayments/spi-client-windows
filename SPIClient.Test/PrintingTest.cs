@@ -6,7 +6,7 @@ namespace Test
     public class PrintingTest
     {
         [Fact]
-        public void PrintingRequest_OnValidRequest_ReturnsObject()
+        public void PrintingRequest_OnValidRequest_ReturnObjects()
         {
             // arrange
             const string key = "test";
@@ -23,7 +23,7 @@ namespace Test
         }
 
         [Fact]
-        public void TestPrintingResponse()
+        public void PrintingResponse_OnValidResponse_ReturnObjects()
         {
             // arrange
             var secrets = SpiClientTestUtils.SetTestSecrets();
@@ -33,6 +33,7 @@ namespace Test
             // act
             var response = new PrintingResponse(msg);
 
+            // assert
             Assert.Equal("print_response", msg.EventName);
             Assert.True(response.IsSuccess());
             Assert.Equal("C24.0", msg.Id);

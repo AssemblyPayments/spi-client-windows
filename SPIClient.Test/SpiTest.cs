@@ -9,13 +9,17 @@ namespace Test
         [Theory]
         [InlineData("123456", false, "Was not waiting for one.")]
         [InlineData("1234567", false, "Not a 6-digit code.")]
-        public void TestSubmitAuthCode(string authCode, bool expectedValidFormat, string expectedMessage)
+        public void SubmitAuthCode_OnValidResponse_ReturnObjects(string authCode, bool expectedValidFormat, string expectedMessage)
         {
+            // arrange
             var spi = new Spi();
+
+            // act
             var submitAuthCodeResult = spi.SubmitAuthCode(authCode);
 
-            Assert.Equal(submitAuthCodeResult.ValidFormat, expectedValidFormat);
-            Assert.Equal(submitAuthCodeResult.Message, expectedMessage);
+            // assert
+            Assert.Equal(expectedValidFormat, submitAuthCodeResult.ValidFormat);
+            Assert.Equal(expectedMessage, submitAuthCodeResult.Message);
         }
     }
 }

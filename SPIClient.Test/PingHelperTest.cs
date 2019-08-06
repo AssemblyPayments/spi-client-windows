@@ -6,22 +6,27 @@ namespace Test
     public class PingHelperTest
     {
         [Fact]
-        public void TestGeneratePingRequest()
+        public void GeneratePingRequest_OnValidRequest_IsSet()
         {
-            Message msg = PingHelper.GeneratePingRequest();
+            // act
+            var msg = PingHelper.GeneratePingRequest();
 
+            // assert
             Assert.Equal(msg.EventName, "ping");
         }
 
         [Fact]
-        public void TestGeneratePongResponse()
+        public void GeneratePongResponse_OnValidResponse_ReturnObjects()
         {
-            Secrets secrets = SpiClientTestUtils.SetTestSecrets();
+            // arrange
+            var secrets = SpiClientTestUtils.SetTestSecrets();
+            const string jsonStr = @"{""message"":{""datetime"":""2019-06-14T18:47:55.411"",""event"":""pong"",""id"":""ping563""}}";
 
-            string jsonStr = @"{""message"":{""datetime"":""2019-06-14T18:47:55.411"",""event"":""pong"",""id"":""ping563""}}";
-
-            Message msg = Message.FromJson(jsonStr, secrets);
+            // act
+            var msg = Message.FromJson(jsonStr, secrets);
             var message = PongHelper.GeneratePongRessponse(msg);
+
+            // assert
             Assert.Equal(msg.EventName, "pong");
         }
     }

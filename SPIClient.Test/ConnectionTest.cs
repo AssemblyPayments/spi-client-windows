@@ -9,28 +9,28 @@ namespace Test
     public class ConnectionTest
     {
         [Fact]
-        public void TestConnectionStatusChanged_Disconnected()
+        public void ConnectionStateEventAtgs_OnDisconnected_ReturnStatus()
         {
+            // arrange
             var are = new AutoResetEvent(false);
-
-            Connection conn = new Connection();
+            var conn = new Connection();
             conn.Address = "ws://127.0.0.1";
 
-            List<ConnectionStateEventArgs> connectionStateEventArgs = new List<ConnectionStateEventArgs>();
-
+            // act
+            var connectionStateEventArgs = new List<ConnectionStateEventArgs>();
             conn.ConnectionStatusChanged += delegate (object sender, ConnectionStateEventArgs state)
             {
                 connectionStateEventArgs.Add(state);
             };
-
             conn.ErrorReceived += delegate (object sender, MessageEventArgs error)
             {
+                // assert
                 Assert.NotNull(error.Message);
             };
             conn.Connect();
-
             var wasSignaled = are.WaitOne(timeout: TimeSpan.FromSeconds(9));
 
+            // assert
             Assert.Equal(ConnectionState.Connecting, connectionStateEventArgs[0].ConnectionState);
             Assert.Equal(ConnectionState.Disconnected, connectionStateEventArgs[1].ConnectionState);
             Assert.False(conn.Connected);
