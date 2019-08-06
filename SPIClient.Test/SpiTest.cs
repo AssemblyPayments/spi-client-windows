@@ -21,5 +21,18 @@ namespace Test
             Assert.Equal(expectedValidFormat, submitAuthCodeResult.ValidFormat);
             Assert.Equal(expectedMessage, submitAuthCodeResult.Message);
         }
+
+        [Fact]
+        public void RetriesBeforeResolvingDeviceAddress_OnValidValue_Checked()
+        {
+            // arrange
+            const int retriesBeforeResolvingDeviceAddress = 3;
+
+            // act
+            Spi spi = new Spi();
+
+            // assert
+            Assert.Equal(retriesBeforeResolvingDeviceAddress, SpiClientTestUtils.GetInstanceField(typeof(Spi), spi, "_retriesBeforeResolvingDeviceAddress"));
+        }
     }
 }
