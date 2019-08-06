@@ -279,7 +279,7 @@ namespace SPIClient
 
         internal List<OpenTablesEntry> GetOpenTables()
         {
-            if (OpenTablesEntries.Count == 0)
+            if (OpenTablesEntries == null || OpenTablesEntries?.Count == 0)
             {
                 return new List<OpenTablesEntry>();
             }

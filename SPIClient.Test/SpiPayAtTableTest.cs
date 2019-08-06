@@ -63,6 +63,40 @@ namespace Test
         }
 
         [Fact]
+        public void GetOpenTables_OnValidResponse_IsSet()
+        {
+            // arrange
+            var openTablesEntries = new List<OpenTablesEntry>();
+            var openTablesEntry = new OpenTablesEntry();
+            openTablesEntry.TableId = "1";
+            openTablesEntry.Label = "1";
+            openTablesEntry.BillOutstandingAmount = 2000;
+            openTablesEntries.Add(openTablesEntry);
+
+            // act
+            var getOpenTablesResponse = new GetOpenTablesResponse();
+            getOpenTablesResponse.OpenTablesEntries = openTablesEntries;
+            var openTablesEntriesResponse = getOpenTablesResponse.GetOpenTables();
+
+            // assert
+            Assert.Equal(openTablesEntries.Count, openTablesEntriesResponse.Count);
+        }
+
+        [Fact]
+        public void GetOpenTables_OnValidResponseNull_IsSet()
+        {
+            // arrange
+            var getOpenTablesResponse = new GetOpenTablesResponse();
+
+            // act
+            var openTablesEntriesResponse = getOpenTablesResponse.GetOpenTables();
+
+            // assert
+            Assert.NotNull(openTablesEntriesResponse);
+            Assert.Null(getOpenTablesResponse.OpenTablesEntries);
+        }
+
+        [Fact]
         public void BillPaymentFlowEndedResponse_OnValidResponse_ReturnObjects()
         {
             // arrange
