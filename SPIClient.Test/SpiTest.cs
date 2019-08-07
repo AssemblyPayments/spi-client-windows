@@ -72,5 +72,31 @@ namespace Test
             Assert.NotEqual(posId, value);
             Assert.Equal(lengthOfPosId, value.ToString().Length);
         }
+
+        [Fact]
+        public void RetriesBeforePairing_OnValidValue_Checked()
+        {
+            // arrange
+            const int retriesBeforePairing = 3;
+
+            // act
+            Spi spi = new Spi();
+
+            // assert
+            Assert.Equal(retriesBeforePairing, SpiClientTestUtils.GetInstanceField(typeof(Spi), spi, "_retriesBeforePairing"));
+        }
+
+        [Fact]
+        public void SleepBeforeReconnectMs_OnValidValue_Checked()
+        {
+            // arrange
+            const int sleepBeforeReconnectMs = 3000;
+
+            // act
+            Spi spi = new Spi();
+
+            // assert
+            Assert.Equal(sleepBeforeReconnectMs, SpiClientTestUtils.GetInstanceField(typeof(Spi), spi, "_sleepBeforeReconnectMs"));
+        }
     }
 }

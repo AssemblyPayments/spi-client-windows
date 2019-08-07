@@ -1708,10 +1708,32 @@ namespace SPIClient
                     }
                     else if (CurrentFlow == SpiFlow.Pairing)
                     {
-                        _log.Warn("Lost Connection during pairing.");
-                        CurrentPairingFlowState.Message = "Could not Connect to Pair. Check Network and Try Again...";
-                        _onPairingFailed();
-                        _pairingFlowStateChanged(this, CurrentPairingFlowState);
+                        Task.Factory.StartNew(() =>
+                        {
+                            if (CurrentPairingFlowState.Finished) return;
+
+                            if (_retriesSinceLastPairing >= _retriesBeforePairing)
+                            {
+                                _retriesSinceLastPairing = 0;
+                                _log.Warn("Lost Connection during pairing.");
+                                CurrentPairingFlowState.Message = "Could not Connect to Pair. Check Network and Try Again...";
+                                _onPairingFailed();
+                                _pairingFlowStateChanged(this, CurrentPairingFlowState);
+                                return;
+                            }
+                            else
+                            {
+                                _log.Info($"Will try to reconnect in {_sleepBeforeReconnectMs}ms ...");
+                                Thread.Sleep(_sleepBeforeReconnectMs);
+                                if (CurrentStatus != SpiStatus.PairedConnected)
+                                {
+                                    // This is non-blocking
+                                    _conn?.Connect();
+                                }
+
+                                _retriesSinceLastPairing += 1;
+                            }
+                        });
                     }
                     break;
                 default:
@@ -2156,6 +2178,9 @@ namespace SPIClient
         private readonly int _sleepBeforeReconnectMs = 3000;
         private readonly int _missedPongsToDisconnect = 2;
         private readonly int _retriesBeforeResolvingDeviceAddress = 3;
+
+        private int _retriesSinceLastPairing = 0;
+        private readonly int _retriesBeforePairing = 3;
 
         private SpiPayAtTable _spiPat;
 
