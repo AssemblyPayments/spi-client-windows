@@ -34,5 +34,43 @@ namespace Test
             // assert
             Assert.Equal(retriesBeforeResolvingDeviceAddress, SpiClientTestUtils.GetInstanceField(typeof(Spi), spi, "_retriesBeforeResolvingDeviceAddress"));
         }
+
+        [Fact]
+        public void SetPosId_OnValidLength_IsSet()
+        {
+            // arrange
+            const string posId = "12345678901234567";
+            const int lengthOfPosId = 16;
+            var spi = new Spi();
+            var messageStamp = new MessageStamp("", null, new System.TimeSpan());
+            SpiClientTestUtils.SetInstanceField(spi, "_currentStatus", SpiStatus.Unpaired);
+            SpiClientTestUtils.SetInstanceField(spi, "_spiMessageStamp", messageStamp);
+
+            // act
+            spi.SetPosId(posId);
+            var value = SpiClientTestUtils.GetInstanceField(typeof(Spi), spi, "_posId");
+
+            // assert
+            Assert.NotEqual(posId, value);
+            Assert.Equal(lengthOfPosId, value.ToString().Length);
+        }
+
+        [Fact]
+        public void SpiInitate_OnValidLength_IsSet()
+        {
+            // arrange
+            const string posId = "12345678901234567";
+            const int lengthOfPosId = 16;
+            var spi = new Spi(posId, "", "", null);            
+            SpiClientTestUtils.SetInstanceField(spi, "_currentStatus", SpiStatus.Unpaired);
+
+            // act
+            spi.SetPosId(posId);
+            var value = SpiClientTestUtils.GetInstanceField(typeof(Spi), spi, "_posId");
+
+            // assert
+            Assert.NotEqual(posId, value);
+            Assert.Equal(lengthOfPosId, value.ToString().Length);
+        }
     }
 }
