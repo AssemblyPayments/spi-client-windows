@@ -136,6 +136,12 @@ namespace SPIClient
         /// <param name="secrets">The Pairing secrets, if you know it already, or null otherwise</param>
         public Spi(string posId, string serialNumber, string eftposAddress, Secrets secrets)
         {
+            if (posId?.Length > 16)
+            {
+                posId = posId.Substring(0, 16);
+                _log.Warn("The Pos Id should be equal or less than 16 characters! It has been truncated");
+            }
+
             _posId = posId;
             _serialNumber = serialNumber;
             _secrets = secrets;
@@ -292,6 +298,12 @@ namespace SPIClient
         {
             if (CurrentStatus != SpiStatus.Unpaired)
                 return false;
+
+            if (posId?.Length > 16)
+            {
+                posId = posId.Substring(0, 16);
+                _log.Warn("The Pos Id should be equal or less than 16 characters! It has been truncated");
+            }
 
             _posId = posId;
             _spiMessageStamp.PosId = posId;
