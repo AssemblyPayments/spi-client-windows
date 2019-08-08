@@ -3,6 +3,7 @@ using System;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -140,6 +141,16 @@ namespace SPIClient
             {
                 posId = posId.Substring(0, 16);
                 _log.Warn("The Pos Id should be equal or less than 16 characters! It has been truncated");
+            }
+
+            if (!string.IsNullOrWhiteSpace(posId) && !regexItemsForPosId.IsMatch(posId))
+            {
+                _log.Warn("The Pos Id can not include special characters!");
+            }
+
+            if (!string.IsNullOrWhiteSpace(eftposAddress) && !regexItemsForEftposAddress.IsMatch(eftposAddress))
+            {
+                _log.Warn("The Eftpos Address is not in correct format!");
             }
 
             _posId = posId;
@@ -305,6 +316,11 @@ namespace SPIClient
                 _log.Warn("The Pos Id should be equal or less than 16 characters! It has been truncated");
             }
 
+            if (!string.IsNullOrWhiteSpace(posId) && !regexItemsForPosId.IsMatch(posId))
+            {
+                _log.Warn("The Pos Id can not include special characters!");
+            }
+
             _posId = posId;
             _spiMessageStamp.PosId = posId;
             return true;
@@ -319,6 +335,12 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.PairedConnected || _autoAddressResolutionEnabled)
                 return false;
+
+            if (!string.IsNullOrWhiteSpace(address) && !regexItemsForEftposAddress.IsMatch(address))
+            {
+                _log.Warn("The Eftpos Address is not in correct format!");
+            }
+
             _eftposAddress = "ws://" + address;
             _conn.Address = _eftposAddress;
             return true;
@@ -2192,6 +2214,9 @@ namespace SPIClient
         private static readonly log4net.ILog _log = log4net.LogManager.GetLogger("spi");
 
         private static readonly string _version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+        private readonly Regex regexItemsForEftposAddress = new Regex(@"^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$");
+        private readonly Regex regexItemsForPosId = new Regex("^[a-zA-Z0-9 ]*$");
 
         #endregion        
     }

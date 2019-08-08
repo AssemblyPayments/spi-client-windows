@@ -190,7 +190,7 @@ namespace Test
         {
             // arrange
             var secrets = SpiClientTestUtils.SetTestSecrets();
-            const string jsonStr = @"{""message"": {""event"": ""cancel_response"", ""id"": ""0"", ""datetime"": ""2018-02-06T15:16:44.094"", ""data"": {""pos_ref_id"": ""123456abc"", ""success"": false, ""error_reason"": ""txn_past_point_of_no_return"", ""error_detail"":""Txn has passed the point of no return"" }}}";
+            const string jsonStr = @"{""message"": {""event"": ""cancel_response"", ""id"": ""0"", ""datetime"": ""2018-02-06T15:16:44.094"", ""data"": {""pos_ref_id"": ""123456abc"", ""success"": false, ""error_reason"": ""TXN_PAST_POINT_OF_NO_RETURN"", ""error_detail"":""Txn has passed the point of no return"" }}}";
 
             // act
             var msg = Message.FromJson(jsonStr, secrets);
@@ -200,7 +200,7 @@ namespace Test
             Assert.Equal("cancel_response", msg.EventName);
             Assert.False(response.Success);
             Assert.Equal("123456abc", response.PosRefId);
-            Assert.Equal("txn_past_point_of_no_return", response.GetErrorReason());
+            Assert.Equal("TXN_PAST_POINT_OF_NO_RETURN", response.GetErrorReason());
             Assert.True(response.WasTxnPastPointOfNoReturn());
             Assert.NotNull(response.GetErrorDetail());
             Assert.Equal(response.GetResponseValueWithAttribute("pos_ref_id"), response.PosRefId);
