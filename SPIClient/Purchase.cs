@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using Newtonsoft.Json.Linq;
 
 namespace SPIClient
 {
@@ -46,7 +46,6 @@ namespace SPIClient
         {
             var data = new JObject(
                 new JProperty("pos_ref_id", PosRefId),
-
                 new JProperty("purchase_amount", PurchaseAmount),
                 new JProperty("tip_amount", TipAmount),
                 new JProperty("cash_amount", CashoutAmount),
@@ -269,6 +268,11 @@ namespace SPIClient
         public string GetErrorDetail()
         {
             return _m.GetDataStringValue("error_detail");
+        }
+
+        public bool WasTxnPastPointOfNoReturn()
+        {
+            return _m.GetError().StartsWith("TXN_PAST_POINT_OF_NO_RETURN");
         }
 
         public string GetResponseValueWithAttribute(string attribute)

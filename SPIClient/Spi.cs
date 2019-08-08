@@ -1,10 +1,10 @@
+using SPIClient.Service;
 using System;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using SPIClient.Service;
 
 namespace SPIClient
 {
@@ -1508,14 +1508,17 @@ namespace SPIClient
             lock (_txLock)
             {
                 var incomingPosRefId = m.GetDataStringValue("pos_ref_id");
-                if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished || !CurrentTxFlowState.PosRefId.Equals(incomingPosRefId))
-                {
-                    _log.Info($"Received Cancel Required but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
-                    return;
-                }
-
                 var txState = CurrentTxFlowState;
                 var cancelResponse = new CancelTransactionResponse(m);
+
+                if (CurrentFlow != SpiFlow.Transaction || txState.Finished || !txState.PosRefId.Equals(incomingPosRefId))
+                {
+                    if (!cancelResponse.WasTxnPastPointOfNoReturn())
+                    {
+                        _log.Info($"Received Cancel Required but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
+                        return;
+                    }
+                }
 
                 if (cancelResponse.Success) return;
 

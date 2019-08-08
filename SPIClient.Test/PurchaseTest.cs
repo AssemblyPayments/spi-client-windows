@@ -190,17 +190,18 @@ namespace Test
         {
             // arrange
             var secrets = SpiClientTestUtils.SetTestSecrets();
-            const string jsonStr = @"{""message"": {""event"": ""cancel_response"", ""id"": ""0"", ""datetime"": ""2018-02-06T15:16:44.094"", ""data"": {""pos_ref_id"": ""123456abc"", ""success"": false, ""error_reason"": ""txn_past_point_of_no_return"", ""error_detail"":""Too late to cancel transaction"" }}}";
+            const string jsonStr = @"{""message"": {""event"": ""cancel_response"", ""id"": ""0"", ""datetime"": ""2018-02-06T15:16:44.094"", ""data"": {""pos_ref_id"": ""123456abc"", ""success"": false, ""error_reason"": ""txn_past_point_of_no_return"", ""error_detail"":""Txn has passed the point of no return"" }}}";
 
             // act
             var msg = Message.FromJson(jsonStr, secrets);
             var response = new CancelTransactionResponse(msg);
 
             // assert
-            Assert.Equal(msg.EventName, "cancel_response");
+            Assert.Equal("cancel_response", msg.EventName);
             Assert.False(response.Success);
-            Assert.Equal(response.PosRefId, "123456abc");
-            Assert.Equal(response.GetErrorReason(), "txn_past_point_of_no_return");
+            Assert.Equal("123456abc", response.PosRefId);
+            Assert.Equal("txn_past_point_of_no_return", response.GetErrorReason());
+            Assert.True(response.WasTxnPastPointOfNoReturn());
             Assert.NotNull(response.GetErrorDetail());
             Assert.Equal(response.GetResponseValueWithAttribute("pos_ref_id"), response.PosRefId);
 
@@ -223,7 +224,7 @@ namespace Test
 
             // assert
             Assert.NotNull(msg);
-            Assert.Equal(msg.EventName, "get_last_transaction");
+            Assert.Equal("get_last_transaction", msg.EventName);
         }
 
         [Fact]
@@ -264,7 +265,7 @@ namespace Test
         }
 
         [Fact]
-        public void GetLastTransactionResponse_OnValidResponseTimeOutOfSyncError_ReturnObjects ()
+        public void GetLastTransactionResponse_OnValidResponseTimeOutOfSyncError_ReturnObjects()
         {
             // arrange
             var secrets = SpiClientTestUtils.SetTestSecrets();
@@ -421,7 +422,7 @@ namespace Test
             const int refundAmount = 1000;
             const string posRefId = "test";
             const bool suppressMerchantPassword = true;
-            
+
             var config = new SpiConfig();
             config.PrintMerchantCopy = true;
             config.PromptForCustomerCopyOnEftpos = false;
