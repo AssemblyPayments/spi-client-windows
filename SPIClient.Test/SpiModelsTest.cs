@@ -70,7 +70,7 @@ namespace Test
 
             // assert
             Assert.False(transactionFlowState.AttemptingToCancel);
-            Assert.Equal(transactionFlowState.DisplayMessage, "CancelFailed");
+            Assert.Equal("CancelFailed", transactionFlowState.DisplayMessage);
         }
 
         [Fact]

@@ -9,7 +9,7 @@ namespace Test
     public class ConnectionTest
     {
         [Fact]
-        public void ConnectionStateEventAtgs_OnDisconnected_ReturnStatus()
+        public void ConnectionStateEventArgs_OnDisconnected_ReturnStatus()
         {
             // arrange
             var are = new AutoResetEvent(false);

@@ -11,6 +11,19 @@ namespace Test
     public class ComWrapperTest
     {
         [Fact]
+        public void ToOpenTablesJson_ValidJson_IsSet()
+        {
+            // arrange
+            var getOpenTablesCom = new GetOpenTablesCom();
+
+            // act
+            string jsonStr = getOpenTablesCom.ToOpenTablesJson();
+
+            //assert
+            Assert.NotNull(jsonStr);
+        }
+
+        [Fact]
         public void AddToOpenTablesList_ValidOpenTablesList_SetObjects()
         {
             // arrange
@@ -28,12 +41,6 @@ namespace Test
             Assert.Equal(openTablesEntries[0].TableId, openTablesEntry.TableId);
             Assert.Equal(openTablesEntries[0].Label, openTablesEntry.Label);
             Assert.Equal(openTablesEntries[0].BillOutstandingAmount, openTablesEntry.BillOutstandingAmount);
-
-            // act
-            string jsonStr = getOpenTablesCom.ToOpenTablesJson();
-
-            //assert
-            Assert.NotNull(jsonStr);
         }
 
         [Fact]
@@ -176,7 +183,6 @@ namespace Test
             var msg = Message.FromJson(jsonStr, secrets);
             var comWrapper = new ComWrapper();
             var response = comWrapper.GetLastTransactionResponseInit(msg);
-            response.CopyMerchantReceiptToCustomerReceipt();
 
             // assert
             Assert.Equal("last_transaction", msg.EventName);
@@ -194,6 +200,22 @@ namespace Test
             Assert.Equal("190614001137", response.GetRRN());
             Assert.Equal("APPROVED", response.GetResponseText());
             Assert.Equal("000", response.GetResponseCode());
+        }
+
+        [Fact]
+        public void CopyMerchantReceiptToCustomerReceipt_OnValidResponse_ReturnObjects()
+        {
+            // arrange
+            var secrets = SpiClientTestUtils.SetTestSecrets();
+            const string jsonStr = @"{""message"":{""data"":{""account_type"":""CREDIT"",""auth_code"":""139059"",""bank_date"":""14062019"",""bank_noncash_amount"":1000,""bank_settlement_date"":""14062019"",""bank_time"":""153747"",""card_entry"":""EMV_CTLS"",""currency"":""AUD"",""customer_receipt"":"""",""customer_receipt_printed"":false,""emv_actioncode"":""ARP"",""emv_actioncode_values"":""9BDDE227547B41F43030"",""emv_pix"":""1010"",""emv_rid"":""A000000003"",""emv_tsi"":""0000"",""emv_tvr"":""0000000000"",""expiry_date"":""1122"",""host_response_code"":""000"",""host_response_text"":""APPROVED"",""informative_text"":""                "",""masked_pan"":""............3952"",""merchant_acquirer"":""EFTPOS FROM BANK SA"",""merchant_addr"":""213 Miller Street"",""merchant_city"":""Sydney"",""merchant_country"":""Australia"",""merchant_id"":""22341842"",""merchant_name"":""Merchant4"",""merchant_postcode"":""2060"",""merchant_receipt"":""EFTPOS FROM BANK SA\r\nMerchant4\r\n213 Miller Street\r\nSydney 2060\r\nAustralia\r\n\r\nTIME 14JUN19   15:37\r\nMID         22341842\r\nTSP     100612348842\r\nRRN     190614001137\r\nVisa Credit     \r\nVisa(C)           CR\r\nCARD............3952\r\nAID   A0000000031010\r\nTVR       0000000000\r\nAUTH          139059\r\n\r\nPURCHASE    AUD10.00\r\n\r\n   (000) APPROVED\r\n\r\n*DUPLICATE  RECEIPT*\r\n\r\n\r\n\r\n\r\n\r\n\r\n"",""merchant_receipt_printed"":false,""online_indicator"":""Y"",""pos_ref_id"":""prchs-14-06-2019-15-37-49"",""purchase_amount"":1000,""rrn"":""190614001137"",""scheme_app_name"":""Visa Credit"",""scheme_name"":""Visa"",""stan"":""001137"",""success"":true,""terminal_id"":""100612348842"",""terminal_ref_id"":""12348842_14062019153831"",""transaction_type"":""PURCHASE""},""datetime"":""2019-06-14T15:38:31.620"",""event"":""last_transaction"",""id"":""glt10""}}";
+            var msg = Message.FromJson(jsonStr, secrets);
+            var comWrapper = new ComWrapper();
+            var response = comWrapper.GetLastTransactionResponseInit(msg);
+
+            // act 
+            response.CopyMerchantReceiptToCustomerReceipt();
+
+            // assert
             Assert.Equal(msg.GetDataStringValue("merchant_receipt"), msg.GetDataStringValue("customer_receipt"));
         }
 
