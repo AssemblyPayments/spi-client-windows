@@ -474,8 +474,8 @@ namespace Test
 
             // assert
             Assert.Equal(msg.EventName, "preauth_extend");
-            Assert.Equal(request.PosRefId, msg.GetDataStringValue("pos_ref_id"));
-            Assert.Equal(request.PreauthId, msg.GetDataStringValue("preauth_id"));
+            Assert.Equal(posRefId, msg.GetDataStringValue("pos_ref_id"));
+            Assert.Equal(preauthId, msg.GetDataStringValue("preauth_id"));
         }
 
         [Fact]
