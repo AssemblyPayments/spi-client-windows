@@ -137,8 +137,8 @@ namespace SPIClient
         /// <param name="secrets">The Pairing secrets, if you know it already, or null otherwise</param>
         public Spi(string posId, string serialNumber, string eftposAddress, Secrets secrets)
         {
-            posId = ValidateForPosId(posId);
-            ValidateForEftposAddress(eftposAddress);
+            posId = ValidatePosId(posId);
+            ValidateEftposAddress(eftposAddress);
 
             _posId = posId;
             _serialNumber = serialNumber;
@@ -296,7 +296,7 @@ namespace SPIClient
         {
             if (CurrentStatus != SpiStatus.Unpaired)
                 return false;
-            _posId = ValidateForPosId(posId);
+            _posId = ValidatePosId(posId);
             _spiMessageStamp.PosId = posId;
             return true;
         }
@@ -310,7 +310,7 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.PairedConnected || _autoAddressResolutionEnabled)
                 return false;
-            ValidateForEftposAddress(address);
+            ValidateEftposAddress(address);
             _eftposAddress = "ws://" + address;
             _conn.Address = _eftposAddress;
             return true;
@@ -1703,33 +1703,28 @@ namespace SPIClient
                     }
                     else if (CurrentFlow == SpiFlow.Pairing)
                     {
-                        new Thread(() =>
+                        if (CurrentPairingFlowState.Finished) return;
+
+                        if (_retriesSinceLastPairing >= _retriesBeforePairing)
                         {
-                            Thread.CurrentThread.IsBackground = true;
-
-                            if (CurrentPairingFlowState.Finished) return;
-
-                            if (_retriesSinceLastPairing >= _retriesBeforePairing)
+                            _retriesSinceLastPairing = 0;
+                            _log.Warn("Lost Connection during pairing.");
+                            _onPairingFailed();
+                            _pairingFlowStateChanged(this, CurrentPairingFlowState);
+                            return;
+                        }
+                        else
+                        {
+                            _log.Info($"Will try to re-pair in {_sleepBeforeReconnectMs}ms ...");
+                            Thread.Sleep(_sleepBeforeReconnectMs);
+                            if (CurrentStatus != SpiStatus.PairedConnected)
                             {
-                                _retriesSinceLastPairing = 0;
-                                _log.Warn("Lost Connection during pairing.");
-                                _onPairingFailed();
-                                _pairingFlowStateChanged(this, CurrentPairingFlowState);
-                                return;
+                                // This is non-blocking
+                                _conn?.Connect();
                             }
-                            else
-                            {
-                                _log.Info($"Will try to re-pair in {_sleepBeforeReconnectMs}ms ...");
-                                Thread.Sleep(_sleepBeforeReconnectMs);
-                                if (CurrentStatus != SpiStatus.PairedConnected)
-                                {
-                                    // This is non-blocking
-                                    _conn?.Connect();
-                                }
 
-                                _retriesSinceLastPairing += 1;
-                            }
-                        }).Start();
+                            _retriesSinceLastPairing += 1;
+                        }
                     }
                     break;
                 default:
@@ -2041,7 +2036,7 @@ namespace SPIClient
 
         #region Internals for Validations
 
-        private string ValidateForPosId(string posId)
+        private string ValidatePosId(string posId)
         {
             if (posId?.Length > 16)
             {
@@ -2057,7 +2052,7 @@ namespace SPIClient
             return posId;
         }
 
-        private void ValidateForEftposAddress(string eftposAddress)
+        private void ValidateEftposAddress(string eftposAddress)
         {
             if (!string.IsNullOrWhiteSpace(eftposAddress) && !regexItemsForEftposAddress.IsMatch(eftposAddress))
             {
