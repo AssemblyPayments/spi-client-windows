@@ -37,7 +37,7 @@ namespace Test
         }
 
         [Fact]
-        public void SetPosId_OnValidLength_IsSet()
+        public void SetPosId_OnInvalidLength_IsSet()
         {
             // arrange
             const string posId = "12345678901234567";
@@ -57,7 +57,7 @@ namespace Test
         }
 
         [Fact]
-        public void SpiInitate_OnValidLengthForPosId_IsSet()
+        public void SpiInitate_OnInvalidLengthForPosId_IsSet()
         {
             // arrange
             const string posId = "12345678901234567";

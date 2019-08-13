@@ -137,21 +137,8 @@ namespace SPIClient
         /// <param name="secrets">The Pairing secrets, if you know it already, or null otherwise</param>
         public Spi(string posId, string serialNumber, string eftposAddress, Secrets secrets)
         {
-            if (posId?.Length > 16)
-            {
-                posId = posId.Substring(0, 16);
-                _log.Warn("The Pos Id should be equal or less than 16 characters! It has been truncated");
-            }
-
-            if (!string.IsNullOrWhiteSpace(posId) && !regexItemsForPosId.IsMatch(posId))
-            {
-                _log.Warn("The Pos Id can not include special characters!");
-            }
-
-            if (!string.IsNullOrWhiteSpace(eftposAddress) && !regexItemsForEftposAddress.IsMatch(eftposAddress))
-            {
-                _log.Warn("The Eftpos Address is not in correct format!");
-            }
+            posId = ValidateForPosId(posId);
+            ValidateForEftposAddress(eftposAddress);
 
             _posId = posId;
             _serialNumber = serialNumber;
@@ -309,19 +296,7 @@ namespace SPIClient
         {
             if (CurrentStatus != SpiStatus.Unpaired)
                 return false;
-
-            if (posId?.Length > 16)
-            {
-                posId = posId.Substring(0, 16);
-                _log.Warn("The Pos Id should be equal or less than 16 characters! It has been truncated");
-            }
-
-            if (!string.IsNullOrWhiteSpace(posId) && !regexItemsForPosId.IsMatch(posId))
-            {
-                _log.Warn("The Pos Id can not include special characters!");
-            }
-
-            _posId = posId;
+            _posId = ValidateForPosId(posId);
             _spiMessageStamp.PosId = posId;
             return true;
         }
@@ -335,12 +310,7 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.PairedConnected || _autoAddressResolutionEnabled)
                 return false;
-
-            if (!string.IsNullOrWhiteSpace(address) && !regexItemsForEftposAddress.IsMatch(address))
-            {
-                _log.Warn("The Eftpos Address is not in correct format!");
-            }
-
+            ValidateForEftposAddress(address);
             _eftposAddress = "ws://" + address;
             _conn.Address = _eftposAddress;
             return true;
@@ -1733,22 +1703,23 @@ namespace SPIClient
                     }
                     else if (CurrentFlow == SpiFlow.Pairing)
                     {
-                        Task.Factory.StartNew(() =>
+                        new Thread(() =>
                         {
+                            Thread.CurrentThread.IsBackground = true;
+
                             if (CurrentPairingFlowState.Finished) return;
 
                             if (_retriesSinceLastPairing >= _retriesBeforePairing)
                             {
                                 _retriesSinceLastPairing = 0;
                                 _log.Warn("Lost Connection during pairing.");
-                                CurrentPairingFlowState.Message = "Could not Connect to Pair. Check Network and Try Again...";
                                 _onPairingFailed();
                                 _pairingFlowStateChanged(this, CurrentPairingFlowState);
                                 return;
                             }
                             else
                             {
-                                _log.Info($"Will try to reconnect in {_sleepBeforeReconnectMs}ms ...");
+                                _log.Info($"Will try to re-pair in {_sleepBeforeReconnectMs}ms ...");
                                 Thread.Sleep(_sleepBeforeReconnectMs);
                                 if (CurrentStatus != SpiStatus.PairedConnected)
                                 {
@@ -1758,7 +1729,7 @@ namespace SPIClient
 
                                 _retriesSinceLastPairing += 1;
                             }
-                        });
+                        }).Start();
                     }
                     break;
                 default:
@@ -2066,6 +2037,34 @@ namespace SPIClient
                 return false;
             }
         }
+        #endregion
+
+        #region Internals for Validations
+
+        private string ValidateForPosId(string posId)
+        {
+            if (posId?.Length > 16)
+            {
+                posId = posId.Substring(0, 16);
+                _log.Warn("The Pos Id should be equal or less than 16 characters! It has been truncated");
+            }
+
+            if (!string.IsNullOrWhiteSpace(posId) && !regexItemsForPosId.IsMatch(posId))
+            {
+                _log.Warn("The Pos Id can not include special characters!");
+            }
+
+            return posId;
+        }
+
+        private void ValidateForEftposAddress(string eftposAddress)
+        {
+            if (!string.IsNullOrWhiteSpace(eftposAddress) && !regexItemsForEftposAddress.IsMatch(eftposAddress))
+            {
+                _log.Warn("The Eftpos Address is not in correct format!");
+            }
+        }
+
         #endregion
 
         #region Device Management 
