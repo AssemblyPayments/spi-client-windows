@@ -148,17 +148,6 @@ namespace SPIClient
                 openTablesResponse = new GetOpenTablesResponse();
                 _log.Info("There is no open table.");
             }
-            else
-            {
-                foreach (var openTablesEntry in openTablesResponse.OpenTablesEntries)
-                {
-                    if (openTablesEntry.TableId.Length > 20)
-                    {
-                        _log.Warn(openTablesEntry.TableId + "Table Id is greater than 20 characters!");
-                        openTablesEntry.TableId = openTablesEntry.TableId.Substring(0, 20);
-                    }
-                }
-            }
 
             _spi._send(openTablesResponse.ToMessage(m.Id));
         }
