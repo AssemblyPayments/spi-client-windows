@@ -297,7 +297,7 @@ namespace SPIClient
             if (CurrentStatus != SpiStatus.Unpaired)
                 return false;
             _posId = ValidatePosId(posId);
-            _spiMessageStamp.PosId = posId;
+            _spiMessageStamp.PosId = _posId;
             return true;
         }
 
