@@ -1,3 +1,5 @@
+using System;
+using System.Net;
 using Serilog;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -2037,12 +2039,12 @@ namespace SPIClient
             if (posId?.Length > 16)
             {
                 posId = posId.Substring(0, 16);
-                _log.Warn("The Pos Id should be equal or less than 16 characters! It has been truncated");
+                _log.Warning("The Pos Id should be equal or less than 16 characters! It has been truncated");
             }
 
             if (!string.IsNullOrWhiteSpace(posId) && !regexItemsForPosId.IsMatch(posId))
             {
-                _log.Warn("The Pos Id can not include special characters!");
+                _log.Warning("The Pos Id can not include special characters!");
             }
 
             return posId;
@@ -2052,7 +2054,7 @@ namespace SPIClient
         {
             if (!string.IsNullOrWhiteSpace(eftposAddress) && !regexItemsForEftposAddress.IsMatch(eftposAddress))
             {
-                _log.Warn("The Eftpos Address is not in correct format!");
+                _log.Warning("The Eftpos Address is not in correct format!");
             }
         }
 
