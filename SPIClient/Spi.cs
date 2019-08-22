@@ -325,7 +325,7 @@ namespace SPIClient
          * @param posVendorId Vendor identifier of the POS itself.
          * @param posVersion  Version string of the POS itself.
          */
-        public void SetPosInformation(string posVendorId, string posVersion)
+        public void SetPosInfo(string posVendorId, string posVersion)
         {
             _posVendorId = posVendorId;
             _posVersion = posVersion;
