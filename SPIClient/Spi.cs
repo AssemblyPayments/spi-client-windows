@@ -1809,7 +1809,7 @@ namespace SPIClient
                 }
                 else
                 {
-                    if (!_hasSetInfo) { _callSetPosInformation(); }
+                    if (!_hasSetInfo) { _callSetPosInfo(); }
 
                     // let's also tell the eftpos our latest table configuration.
                     _spiPat?.PushPayAtTableConfig();
@@ -1817,7 +1817,7 @@ namespace SPIClient
             }
         }
 
-        private void _callSetPosInformation()
+        private void _callSetPosInfo()
         {
             SetPosInfoRequest setPosInfoRequest = new SetPosInfoRequest(_posVersion, _posVendorId, ".net", GetVersion(), DeviceInfo.GetAppDeviceInfo());
             _send(setPosInfoRequest.toMessage());
