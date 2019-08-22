@@ -1,10 +1,7 @@
-﻿using log4net;
-using log4net.Config;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using SPIClient.Service;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -430,27 +427,6 @@ namespace SPIClient
         public string NewBillId()
         {
             return (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds.ToString();
-        }
-
-        private static readonly ILog log = LogManagerWrapper.GetLogger("spi");
-    }
-
-    public static class LogManagerWrapper
-    { 
-        public static ILog GetLogger(string type)
-        {
-            // If no loggers have been created, load our own.
-            if (LogManager.GetCurrentLoggers().Length == 0)
-            {
-                LoadConfig();
-            }
-            return LogManager.GetLogger(type);
-        }
-
-        private static void LoadConfig()
-        {
-            //// TODO: Do exception handling for File access issues and supply sane defaults if it's unavailable.
-            XmlConfigurator.ConfigureAndWatch(new FileInfo("SPIClient.dll.config"));
         }
     }
 

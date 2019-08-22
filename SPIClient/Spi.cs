@@ -2204,7 +2204,6 @@ namespace SPIClient
 
         private SpiPreauth _spiPreauth;
 
-        //private static readonly log4net.ILog _log = log4net.LogManager.GetLogger("spi");
         private static readonly Serilog.Core.Logger _log = new LoggerConfiguration()
                                                                 .MinimumLevel.Debug()
                                                                 .WriteTo.File(@"Spi.log")
