@@ -1,5 +1,4 @@
 ﻿using SPIClient;
-using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Test

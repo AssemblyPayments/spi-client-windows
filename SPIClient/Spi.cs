@@ -293,7 +293,7 @@ namespace SPIClient
 
         /// <summary>
         /// Allows you to set the PosId which identifies this instance of your POS.
-        /// Can only be called in thge Unpaired state. 
+        /// Can only be called in in the unpaired state. 
         /// </summary>
         public bool SetPosId(string posId)
         {
@@ -303,7 +303,8 @@ namespace SPIClient
             if (!IsPosIdValid(posId))
                 return false;
 
-            _spiMessageStamp.PosId = _posId;
+            _posId = posId;
+            _spiMessageStamp.PosId = posId;
             return true;
         }
 
@@ -2048,7 +2049,7 @@ namespace SPIClient
         {
             if (posId?.Length > 16)
             {
-                _log.Warning("Pos Id is greater than 16 characters. It has been truncated to 16 characters");
+                _log.Warning("Pos Id is greater than 16 characters");
                 return false;
             }
 
