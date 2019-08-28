@@ -138,8 +138,10 @@ namespace SPIClient
         /// <param name="secrets">The Pairing secrets, if you know it already, or null otherwise</param>
         public Spi(string posId, string serialNumber, string eftposAddress, Secrets secrets)
         {
-            posId = ValidatePosId(posId);
-            ValidateEftposAddress(eftposAddress);
+            if (!IsPosIdValid(posId) || !IsEftposAddressValid(eftposAddress))
+            {
+                return;
+            }
 
             _posId = posId;
             _serialNumber = serialNumber;
@@ -297,7 +299,10 @@ namespace SPIClient
         {
             if (CurrentStatus != SpiStatus.Unpaired)
                 return false;
-            _posId = ValidatePosId(posId);
+
+            if (!IsPosIdValid(posId))
+                return false;
+
             _spiMessageStamp.PosId = _posId;
             return true;
         }
@@ -311,7 +316,10 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.PairedConnected || _autoAddressResolutionEnabled)
                 return false;
-            ValidateEftposAddress(address);
+
+            if (!IsEftposAddressValid(address))
+                return false;
+
             _eftposAddress = "ws://" + address;
             _conn.Address = _eftposAddress;
             return true;
@@ -378,15 +386,17 @@ namespace SPIClient
         /// <returns>Whether pairing has initiated or not</returns>
         public bool Pair()
         {
+            _log.Warning("Trying to pair ....");
+
             if (CurrentStatus != SpiStatus.Unpaired)
             {
-                _log.Warning("Tried to Pair but we're already so.");
+                _log.Warning("Tried to Pair, but we're already paired. Stop pairing.");
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(_posId) || string.IsNullOrWhiteSpace(_eftposAddress))
+            if (!IsPosIdValid(_posId) || !IsEftposAddressValid(_eftposAddress))
             {
-                _log.Warning("Tried to Pair but missing posId or eftposAddress");
+                _log.Warning("Invalid Pos Id or Eftpos address, stop pairing.");
                 return false;
             }
 
@@ -2034,28 +2044,44 @@ namespace SPIClient
 
         #region Internals for Validations
 
-        private string ValidatePosId(string posId)
+        private bool IsPosIdValid(string posId)
         {
             if (posId?.Length > 16)
             {
-                posId = posId.Substring(0, 16);
-                _log.Warning("The Pos Id should be equal or less than 16 characters! It has been truncated");
+                _log.Warning("Pos Id is greater than 16 characters. It has been truncated to 16 characters");
+                return false;
             }
 
-            if (!string.IsNullOrWhiteSpace(posId) && !regexItemsForPosId.IsMatch(posId))
+            if (string.IsNullOrWhiteSpace(posId))
             {
-                _log.Warning("The Pos Id can not include special characters!");
+                _log.Warning("Pos Id cannot be null or empty");
+                return false;
             }
 
-            return posId;
+            if (!regexItemsForPosId.IsMatch(posId))
+            {
+                _log.Warning("Pos Id cannot include special characters");
+                return false;
+            }
+
+            return true;
         }
 
-        private void ValidateEftposAddress(string eftposAddress)
+        private bool IsEftposAddressValid(string eftposAddress)
         {
-            if (!string.IsNullOrWhiteSpace(eftposAddress) && !regexItemsForEftposAddress.IsMatch(eftposAddress))
+            if (string.IsNullOrWhiteSpace(eftposAddress))
             {
-                _log.Warning("The Eftpos Address is not in correct format!");
+                _log.Warning("The Eftpos address cannot be null or empty");
+                return false;
             }
+
+            if (!regexItemsForEftposAddress.IsMatch(eftposAddress))
+            {
+                _log.Warning("The Eftpos address is not in the right format");
+                return false;
+            }
+
+            return true;
         }
 
         #endregion
