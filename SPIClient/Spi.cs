@@ -301,6 +301,8 @@ namespace SPIClient
             if (CurrentStatus != SpiStatus.Unpaired)
                 return false;
 
+            _posId = ""; // reset posId to give more explicit feedback
+
             if (!IsPosIdValid(posId))
                 return false;
 
@@ -318,6 +320,8 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.PairedConnected || _autoAddressResolutionEnabled)
                 return false;
+
+            _eftposAddress = ""; // reset eftposAddress to give more explicit feedback
 
             if (!IsEftposAddressValid(address))
                 return false;
