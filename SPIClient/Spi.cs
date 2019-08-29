@@ -1530,8 +1530,11 @@ namespace SPIClient
 
                 if (CurrentFlow != SpiFlow.Transaction || txState.Finished || !txState.PosRefId.Equals(incomingPosRefId))
                 {
-                    _log.Information($"Received Cancel Required but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
-                    return;
+                    if (!cancelResponse.WasTxnPastPointOfNoReturn())
+                    {
+                        _log.Information($"Received Cancel Required but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
+                        return;
+                    }
                 }
 
                 if (cancelResponse.Success) return;
