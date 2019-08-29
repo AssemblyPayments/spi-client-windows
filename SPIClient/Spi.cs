@@ -1925,7 +1925,7 @@ namespace SPIClient
         {
             // First we parse the incoming message
             var m = Message.FromJson(messageJson.Message, _secrets);
-            _log.Debug("Received:" + m.DecryptedJson);
+            _log.Debug("Received: {Json:1}", m.DecryptedJson);
 
             if (SpiPreauth.IsPreauthEvent(m.EventName))
             {
@@ -2044,13 +2044,13 @@ namespace SPIClient
             var json = message.ToJson(_spiMessageStamp);
             if (_conn.Connected)
             {
-                _log.Debug("Sending: " + message.DecryptedJson);
+                _log.Debug("Sending: {Json:1}", message.DecryptedJson);
                 _conn.Send(json);
                 return true;
             }
             else
             {
-                _log.Debug("Asked to send, but not connected: " + message.DecryptedJson);
+                _log.Debug("Asked to send, but not connected: {Json:1}", message.DecryptedJson);
                 return false;
             }
         }
@@ -2246,7 +2246,7 @@ namespace SPIClient
 
         private static readonly Serilog.Core.Logger _log = new LoggerConfiguration()
                                                                 .MinimumLevel.Debug()
-                                                                .WriteTo.File(@"Spi.log")
+                                                                .WriteTo.File(@"Spi.log", rollingInterval: RollingInterval.Day)
                                                                 .CreateLogger();
 
         private static readonly string _version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
