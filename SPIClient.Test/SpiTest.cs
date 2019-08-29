@@ -48,7 +48,7 @@ namespace Test
             var value = SpiClientTestUtils.GetInstanceField(typeof(Spi), spi, "_posId");
 
             // assert
-            Assert.NotEqual(posId, value);
+            Assert.NotEqual("", value);
         }
 
         [Fact]
@@ -63,7 +63,7 @@ namespace Test
             var value = SpiClientTestUtils.GetInstanceField(typeof(Spi), spi, "_posId");
 
             // assert
-            Assert.NotEqual(posId, value);
+            Assert.NotEqual("", value);
         }
 
         [Fact]
@@ -94,7 +94,7 @@ namespace Test
             var value = SpiClientTestUtils.GetInstanceField(typeof(Spi), spi, "_posId");
 
             // assert
-            Assert.NotEqual(posId, value);
+            Assert.NotEqual("", value);
         }
 
         [Fact]

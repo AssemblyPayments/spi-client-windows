@@ -179,9 +179,17 @@ namespace SPIClient
                 throw new NullReferenceException("Missing POS vendor ID and version. posVendorId and posVersion are required before starting");
             }
 
-            if (!IsPosIdValid(_posId) || !IsEftposAddressValid(_eftposAddress))
+            if (!IsPosIdValid(_posId))
             {
-                // continue, as they can set the posId and eftposAddress further down the track
+                // continue, as they can set the posId later on
+                _posId = "";
+                _log.Warning("Invalid parameter, please correct them before pairing");
+            }
+
+            if (!IsEftposAddressValid(_eftposAddress))
+            {
+                // continue, as they can set the eftposAddress later on
+                _eftposAddress = "";
                 _log.Warning("Invalid parameter, please correct them before pairing");
             }
 
