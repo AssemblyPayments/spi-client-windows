@@ -138,11 +138,6 @@ namespace SPIClient
         /// <param name="secrets">The Pairing secrets, if you know it already, or null otherwise</param>
         public Spi(string posId, string serialNumber, string eftposAddress, Secrets secrets)
         {
-            if (!IsPosIdValid(posId) || !IsEftposAddressValid(eftposAddress))
-            {
-                return;
-            }
-
             _posId = posId;
             _serialNumber = serialNumber;
             _secrets = secrets;
@@ -182,6 +177,12 @@ namespace SPIClient
                 // POS information is now required to be set
                 _log.Warning("Missing POS vendor ID and version. posVendorId and posVersion are required before starting");
                 throw new NullReferenceException("Missing POS vendor ID and version. posVendorId and posVersion are required before starting");
+            }
+
+            if (!IsPosIdValid(_posId) || !IsEftposAddressValid(_eftposAddress))
+            {
+                // continue, as they can set the posId and eftposAddress further down the track
+                _log.Warning("Invalid parameter, please correct them before pairing");
             }
 
             _resetConn();
@@ -2076,7 +2077,7 @@ namespace SPIClient
                 return false;
             }
 
-            if (!regexItemsForEftposAddress.IsMatch(eftposAddress))
+            if (!regexItemsForEftposAddress.IsMatch(eftposAddress.Replace("ws://", "")))
             {
                 _log.Warning("The Eftpos address is not in the right format");
                 return false;
