@@ -312,7 +312,10 @@ namespace SPIClient
             _posId = ""; // reset posId to give more explicit feedback
 
             if (!IsPosIdValid(posId))
+            {
+                _log.Information("Pos Id set to null");
                 return false;
+            }
 
             _posId = posId;
             _spiMessageStamp.PosId = posId;
@@ -332,7 +335,10 @@ namespace SPIClient
             _eftposAddress = ""; // reset eftposAddress to give more explicit feedback
 
             if (!IsEftposAddressValid(address))
+            {
+                _log.Information("Eftpos Address set to null");
                 return false;
+            }
 
             _eftposAddress = "ws://" + address;
             _conn.Address = _eftposAddress;
