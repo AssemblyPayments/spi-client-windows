@@ -9,8 +9,6 @@ namespace SPIClient.Service
 {
     public class HttpBaseService
     {
-        private static readonly Serilog.Core.Logger Log = new LoggerConfiguration().WriteTo.File("spi.log").CreateLogger();
-
         public DataFormat DataFormat { get; set; }
         private string Url { get; }
         private IRestClient RestClient { get; set; }

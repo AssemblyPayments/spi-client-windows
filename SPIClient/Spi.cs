@@ -151,6 +151,12 @@ namespace SPIClient
             _mostRecentPingSent = null;
             _mostRecentPongReceived = null;
             _missedPongsCount = 0;
+
+            // configure global logging
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.File(@"Spi.log", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
         }
 
         public SpiPayAtTable EnablePayAtTable()
@@ -175,7 +181,7 @@ namespace SPIClient
             if (string.IsNullOrWhiteSpace(_posVendorId) || string.IsNullOrWhiteSpace(_posVersion))
             {
                 // POS information is now required to be set
-                _log.Warning("Missing POS vendor ID and version. posVendorId and posVersion are required before starting");
+                Log.Warning("Missing POS vendor ID and version. posVendorId and posVersion are required before starting");
                 throw new NullReferenceException("Missing POS vendor ID and version. posVendorId and posVersion are required before starting");
             }
 
@@ -183,14 +189,14 @@ namespace SPIClient
             {
                 // continue, as they can set the posId later on
                 _posId = "";
-                _log.Warning("Invalid parameter, please correct them before pairing");
+                Log.Warning("Invalid parameter, please correct them before pairing");
             }
 
             if (!IsEftposAddressValid(_eftposAddress))
             {
                 // continue, as they can set the eftposAddress later on
                 _eftposAddress = "";
-                _log.Warning("Invalid parameter, please correct them before pairing");
+                Log.Warning("Invalid parameter, please correct them before pairing");
             }
 
             _resetConn();
@@ -199,13 +205,13 @@ namespace SPIClient
             CurrentFlow = SpiFlow.Idle;
             if (_secrets != null)
             {
-                _log.Information("Starting in Paired State");
+                Log.Information("Starting in Paired State");
                 CurrentStatus = SpiStatus.PairedConnecting;
                 _conn.Connect(); // This is non-blocking
             }
             else
             {
-                _log.Information("Starting in Unpaired State");
+                Log.Information("Starting in Unpaired State");
                 _currentStatus = SpiStatus.Unpaired;
             }
         }
@@ -313,7 +319,7 @@ namespace SPIClient
 
             if (!IsPosIdValid(posId))
             {
-                _log.Information("Pos Id set to null");
+                Log.Information("Pos Id set to null");
                 return false;
             }
 
@@ -336,7 +342,7 @@ namespace SPIClient
 
             if (!IsEftposAddressValid(address))
             {
-                _log.Information("Eftpos Address set to null");
+                Log.Information("Eftpos Address set to null");
                 return false;
             }
 
@@ -406,17 +412,17 @@ namespace SPIClient
         /// <returns>Whether pairing has initiated or not</returns>
         public bool Pair()
         {
-            _log.Warning("Trying to pair ....");
+            Log.Warning("Trying to pair ....");
 
             if (CurrentStatus != SpiStatus.Unpaired)
             {
-                _log.Warning("Tried to Pair, but we're already paired. Stop pairing.");
+                Log.Warning("Tried to Pair, but we're already paired. Stop pairing.");
                 return false;
             }
 
             if (!IsPosIdValid(_posId) || !IsEftposAddressValid(_eftposAddress))
             {
-                _log.Warning("Invalid Pos Id or Eftpos address, stop pairing.");
+                Log.Warning("Invalid Pos Id or Eftpos address, stop pairing.");
                 return false;
             }
 
@@ -452,7 +458,7 @@ namespace SPIClient
             if (CurrentPairingFlowState.AwaitingCheckFromEftpos)
             {
                 // But we are still waiting for confirmation from Eftpos side.
-                _log.Information("Pair Code Confirmed from POS side, but am still waiting for confirmation from Eftpos.");
+                Log.Information("Pair Code Confirmed from POS side, but am still waiting for confirmation from Eftpos.");
                 CurrentPairingFlowState.Message =
                     "Click YES on EFTPOS if code is: " + CurrentPairingFlowState.ConfirmationCode;
                 _pairingFlowStateChanged(this, CurrentPairingFlowState);
@@ -460,7 +466,7 @@ namespace SPIClient
             else
             {
                 // Already confirmed from Eftpos - So all good now. We're Paired also from the POS perspective.
-                _log.Information("Pair Code Confirmed from POS side, and was already confirmed from Eftpos side. Pairing finalised.");
+                Log.Information("Pair Code Confirmed from POS side, and was already confirmed from Eftpos side. Pairing finalised.");
                 _onPairingSuccess();
                 _onReadyToTransact();
             }
@@ -674,7 +680,7 @@ namespace SPIClient
             {
                 if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished || !CurrentTxFlowState.AwaitingSignatureCheck)
                 {
-                    _log.Information("Asked to accept signature but I was not waiting for one.");
+                    Log.Information("Asked to accept signature but I was not waiting for one.");
                     return new MidTxResult(false, "Asked to accept signature but I was not waiting for one.");
                 }
 
@@ -707,7 +713,7 @@ namespace SPIClient
             {
                 if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished || !CurrentTxFlowState.AwaitingPhoneForAuth)
                 {
-                    _log.Information("Asked to send auth code but I was not waiting for one.");
+                    Log.Information("Asked to send auth code but I was not waiting for one.");
                     return new SubmitAuthCodeResult(false, "Was not waiting for one.");
                 }
 
@@ -730,7 +736,7 @@ namespace SPIClient
             {
                 if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished)
                 {
-                    _log.Information("Asked to cancel transaction but I was not in the middle of one.");
+                    Log.Information("Asked to cancel transaction but I was not in the middle of one.");
                     return new MidTxResult(false, "Asked to cancel transaction but I was not in the middle of one.");
                 }
 
@@ -1033,7 +1039,7 @@ namespace SPIClient
         /// <returns></returns>
         public Message.SuccessState GltMatch(GetLastTransactionResponse gltResponse, string posRefId)
         {
-            _log.Information($"GLT CHECK: PosRefId: {posRefId}->{gltResponse.GetPosRefId()}");
+            Log.Information($"GLT CHECK: PosRefId: {posRefId}->{gltResponse.GetPosRefId()}");
 
             if (!posRefId.Equals(gltResponse.GetPosRefId()))
             {
@@ -1053,7 +1059,7 @@ namespace SPIClient
         /// <returns></returns>
         public Message.SuccessState GltMatch(GetLastTransactionResponse gltResponse, string posRefId, int expectedAmount, DateTime requestTime)
         {
-            _log.Information($"GLT CHECK: PosRefId: {posRefId}->{gltResponse.GetPosRefId()}");
+            Log.Information($"GLT CHECK: PosRefId: {posRefId}->{gltResponse.GetPosRefId()}");
 
             var gltBankDateTime = DateTime.ParseExact(gltResponse.GetBankDateTimeString(), "ddMMyyyyHHmmss", System.Globalization.CultureInfo.InvariantCulture);
             var compare = DateTime.Compare(requestTime, gltBankDateTime);
@@ -1149,13 +1155,13 @@ namespace SPIClient
                 if (CurrentPairingFlowState.AwaitingCheckFromPos)
                 {
                     // Still Waiting for User to say yes on POS
-                    _log.Information("Got Pair Confirm from Eftpos, but still waiting for use to confirm from POS.");
+                    Log.Information("Got Pair Confirm from Eftpos, but still waiting for use to confirm from POS.");
                     CurrentPairingFlowState.Message = "Confirm that the following Code is what the EFTPOS showed";
                     _pairingFlowStateChanged(this, CurrentPairingFlowState);
                 }
                 else
                 {
-                    _log.Information("Got Pair Confirm from Eftpos, and already had confirm from POS. Now just waiting for first pong.");
+                    Log.Information("Got Pair Confirm from Eftpos, and already had confirm from POS. Now just waiting for first pong.");
                     _onPairingSuccess();
                 }
 
@@ -1171,7 +1177,7 @@ namespace SPIClient
 
         private void _handleDropKeysAdvice(Message m)
         {
-            _log.Information("Eftpos was Unpaired. I shall unpair from my end as well.");
+            Log.Information("Eftpos was Unpaired. I shall unpair from my end as well.");
             _doUnpair();
         }
 
@@ -1239,7 +1245,7 @@ namespace SPIClient
                 var incomingPosRefId = m.GetDataStringValue("pos_ref_id");
                 if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished || !CurrentTxFlowState.PosRefId.Equals(incomingPosRefId))
                 {
-                    _log.Information($"Received Signature Required but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
+                    Log.Information($"Received Signature Required but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
                     return;
                 }
                 CurrentTxFlowState.SignatureRequired(new SignatureRequired(m), "Ask Customer to Sign the Receipt");
@@ -1258,7 +1264,7 @@ namespace SPIClient
                 var incomingPosRefId = m.GetDataStringValue("pos_ref_id");
                 if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished || !CurrentTxFlowState.PosRefId.Equals(incomingPosRefId))
                 {
-                    _log.Information($"Received Auth Code Required but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
+                    Log.Information($"Received Auth Code Required but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
                     return;
                 }
                 var phoneForAuthRequired = new PhoneForAuthRequired(m);
@@ -1279,7 +1285,7 @@ namespace SPIClient
                 var incomingPosRefId = m.GetDataStringValue("pos_ref_id");
                 if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished || !CurrentTxFlowState.PosRefId.Equals(incomingPosRefId))
                 {
-                    _log.Information($"Received Purchase response but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
+                    Log.Information($"Received Purchase response but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
                     return;
                 }
                 // TH-1A, TH-2A
@@ -1301,7 +1307,7 @@ namespace SPIClient
                 var incomingPosRefId = m.GetDataStringValue("pos_ref_id");
                 if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished || !CurrentTxFlowState.PosRefId.Equals(incomingPosRefId))
                 {
-                    _log.Information($"Received Cashout Response but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
+                    Log.Information($"Received Cashout Response but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
                     return;
                 }
                 // TH-1A, TH-2A
@@ -1323,7 +1329,7 @@ namespace SPIClient
                 var incomingPosRefId = m.GetDataStringValue("pos_ref_id");
                 if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished || !CurrentTxFlowState.PosRefId.Equals(incomingPosRefId))
                 {
-                    _log.Information($"Received Moto Response but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
+                    Log.Information($"Received Moto Response but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
                     return;
                 }
                 // TH-1A, TH-2A
@@ -1345,7 +1351,7 @@ namespace SPIClient
                 var incomingPosRefId = m.GetDataStringValue("pos_ref_id");
                 if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished || !CurrentTxFlowState.PosRefId.Equals(incomingPosRefId))
                 {
-                    _log.Information($"Received Refund response but I was not waiting for this one. Incoming Pos Ref ID: {incomingPosRefId}");
+                    Log.Information($"Received Refund response but I was not waiting for this one. Incoming Pos Ref ID: {incomingPosRefId}");
                     return;
                 }
                 // TH-1A, TH-2A
@@ -1366,7 +1372,7 @@ namespace SPIClient
             {
                 if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished)
                 {
-                    _log.Information($"Received Settle response but I was not waiting for one. {m.DecryptedJson}");
+                    Log.Information($"Received Settle response but I was not waiting for one. {m.DecryptedJson}");
                     return;
                 }
                 // TH-1A, TH-2A
@@ -1387,7 +1393,7 @@ namespace SPIClient
             {
                 if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished)
                 {
-                    _log.Information($"Received Settlement Enquiry response but I was not waiting for one. {m.DecryptedJson}");
+                    Log.Information($"Received Settlement Enquiry response but I was not waiting for one. {m.DecryptedJson}");
                     return;
                 }
                 // TH-1A, TH-2A
@@ -1412,12 +1418,12 @@ namespace SPIClient
                     && m.GetError() == "NO_TRANSACTION")
                 {
                     // TH-2E
-                    _log.Information($"Was trying to cancel a transaction but there is nothing to cancel. Calling GLT to see what's up");
+                    Log.Information($"Was trying to cancel a transaction but there is nothing to cancel. Calling GLT to see what's up");
                     _callGetLastTransaction();
                 }
                 else
                 {
-                    _log.Information($"Received Error Event But Don't know what to do with it. {m.DecryptedJson}");
+                    Log.Information($"Received Error Event But Don't know what to do with it. {m.DecryptedJson}");
                 }
             }
         }
@@ -1433,25 +1439,25 @@ namespace SPIClient
                 var txState = CurrentTxFlowState;
                 if (CurrentFlow != SpiFlow.Transaction || txState.Finished)
                 {
-                    _log.Information($"Received glt response but we were not in the middle of a tx. ignoring.");
+                    Log.Information($"Received glt response but we were not in the middle of a tx. ignoring.");
                     return;
                 }
 
                 if (!txState.AwaitingGltResponse)
                 {
-                    _log.Information($"received a glt response but we had not asked for one within this transaction. Perhaps leftover from previous one. ignoring.");
+                    Log.Information($"received a glt response but we had not asked for one within this transaction. Perhaps leftover from previous one. ignoring.");
                     return;
                 }
 
                 if (txState.LastGltRequestId != m.Id)
                 {
-                    _log.Information($"received a glt response but the message id does not match the glt request that we sent. strange. ignoring.");
+                    Log.Information($"received a glt response but the message id does not match the glt request that we sent. strange. ignoring.");
                     return;
                 }
 
                 // TH-4 We were in the middle of a transaction.
                 // Let's attempt recovery. This is step 4 of Transaction Processing Handling
-                _log.Information($"Got Last Transaction..");
+                Log.Information($"Got Last Transaction..");
                 txState.GotGltResponse();
                 var gtlResponse = new GetLastTransactionResponse(m);
                 if (!gtlResponse.WasRetrievedSuccessfully())
@@ -1462,19 +1468,19 @@ namespace SPIClient
 
                         if (gtlResponse.IsWaitingForSignatureResponse() && !txState.AwaitingSignatureCheck)
                         {
-                            _log.Information($"Eftpos is waiting for us to send it signature accept/decline, but we were not aware of this. " +
+                            Log.Information($"Eftpos is waiting for us to send it signature accept/decline, but we were not aware of this. " +
                                       $"The user can only really decline at this stage as there is no receipt to print for signing.");
                             CurrentTxFlowState.SignatureRequired(new SignatureRequired(txState.PosRefId, m.Id, "MISSING RECEIPT\n DECLINE AND TRY AGAIN."), "Recovered in Signature Required but we don't have receipt. You may Decline then Retry.");
                         }
                         else if (gtlResponse.IsWaitingForAuthCode() && !txState.AwaitingPhoneForAuth)
                         {
-                            _log.Information($"Eftpos is waiting for us to send it auth code, but we were not aware of this. " +
+                            Log.Information($"Eftpos is waiting for us to send it auth code, but we were not aware of this. " +
                                       $"We can only cancel the transaction at this stage as we don't have enough information to recover from this.");
                             CurrentTxFlowState.PhoneForAuthRequired(new PhoneForAuthRequired(txState.PosRefId, m.Id, "UNKNOWN", "UNKNOWN"), "Recovered mid Phone-For-Auth but don't have details. You may Cancel then Retry.");
                         }
                         else
                         {
-                            _log.Information($"Operation still in progress... stay waiting.");
+                            Log.Information($"Operation still in progress... stay waiting.");
                             // No need to publish txFlowStateChanged. Can return;
                             return;
                         }
@@ -1483,14 +1489,14 @@ namespace SPIClient
                     {
                         // Let's not give up based on a TOOS error.
                         // Let's log it, and ignore it. 
-                        _log.Information($"Time-Out-Of-Sync error in Get Last Transaction response. Let's ignore it and we'll try again.");
+                        Log.Information($"Time-Out-Of-Sync error in Get Last Transaction response. Let's ignore it and we'll try again.");
                         // No need to publish txFlowStateChanged. Can return;
                         return;
                     }
                     else
                     {
                         // TH-4X - Unexpected Response when recovering
-                        _log.Information($"Unexpected Response in Get Last Transaction during - Received posRefId:{gtlResponse.GetPosRefId()} Error:{m.GetError()}. Ignoring.");
+                        Log.Information($"Unexpected Response in Get Last Transaction during - Received posRefId:{gtlResponse.GetPosRefId()} Error:{m.GetError()}. Ignoring.");
                         return;
                     }
                 }
@@ -1499,7 +1505,7 @@ namespace SPIClient
                     if (txState.Type == TransactionType.GetLastTransaction)
                     {
                         // THIS WAS A PLAIN GET LAST TRANSACTION REQUEST, NOT FOR RECOVERY PURPOSES.
-                        _log.Information($"Retrieved Last Transaction as asked directly by the user.");
+                        Log.Information($"Retrieved Last Transaction as asked directly by the user.");
                         gtlResponse.CopyMerchantReceiptToCustomerReceipt();
                         txState.Completed(m.GetSuccessState(), m, "Last Transaction Retrieved");
                     }
@@ -1510,7 +1516,7 @@ namespace SPIClient
                         if (successState == Message.SuccessState.Unknown)
                         {
                             // TH-4N: Didn't Match our transaction. Consider Unknown State.
-                            _log.Information($"Did not match transaction.");
+                            Log.Information($"Did not match transaction.");
                             txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
                         }
                         else
@@ -1538,14 +1544,14 @@ namespace SPIClient
                 {
                     if (!cancelResponse.WasTxnPastPointOfNoReturn())
                     {
-                        _log.Information($"Received Cancel Required but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
+                        Log.Information($"Received Cancel Required but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
                         return;
                     }
                 }
 
                 if (cancelResponse.Success) return;
 
-                _log.Warning("Failed to cancel transaction: reason=" + cancelResponse.GetErrorReason() + ", detail=" + cancelResponse.GetErrorDetail());
+                Log.Warning("Failed to cancel transaction: reason=" + cancelResponse.GetErrorReason() + ", detail=" + cancelResponse.GetErrorDetail());
 
                 txState.CancelFailed("Failed to cancel transaction: " + cancelResponse.GetErrorDetail() + ". Check EFTPOS.");
             }
@@ -1561,11 +1567,11 @@ namespace SPIClient
                 if (response.isSuccess())
                 {
                     _hasSetInfo = true;
-                    _log.Information("Setting POS info successful");
+                    Log.Information("Setting POS info successful");
                 }
                 else
                 {
-                    _log.Warning("Setting POS info failed: reason=" + response.getErrorReason() + ", detail=" + response.getErrorDetail());
+                    Log.Warning("Setting POS info failed: reason=" + response.getErrorReason() + ", detail=" + response.getErrorDetail());
                 }
             }
         }
@@ -1587,14 +1593,14 @@ namespace SPIClient
                             if (state.AttemptingToCancel && DateTime.Now > state.CancelAttemptTime.Add(_maxWaitForCancelTx))
                             {
                                 // TH-2T - too long since cancel attempt - Consider unknown
-                                _log.Information($"Been too long waiting for transaction to cancel.");
+                                Log.Information($"Been too long waiting for transaction to cancel.");
                                 txState.UnknownCompleted("Waited long enough for Cancel Transaction result. Check EFTPOS. ");
                                 needsPublishing = true;
                             }
                             else if (state.RequestSent && DateTime.Now > state.LastStateRequestTime.Add(_checkOnTxFrequency))
                             {
                                 // TH-1T, TH-4T - It's been a while since we received an update, let's call a GLT
-                                _log.Information($"Checking on our transaction. Last we asked was at {state.LastStateRequestTime}...");
+                                Log.Information($"Checking on our transaction. Last we asked was at {state.LastStateRequestTime}...");
                                 _callGetLastTransaction();
                             }
                         }
@@ -1663,7 +1669,7 @@ namespace SPIClient
             switch (state.ConnectionState)
             {
                 case ConnectionState.Connecting:
-                    _log.Information($"I'm Connecting to the Eftpos at {_eftposAddress}...");
+                    Log.Information($"I'm Connecting to the Eftpos at {_eftposAddress}...");
                     break;
 
                 case ConnectionState.Connected:
@@ -1678,7 +1684,7 @@ namespace SPIClient
                     }
                     else
                     {
-                        _log.Information($"I'm Connected to {_eftposAddress}...");
+                        Log.Information($"I'm Connected to {_eftposAddress}...");
                         _spiMessageStamp.Secrets = _secrets;
                         _startPeriodicPing();
                     }
@@ -1686,7 +1692,7 @@ namespace SPIClient
 
                 case ConnectionState.Disconnected:
                     // Let's reset some lifecycle related to connection state, ready for next connection
-                    _log.Information($"I'm disconnected from {_eftposAddress}...");
+                    Log.Information($"I'm disconnected from {_eftposAddress}...");
                     _mostRecentPingSent = null;
                     _mostRecentPongReceived = null;
                     _missedPongsCount = 0;
@@ -1702,7 +1708,7 @@ namespace SPIClient
                             {
                                 // we're in the middle of a transaction, just so you know!
                                 // TH-1D
-                                _log.Warning($"Lost connection in the middle of a transaction...");
+                                Log.Warning($"Lost connection in the middle of a transaction...");
                             }
                         }
 
@@ -1723,7 +1729,7 @@ namespace SPIClient
                                 }
                             }
 
-                            _log.Information($"Will try to reconnect in {_sleepBeforeReconnectMs}ms ...");
+                            Log.Information($"Will try to reconnect in {_sleepBeforeReconnectMs}ms ...");
                             Thread.Sleep(_sleepBeforeReconnectMs);
                             if (CurrentStatus != SpiStatus.Unpaired)
                             {
@@ -1739,14 +1745,14 @@ namespace SPIClient
                         if (_retriesSinceLastPairing >= _retriesBeforePairing)
                         {
                             _retriesSinceLastPairing = 0;
-                            _log.Warning("Lost Connection during pairing.");
+                            Log.Warning("Lost Connection during pairing.");
                             _onPairingFailed();
                             _pairingFlowStateChanged(this, CurrentPairingFlowState);
                             return;
                         }
                         else
                         {
-                            _log.Information($"Will try to re-pair in {_sleepBeforeReconnectMs}ms ...");
+                            Log.Information($"Will try to re-pair in {_sleepBeforeReconnectMs}ms ...");
                             Thread.Sleep(_sleepBeforeReconnectMs);
                             if (CurrentStatus != SpiStatus.PairedConnected)
                             {
@@ -1789,18 +1795,18 @@ namespace SPIClient
                         (_mostRecentPongReceived == null || _mostRecentPongReceived.Id != _mostRecentPingSent.Id))
                     {
                         _missedPongsCount += 1;
-                        _log.Information($"Eftpos didn't reply to my Ping. Missed Count: {_missedPongsCount}/{_missedPongsToDisconnect}. ");
+                        Log.Information($"Eftpos didn't reply to my Ping. Missed Count: {_missedPongsCount}/{_missedPongsToDisconnect}. ");
 
                         if (_missedPongsCount < _missedPongsToDisconnect)
                         {
-                            _log.Information("Trying another ping...");
+                            Log.Information("Trying another ping...");
                             continue;
                         }
 
                         // This means that we have reached missed pong limit.
                         // We consider this connection as broken.
                         // Let's Disconnect.
-                        _log.Information("Disconnecting...");
+                        Log.Information("Disconnecting...");
                         _conn.Disconnect();
                         break;
                     }
@@ -1817,7 +1823,7 @@ namespace SPIClient
         /// </summary>
         private void _onReadyToTransact()
         {
-            _log.Information("On Ready To Transact!");
+            Log.Information("On Ready To Transact!");
 
             // So, we have just made a connection and pinged successfully.
             CurrentStatus = SpiStatus.PairedConnected;
@@ -1892,17 +1898,17 @@ namespace SPIClient
                 // First pong received after a connection, and after the pairing process is fully finalised.
                 if (CurrentStatus != SpiStatus.Unpaired)
                 {
-                    _log.Information("First pong of connection and in paired state.");
+                    Log.Information("First pong of connection and in paired state.");
                     _onReadyToTransact();
                 }
                 else
                 {
-                    _log.Information("First pong of connection but pairing process not finalised yet.");
+                    Log.Information("First pong of connection but pairing process not finalised yet.");
                 }
             }
 
             _mostRecentPongReceived = m;
-            _log.Debug($"PongLatency:{DateTime.Now.Subtract(_mostRecentPingSentTime)}");
+            Log.Debug($"PongLatency:{DateTime.Now.Subtract(_mostRecentPingSentTime)}");
         }
 
         /// <summary>
@@ -1934,7 +1940,7 @@ namespace SPIClient
         {
             // First we parse the incoming message
             var m = Message.FromJson(messageJson.Message, _secrets);
-            _log.Debug("Received: {Json:1}", m.DecryptedJson);
+            Log.Debug("Received: {Json:1}", m.DecryptedJson);
 
             if (SpiPreauth.IsPreauthEvent(m.EventName))
             {
@@ -2035,17 +2041,17 @@ namespace SPIClient
                     _handleErrorEvent(m);
                     break;
                 case Events.InvalidHmacSignature:
-                    _log.Information("I could not verify message from Eftpos. You might have to Un-pair Eftpos and then reconnect.");
+                    Log.Information("I could not verify message from Eftpos. You might have to Un-pair Eftpos and then reconnect.");
                     break;
                 default:
-                    _log.Information($"I don't Understand Event: {m.EventName}, {m.Data}. Perhaps I have not implemented it yet.");
+                    Log.Information($"I don't Understand Event: {m.EventName}, {m.Data}. Perhaps I have not implemented it yet.");
                     break;
             }
         }
 
         private void _onWsErrorReceived(object sender, MessageEventArgs error)
         {
-            _log.Warning("Received WS Error: " + error.Message);
+            Log.Warning("Received WS Error: " + error.Message);
         }
 
         internal bool _send(Message message)
@@ -2053,13 +2059,13 @@ namespace SPIClient
             var json = message.ToJson(_spiMessageStamp);
             if (_conn.Connected)
             {
-                _log.Debug("Sending: {Json:1}", message.DecryptedJson);
+                Log.Debug("Sending: {Json:1}", message.DecryptedJson);
                 _conn.Send(json);
                 return true;
             }
             else
             {
-                _log.Debug("Asked to send, but not connected: {Json:1}", message.DecryptedJson);
+                Log.Debug("Asked to send, but not connected: {Json:1}", message.DecryptedJson);
                 return false;
             }
         }
@@ -2071,19 +2077,19 @@ namespace SPIClient
         {
             if (posId?.Length > 16)
             {
-                _log.Warning("Pos Id is greater than 16 characters");
+                Log.Warning("Pos Id is greater than 16 characters");
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(posId))
             {
-                _log.Warning("Pos Id cannot be null or empty");
+                Log.Warning("Pos Id cannot be null or empty");
                 return false;
             }
 
             if (!regexItemsForPosId.IsMatch(posId))
             {
-                _log.Warning("Pos Id cannot include special characters");
+                Log.Warning("Pos Id cannot include special characters");
                 return false;
             }
 
@@ -2094,13 +2100,13 @@ namespace SPIClient
         {
             if (string.IsNullOrWhiteSpace(eftposAddress))
             {
-                _log.Warning("The Eftpos address cannot be null or empty");
+                Log.Warning("The Eftpos address cannot be null or empty");
                 return false;
             }
 
             if (!regexItemsForEftposAddress.IsMatch(eftposAddress.Replace("ws://", "")))
             {
-                _log.Warning("The Eftpos address is not in the right format");
+                Log.Warning("The Eftpos address is not in the right format");
                 return false;
             }
 
@@ -2128,7 +2134,7 @@ namespace SPIClient
 
             if (string.IsNullOrWhiteSpace(_serialNumber) || string.IsNullOrWhiteSpace(_deviceApiKey))
             {
-                _log.Warning("Missing serialNumber and/or deviceApiKey. Need to set them before for Auto Address to work.");
+                Log.Warning("Missing serialNumber and/or deviceApiKey. Need to set them before for Auto Address to work.");
                 return;
             }
 
@@ -2192,7 +2198,7 @@ namespace SPIClient
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing) return;
-            _log.Information("Disposing...");
+            Log.Information("Disposing...");
             Log.CloseAndFlush();
             _conn?.Disconnect();
             _conn = null;
@@ -2252,11 +2258,6 @@ namespace SPIClient
         private SpiPayAtTable _spiPat;
 
         private SpiPreauth _spiPreauth;
-
-        private static readonly Serilog.Core.Logger _log = new LoggerConfiguration()
-                                                                .MinimumLevel.Debug()
-                                                                .WriteTo.File(@"Spi.log", rollingInterval: RollingInterval.Day)
-                                                                .CreateLogger();
 
         private static readonly string _version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 

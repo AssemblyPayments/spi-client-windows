@@ -199,7 +199,7 @@ namespace SPIClient
                     _handlePreauthResponse(m);
                     break;
                 default:
-                    _log.Information($"I don't Understand Preauth Event: {m.EventName}, {m.Data}. Perhaps I have not implemented it yet.");
+                    Log.Information($"I don't Understand Preauth Event: {m.EventName}, {m.Data}. Perhaps I have not implemented it yet.");
                     break;
             }
         }
@@ -212,7 +212,7 @@ namespace SPIClient
                 var currentTxFlowState = _spi.CurrentTxFlowState;
                 if (_spi.CurrentFlow != SpiFlow.Transaction || currentTxFlowState.Finished || !currentTxFlowState.PosRefId.Equals(incomingPosRefId))
                 {
-                    _log.Information($"Received Account Verify response but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
+                    Log.Information($"Received Account Verify response but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
                     return;
                 }
                 // TH-1A, TH-2A
@@ -231,7 +231,7 @@ namespace SPIClient
                 var currentTxFlowState = _spi.CurrentTxFlowState;
                 if (_spi.CurrentFlow != SpiFlow.Transaction || currentTxFlowState.Finished || !currentTxFlowState.PosRefId.Equals(incomingPosRefId))
                 {
-                    _log.Information($"Received Preauth response but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
+                    Log.Information($"Received Preauth response but I was not waiting for one. Incoming Pos Ref ID: {incomingPosRefId}");
                     return;
                 }
                 // TH-1A, TH-2A
@@ -250,7 +250,5 @@ namespace SPIClient
                    || eventName == PreauthEvents.AccountVerifyRequest
                    || eventName == PreauthEvents.AccountVerifyResponse;
         }
-
-        private static readonly Serilog.Core.Logger _log = new LoggerConfiguration().WriteTo.File("spi.log").CreateLogger();
     }
 }

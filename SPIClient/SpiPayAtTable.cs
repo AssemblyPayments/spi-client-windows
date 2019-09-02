@@ -69,7 +69,7 @@ namespace SPIClient
             billStatus.TableId = tableId;
             if (billStatus.TotalAmount <= 0)
             {
-                _log.Information("Table has 0 total amount. not sending it to eftpos.");
+                Log.Information("Table has 0 total amount. not sending it to eftpos.");
                 billStatus.Result = BillRetrievalResult.INVALID_TABLE_ID;
             }
 
@@ -84,7 +84,7 @@ namespace SPIClient
             var existingBillStatus = GetBillStatus(billPayment.BillId, billPayment.TableId, billPayment.OperatorId, billPayment.PaymentFlowStarted);
             if (existingBillStatus.Result != BillRetrievalResult.SUCCESS)
             {
-                _log.Warning("Could not retrieve Bill Status for Payment Advice. Sending Error to Eftpos.");
+                Log.Warning("Could not retrieve Bill Status for Payment Advice. Sending Error to Eftpos.");
                 _spi._send(existingBillStatus.ToMessage(m.Id));
             }
 
@@ -96,7 +96,7 @@ namespace SPIClient
                 // We have already processed this payment.
                 // perhaps Eftpos did get our acknowledgement.
                 // Let's update Eftpos.
-                _log.Warning("Had already received this bill_paymemnt advice from eftpos. Ignoring.");
+                Log.Warning("Had already received this bill_paymemnt advice from eftpos. Ignoring.");
                 _spi._send(existingBillStatus.ToMessage(m.Id));
                 return;
             }
@@ -121,7 +121,7 @@ namespace SPIClient
 
             if (updatedBillStatus.Result != BillRetrievalResult.SUCCESS)
             {
-                _log.Warning("POS Errored when being Advised of Payment. Letting EFTPOS know, and sending existing bill data.");
+                Log.Warning("POS Errored when being Advised of Payment. Letting EFTPOS know, and sending existing bill data.");
                 updatedBillStatus.BillData = existingBillStatus.BillData;
             }
             else
@@ -147,7 +147,7 @@ namespace SPIClient
             if ((openTablesResponse == null) || (openTablesResponse?.OpenTablesEntries == null) || (openTablesResponse?.OpenTablesEntries?.Count <= 0))
             {
                 openTablesResponse = new GetOpenTablesResponse();
-                _log.Information("There is no open table.");
+                Log.Information("There is no open table.");
             }
 
             _spi._send(openTablesResponse.ToMessage(m.Id));
@@ -157,9 +157,6 @@ namespace SPIClient
         {
             BillPaymentFlowEnded(m);
         }
-
-        private static readonly Serilog.Core.Logger _log = new LoggerConfiguration().WriteTo.File("spi.log").CreateLogger();
-
     }
 
 }
