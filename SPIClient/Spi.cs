@@ -2262,7 +2262,7 @@ namespace SPIClient
         private static readonly string _version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
         private readonly Regex regexItemsForEftposAddress = new Regex(@"^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$");
-        private readonly Regex regexItemsForPosId = new Regex("^[a-zA-Z0-9 ]*$");
+        private readonly Regex regexItemsForPosId = new Regex("^[a-zA-Z0-9]*$");
 
         #endregion        
     }
