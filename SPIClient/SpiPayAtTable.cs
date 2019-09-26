@@ -155,7 +155,7 @@ namespace SPIClient
 
         internal void _handleBillPaymentFlowEnded(Message m)
         {
-            BillPaymentFlowEnded(m);
+            BillPaymentFlowEnded?.Invoke(m);
         }
     }
 
