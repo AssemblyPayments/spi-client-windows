@@ -1,5 +1,4 @@
 using System;
-using System.Net;
 using Serilog;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -1090,7 +1089,9 @@ namespace SPIClient
                 _send(new PrintingRequest(key, payload).ToMessage());
             }
         }
+        #endregion
 
+        #region Device Management Methods
         public void GetTerminalStatus()
         {
             lock (_txLock)
@@ -1107,6 +1108,18 @@ namespace SPIClient
             }
         }
 
+        /// <summary>
+        /// Async call to get the current terminal address, this does not update the internals address of the library.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<string> GetTerminalAddress()
+        {
+            var service = new DeviceAddressService();
+            var addressResponse = await service.RetrieveDeviceAddress(_serialNumber, _deviceApiKey, _acquirerCode, _inTestMode);
+            var deviceAddressStatus = DeviceHelper.GenerateDeviceAddressStatus(addressResponse, _eftposAddress);
+
+            return deviceAddressStatus.Address;
+        }
         #endregion
 
         #region Internals for Pairing Flow
@@ -2122,11 +2135,6 @@ namespace SPIClient
             return _serialNumber != updatedSerialNumber;
         }
 
-        private bool HasEftposAddressChanged(string updatedEftposAddress)
-        {
-            return _eftposAddress != updatedEftposAddress;
-        }
-
         private async void _autoResolveEftposAddress()
         {
             if (!_autoAddressResolutionEnabled)
@@ -2139,49 +2147,25 @@ namespace SPIClient
             }
 
             var service = new DeviceAddressService();
-            var addressResponse = await service.RetrieveService(_serialNumber, _deviceApiKey, _acquirerCode, _inTestMode);
+            var addressResponse = await service.RetrieveDeviceAddress(_serialNumber, _deviceApiKey, _acquirerCode, _inTestMode);
+            var deviceAddressStatus = DeviceHelper.GenerateDeviceAddressStatus(addressResponse, _eftposAddress);
+            CurrentDeviceStatus = deviceAddressStatus;
 
-            DeviceAddressStatus CurrentDeviceStatus = new DeviceAddressStatus();
-
-            if (addressResponse.StatusCode == HttpStatusCode.NotFound)
+            if (deviceAddressStatus.DeviceAddressResponseCode != DeviceAddressResponseCode.SUCCESS)
             {
-                CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.INVALID_SERIAL_NUMBER;
-                CurrentDeviceStatus.ResponseStatusDescription = addressResponse.StatusDescription;
-                CurrentDeviceStatus.ResponseMessage = addressResponse.ErrorMessage;
-
+                Log.Warning("Trying to auto resolve address, but device address has not changed.");
+                
+                // even though address haven't changed - dispatch event as PoS depend on this
                 _deviceAddressChanged(this, CurrentDeviceStatus);
                 return;
             }
 
-            if (addressResponse?.Data?.Address == null)
-            {
-                CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.DEVICE_SERVICE_ERROR;
-                CurrentDeviceStatus.ResponseStatusDescription = addressResponse.StatusDescription;
-                CurrentDeviceStatus.ResponseMessage = addressResponse.ErrorMessage;
-
-                _deviceAddressChanged(this, CurrentDeviceStatus);
-                return;
-            }
-
-            if (!HasEftposAddressChanged(addressResponse.Data.Address))
-            {
-                CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.ADDRESS_NOT_CHANGED;
-
-                _deviceAddressChanged(this, CurrentDeviceStatus);
-                return;
-            }
-
-            // update device and connection address
-            _eftposAddress = "ws://" + addressResponse.Data.Address;
+            // new address, update device and connection address
+            _eftposAddress = "ws://" + deviceAddressStatus.Address;
             _conn.Address = _eftposAddress;
+            Log.Warning($"New address for device {deviceAddressStatus.Address}");
 
-            CurrentDeviceStatus = new DeviceAddressStatus
-            {
-                Address = addressResponse.Data.Address,
-                LastUpdated = addressResponse.Data.LastUpdated,
-                DeviceAddressResponseCode = DeviceAddressResponseCode.SUCCESS
-            };
-
+            // dispatch event
             _deviceAddressChanged(this, CurrentDeviceStatus);
         }
 
