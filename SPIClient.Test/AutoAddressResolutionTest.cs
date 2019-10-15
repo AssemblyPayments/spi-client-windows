@@ -76,7 +76,7 @@ namespace Test
         }
 
         [Fact]
-        public void GetTerminalAddress_OnValidSerialNumber_ReturnAddress()
+        public void GetTerminalAddress_OnRegisteredSerialNumber_ReturnAddress()
         {
             // arrange
             const string apiKey = "RamenPosDeviceAddressApiKey";
@@ -97,7 +97,7 @@ namespace Test
         }
 
         [Fact]
-        public void GetTerminalAddress_OnInvalidSerialNumber_ReturnAddress()
+        public void GetTerminalAddress_OnNotRgisteredSerialNumber_ReturnAddress()
         {
             // arrange
             const string apiKey = "RamenPosDeviceAddressApiKey";
