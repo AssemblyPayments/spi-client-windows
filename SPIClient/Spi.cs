@@ -2159,7 +2159,7 @@ namespace SPIClient
             else if (deviceAddressStatus.DeviceAddressResponseCode != DeviceAddressResponseCode.SUCCESS)
             {
                 Log.Information("Address resolved, but device address has not changed.");
-                
+         
                 // even though address haven't changed - dispatch event as PoS depend on this
                 _deviceAddressChanged(this, CurrentDeviceStatus);
                 return;
