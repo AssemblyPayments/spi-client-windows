@@ -55,7 +55,10 @@ namespace SPIClient
 
         public void PushPayAtTableConfig()
         {
-            _spi._send(Config.ToMessage(RequestIdHelper.Id("patconf")));
+            if (_spi.CurrentStatus == SpiStatus.PairedConnected)
+            {
+                _spi._send(Config.ToMessage(RequestIdHelper.Id("patconf")));
+            }
         }
 
         internal void _handleGetBillDetailsRequest(Message m)

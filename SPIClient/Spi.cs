@@ -1084,9 +1084,12 @@ namespace SPIClient
 
         public void PrintReport(string key, string payload)
         {
-            lock (_txLock)
+            if (CurrentStatus == SpiStatus.PairedConnected)
             {
-                _send(new PrintingRequest(key, payload).ToMessage());
+                lock (_txLock)
+                {
+                    _send(new PrintingRequest(key, payload).ToMessage());
+                }
             }
         }
         #endregion
@@ -1094,17 +1097,23 @@ namespace SPIClient
         #region Device Management Methods
         public void GetTerminalStatus()
         {
-            lock (_txLock)
+            if (CurrentStatus == SpiStatus.PairedConnected)
             {
-                _send(new TerminalStatusRequest().ToMessage());
+                lock (_txLock)
+                {
+                    _send(new TerminalStatusRequest().ToMessage());
+                }
             }
         }
 
         public void GetTerminalConfiguration()
         {
-            lock (_txLock)
+            if (CurrentStatus == SpiStatus.PairedConnected)
             {
-                _send(new TerminalConfigurationRequest().ToMessage());
+                lock (_txLock)
+                {
+                    _send(new TerminalConfigurationRequest().ToMessage());
+                }
             }
         }
 
