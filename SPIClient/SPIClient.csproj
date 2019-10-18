@@ -87,6 +87,7 @@
     <Compile Include="ConnectionViaHttpAdaptor.cs" />
     <Compile Include="Crypto.cs" />
     <Compile Include="Device.cs" />
+    <Compile Include="DeviceHelper.cs" />
     <Compile Include="DiffieHellman.cs" />
     <Compile Include="KeyRollingHelper.cs" />
     <Compile Include="Messages.cs" />

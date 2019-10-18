@@ -39,7 +39,7 @@ namespace Test
         }
 
         [Fact]
-        public async void RetrieveService_SerialNumberNotRegistered_NotFound()
+        public async void RetrieveDeviceAddress_SerialNumberNotRegistered_NotFound()
         {
             // arrange
             const string apiKey = "RamenPosDeviceAddressApiKey";
@@ -48,7 +48,7 @@ namespace Test
             var deviceService = new DeviceAddressService();
 
             // act
-            var addressResponse = await deviceService.RetrieveService(serialNumber, apiKey, acquirerCode, true);
+            var addressResponse = await deviceService.RetrieveDeviceAddress(serialNumber, apiKey, acquirerCode, true);
 
             // assert
             Assert.NotNull(addressResponse);
@@ -58,7 +58,7 @@ namespace Test
         }
 
         [Fact]
-        public async Task RetrieveService_SerialNumberRegistered_Found()
+        public async Task RetrieveDeviceAddress_SerialNumberRegistered_Found()
         {
             // arrange
             const string apiKey = "RamenPosDeviceAddressApiKey";
@@ -67,12 +67,54 @@ namespace Test
             var deviceService = new DeviceAddressService();
 
             // act
-            var addressResponse = await deviceService.RetrieveService(serialNumber, apiKey, acquirerCode, true);
+            var addressResponse = await deviceService.RetrieveDeviceAddress(serialNumber, apiKey, acquirerCode, true);
 
             // assert
             Assert.NotNull(addressResponse);
             Assert.NotNull(addressResponse.Data.Address);
             Assert.Equal(DeviceAddressResponseCode.SUCCESS, addressResponse.Data.DeviceAddressResponseCode);
+        }
+
+        [Fact]
+        public void GetTerminalAddress_OnRegisteredSerialNumber_ReturnAddress()
+        {
+            // arrange
+            const string apiKey = "RamenPosDeviceAddressApiKey";
+            const string acquirerCode = "wbc";
+            const string serialNumber = "328-513-254";
+            var spi = new Spi("Pos1", serialNumber, "", null);
+            SpiClientTestUtils.SetInstanceField(spi, "_currentStatus", SpiStatus.Unpaired);
+            spi.SetTestMode(true);
+            spi.SetDeviceApiKey(apiKey);
+            spi.SetAcquirerCode(acquirerCode);
+
+            // act
+            var response = spi.GetTerminalAddress();
+            var ipAddress = response.Result;
+
+            // assert
+            Assert.NotNull(ipAddress);
+        }
+
+        [Fact]
+        public void GetTerminalAddress_OnNotRgisteredSerialNumber_ReturnAddress()
+        {
+            // arrange
+            const string apiKey = "RamenPosDeviceAddressApiKey";
+            const string acquirerCode = "wbc";
+            const string serialNumber = "123-456-789";
+            var spi = new Spi("Pos1", serialNumber, "", null);
+            SpiClientTestUtils.SetInstanceField(spi, "_currentStatus", SpiStatus.Unpaired);
+            spi.SetTestMode(true);
+            spi.SetDeviceApiKey(apiKey);
+            spi.SetAcquirerCode(acquirerCode);
+
+            // act
+            var response = spi.GetTerminalAddress();
+            var ipAddress = response.Result;
+
+            // assert
+            Assert.Null(ipAddress);
         }
     }
 }

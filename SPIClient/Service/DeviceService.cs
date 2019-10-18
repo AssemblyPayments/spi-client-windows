@@ -38,7 +38,7 @@ namespace SPIClient.Service
     {
         private const string ApiKeyHeader = "ASM-MSP-DEVICE-ADDRESS-API-KEY";
 
-        public async Task<IRestResponse<DeviceAddressStatus>> RetrieveService(string serialNumber, string apiKey, string acquirerCode, bool isTestMode)
+        public async Task<IRestResponse<DeviceAddressStatus>> RetrieveDeviceAddress(string serialNumber, string apiKey, string acquirerCode, bool isTestMode)
         {
             var deviceAddressUri = isTestMode ? $"https://device-address-api-sb.{acquirerCode}.msp.assemblypayments.com/v1/{serialNumber}/ip" : $"https://device-address-api.{acquirerCode}.msp.assemblypayments.com/v1/{serialNumber}/ip";
 
@@ -46,8 +46,9 @@ namespace SPIClient.Service
             var request = new RestRequest(Method.GET);
             request.AddHeader(ApiKeyHeader, apiKey);
 
-            var response = await addressService.SendRequest<DeviceAddressStatus>(request);
-            return response;
+            var serviceResponse = await addressService.SendRequest<DeviceAddressStatus>(request);
+            
+            return serviceResponse;
         }
     }
 }
