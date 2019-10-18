@@ -2151,10 +2151,15 @@ namespace SPIClient
             var deviceAddressStatus = DeviceHelper.GenerateDeviceAddressStatus(addressResponse, _eftposAddress);
             CurrentDeviceStatus = deviceAddressStatus;
 
-            if (deviceAddressStatus.DeviceAddressResponseCode != DeviceAddressResponseCode.SUCCESS)
+            if (deviceAddressStatus.DeviceAddressResponseCode == DeviceAddressResponseCode.DEVICE_SERVICE_ERROR)
             {
-                Log.Warning("Trying to auto resolve address, but device address has not changed.");
-                
+                Log.Warning("Could not communicate with device address service.");
+                return;
+            }
+            else if (deviceAddressStatus.DeviceAddressResponseCode != DeviceAddressResponseCode.SUCCESS)
+            {
+                Log.Information("Address resolved, but device address has not changed.");
+         
                 // even though address haven't changed - dispatch event as PoS depend on this
                 _deviceAddressChanged(this, CurrentDeviceStatus);
                 return;
@@ -2163,7 +2168,7 @@ namespace SPIClient
             // new address, update device and connection address
             _eftposAddress = "ws://" + deviceAddressStatus.Address;
             _conn.Address = _eftposAddress;
-            Log.Warning($"New address for device {deviceAddressStatus.Address}");
+            Log.Information($"Address resolved to {deviceAddressStatus.Address}");
 
             // dispatch event
             _deviceAddressChanged(this, CurrentDeviceStatus);
