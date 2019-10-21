@@ -87,7 +87,7 @@ namespace SPIClient
         public static Dictionary<string, string> GetAppDeviceInfo()
         {
             Dictionary<string, string> deviceInfo = new Dictionary<string, string>();
-            deviceInfo.Add("device_system", Environment.OSVersion.Platform.ToString() + " " + Environment.OSVersion.Version.ToString());
+            deviceInfo.Add("os", Environment.OSVersion.Platform.ToString() + " " + Environment.OSVersion.Version.ToString());
             return deviceInfo;
         }
     }
