@@ -25,18 +25,27 @@ namespace SPIClient.Service
         public async Task<IRestResponse<T>> SendRequest<T>(IRestRequest request) where T : new()
         {
             var cancellationTokenSource = new CancellationTokenSource(_timeOut);
-            var response = await RestClient.ExecuteTaskAsync<T>(request, cancellationTokenSource.Token);
 
-            if (response.StatusCode != HttpStatusCode.OK)
+            try
             {
-                Log.Error($"Status code {(int)response.StatusCode} received from {Url} - Exception {response.ErrorException}");                
+                var response = await RestClient.ExecuteTaskAsync<T>(request, cancellationTokenSource.Token);
+
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    Log.Error($"Status code {(int)response.StatusCode} received from {Url} - Exception {response.ErrorException}");
+                }
+                else
+                {
+                    Log.Information($"Response received from {Url} - {response.Content}");
+                }
+
+                return response;
             }
-            else
+            catch (TaskCanceledException ex)
             {
-                Log.Information($"Response received from {Url} - {response.Content}");
+                Log.Error($"Task cancelled {ex.CancellationToken.IsCancellationRequested.ToString()}");
+                return null;
             }
-            
-            return response;
         }
     }
     
