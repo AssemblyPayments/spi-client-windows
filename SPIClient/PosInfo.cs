@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using SPIClient;
 using System;
 using System.Collections.Generic;
@@ -31,9 +32,17 @@ namespace SPIClient
                 new JProperty("pos_version", _version),
                 new JProperty("pos_vendor_id", _vendorId),
                 new JProperty("library_language", _libraryLanguage),
-                new JProperty("library_version", _libraryVersion),
-                new JProperty("other_info", _otherInfo.ToString())
+                new JProperty("library_version", _libraryVersion)
                 );
+
+            if (_otherInfo != null)
+            {
+                var otherInfo = JProperty.FromObject(_otherInfo);
+                if (otherInfo != null)
+                {
+                    data.Add("other_info", otherInfo);
+                }
+            }
 
             return new Message(RequestIdHelper.Id("prav"), Events.SetPosInfoRequest, data, true);
         }
@@ -78,7 +87,7 @@ namespace SPIClient
         public static Dictionary<string, string> GetAppDeviceInfo()
         {
             Dictionary<string, string> deviceInfo = new Dictionary<string, string>();
-            deviceInfo.Add("device_system", Environment.OSVersion.Platform.ToString() + " " + Environment.OSVersion.Version.ToString());
+            deviceInfo.Add("os", Environment.OSVersion.Platform.ToString() + " " + Environment.OSVersion.Version.ToString());
             return deviceInfo;
         }
     }
