@@ -24,7 +24,7 @@ namespace SPIClient
             
             if (serviceResponse.Data.Address == currentEftposAddress)
             {
-                deviceAddressStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.ADDRESS_NOT_CHANGED;
+                deviceAddressStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.SERIAL_NUMBER_NOT_CHANGED;
             }
             else
             {
