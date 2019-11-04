@@ -293,7 +293,7 @@ namespace SPIClient
         /// <returns></returns>
         public bool SetTestMode(bool testMode)
         {
-            if (CurrentStatus != SpiStatus.Unpaired)
+            if (CurrentStatus == SpiStatus.PairedConnected)
                 return false;
 
             if (testMode == _inTestMode)
