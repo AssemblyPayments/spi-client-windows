@@ -1053,7 +1053,7 @@ namespace SPIClient
         }
 
         /// <summary>
-        /// See GltMatch. VSV-2277 This prevents issue with PosRefId associated with the wrong transaction
+        /// See GltMatch. VSV-2277 This prevents issue with PosRefId associated with the wrong transaction - for purchase only.
         /// </summary>
         /// <param name="gltResponse">The GetLastTransactionResponse message to check</param>
         /// <param name="posRefId">The Reference Id that you passed in with the original request</param>
@@ -1072,7 +1072,7 @@ namespace SPIClient
                 return Message.SuccessState.Unknown;
             }
 
-            if (gltResponse.GetTxType().ToUpper() == "PURCHASE" && gltResponse.GetBankNonCashAmount() != expectedAmount && compare > 0)
+            if (gltResponse.GetTxType().ToUpper() == "PURCHASE" && gltResponse.GetPurchaseAmount() != expectedAmount && compare > 0)
             {
                 return Message.SuccessState.Unknown;
             }
