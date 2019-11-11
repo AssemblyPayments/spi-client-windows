@@ -367,6 +367,11 @@ namespace SPIClient
             return _m.GetDataIntValue("bank_noncash_amount");
         }
 
+        public int GetPurchaseAmount()
+        {
+            return _m.GetDataIntValue("purchase_amount");
+        }
+
         [Obsolete("Should not need to look at this in a GLT Response")]
         public string GetSchemeApp()
         {
