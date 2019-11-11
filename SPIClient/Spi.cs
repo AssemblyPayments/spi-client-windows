@@ -128,6 +128,17 @@ namespace SPIClient
         public Spi() { }
 
         /// <summary>
+        /// Constructor chaining
+        /// </summary>
+        /// <param name="posId"></param>
+        /// <param name="eftposAddress"></param>
+        /// <param name="secrets"></param>
+        public Spi(string posId, string eftposAddress, Secrets secrets) : this(posId, "", eftposAddress, secrets)
+        {
+            _pairUsingEftposAddress = true;
+        }
+
+        /// <summary>
         /// Create a new Spi instance. 
         /// If you provide secrets, it will start in PairedConnecting status; Otherwise it will start in Unpaired status.
         /// </summary>
@@ -240,11 +251,9 @@ namespace SPIClient
         /// </summary>
         public bool SetSerialNumber(string serialNumber)
         {
-            if (CurrentStatus != SpiStatus.Unpaired)
-                return false;
-
             var was = _serialNumber;
             _serialNumber = serialNumber;
+
             if (HasSerialNumberChanged(was))
             {
                 _autoResolveEftposAddress();
@@ -269,11 +278,9 @@ namespace SPIClient
         /// <returns></returns>
         public bool SetAutoAddressResolution(bool autoAddressResolutionEnable)
         {
-            if (CurrentStatus == SpiStatus.PairedConnected)
-                return false;
-
             var was = _autoAddressResolutionEnabled;
             _autoAddressResolutionEnabled = autoAddressResolutionEnable;
+
             if (autoAddressResolutionEnable && !was)
             {
                 // we're turning it on
@@ -292,9 +299,6 @@ namespace SPIClient
         /// <returns></returns>
         public bool SetTestMode(bool testMode)
         {
-            if (CurrentStatus == SpiStatus.PairedConnected)
-                return false;
-
             if (testMode == _inTestMode)
                 return true;
 
@@ -334,7 +338,7 @@ namespace SPIClient
         /// </summary>
         public bool SetEftposAddress(string address)
         {
-            if (CurrentStatus == SpiStatus.PairedConnected || _autoAddressResolutionEnabled)
+            if (CurrentStatus == SpiStatus.PairedConnected)
                 return false;
 
             _eftposAddress = ""; // reset eftposAddress to give more explicit feedback
@@ -1211,6 +1215,12 @@ namespace SPIClient
             CurrentStatus = SpiStatus.PairedConnected;
             _secretsChanged(this, _secrets);
             _pairingFlowStateChanged(this, CurrentPairingFlowState);
+
+            // set the serial number
+            if (_pairUsingEftposAddress)
+            {
+                GetTerminalConfiguration();
+            }
         }
 
         private void _onPairingFailed()
@@ -1654,6 +1664,15 @@ namespace SPIClient
         {
             lock (_txLock)
             {
+                if (_pairUsingEftposAddress)
+                {
+                    var response = new TerminalConfigurationResponse(m);
+                    if (response.isSuccess())
+                    {
+                        _serialNumber = response.GetSerialNumber();
+                    }
+                }
+
                 TerminalConfigurationResponse?.Invoke(m);
             }
         }
@@ -1870,7 +1889,14 @@ namespace SPIClient
                 }
                 else
                 {
-                    if (!_hasSetInfo) { _callSetPosInfo(); }
+                    if (!_hasSetInfo) 
+                    { 
+                        _callSetPosInfo(); 
+                    }
+                    
+                    if (_pairUsingEftposAddress) { 
+                        GetTerminalConfiguration();
+                    }
 
                     // let's also tell the eftpos our latest table configuration.
                     _spiPat?.PushPayAtTableConfig();
@@ -2212,12 +2238,13 @@ namespace SPIClient
         private string _deviceApiKey;
         private string _acquirerCode;
         private bool _inTestMode;
-        private bool _autoAddressResolutionEnabled;
+        private bool _autoAddressResolutionEnabled = true; // enabled by default
         private Secrets _secrets;
         private MessageStamp _spiMessageStamp;
         private string _posVendorId;
         private string _posVersion;
         private bool _hasSetInfo;
+        private bool _pairUsingEftposAddress;
 
         private Connection _conn;
         private readonly TimeSpan _pongTimeout = TimeSpan.FromSeconds(5);
