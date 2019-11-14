@@ -1180,17 +1180,14 @@ namespace SPIClient
             {
                 if (CurrentPairingFlowState.AwaitingCheckFromPos)
                 {
-                    // Still Waiting for User to say yes on POS
-                    Log.Information("Got Pair Confirm from Eftpos, but still waiting for use to confirm from POS.");
-                    CurrentPairingFlowState.Message = "Confirm that the following Code is what the EFTPOS showed";
-                    _pairingFlowStateChanged(this, CurrentPairingFlowState);
-                }
-                else
-                {
-                    Log.Information("Got Pair Confirm from Eftpos, and already had confirm from POS. Now just waiting for first pong.");
-                    _onPairingSuccess();
+                    // Waiting for PoS, auto confirming code
+                    Log.Information("Confirming pairing from library.");
+                    PairingConfirmCode();
                 }
 
+                Log.Information("Got Pair Confirm from Eftpos, and already had confirm from POS. Now just waiting for first pong.");
+                _onPairingSuccess();
+            
                 // I need to ping even if the pos user has not said yes yet, 
                 // because otherwise within 5 seconds connection will be dropped by eftpos.
                 _startPeriodicPing();
