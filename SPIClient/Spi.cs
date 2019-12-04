@@ -154,7 +154,7 @@ namespace SPIClient
             _eftposAddress = "ws://" + eftposAddress;
 
             // Our stamp for signing outgoing messages
-            _spiMessageStamp = new MessageStamp(_posId, _secrets, TimeSpan.Zero);
+            _spiMessageStamp = new MessageStamp(_posId, _secrets);
             _secrets = secrets;
 
             // We will maintain some state
@@ -472,7 +472,16 @@ namespace SPIClient
                 Log.Information("Pair Code Confirmed from POS side, and was already confirmed from Eftpos side. Pairing finalised.");
                 _onPairingSuccess();
                 _onReadyToTransact();
+
+
+
+                // set the serial number
+                //if (_pairUsingEftposAddress)
+                //{
+                //    GetTerminalConfiguration();
+                //}
             }
+
         }
 
         /// <summary>
@@ -1215,12 +1224,6 @@ namespace SPIClient
             CurrentStatus = SpiStatus.PairedConnected;
             _secretsChanged(this, _secrets);
             _pairingFlowStateChanged(this, CurrentPairingFlowState);
-
-            // set the serial number
-            if (_pairUsingEftposAddress)
-            {
-                GetTerminalConfiguration();
-            }
         }
 
         private void _onPairingFailed()
@@ -1829,7 +1832,7 @@ namespace SPIClient
                 Thread.CurrentThread.IsBackground = true;
                 while (_conn.Connected && _secrets != null)
                 {
-                    _doPing();
+                    _doPing();// first ping
 
                     Thread.Sleep(_pongTimeout);
                     if (_mostRecentPingSent != null &&
@@ -1927,6 +1930,13 @@ namespace SPIClient
         private void _doPing()
         {
             var ping = PingHelper.GeneratePingRequest();
+
+            // first ping, generate a pseudo random number
+            if (_mostRecentPingSent == null)
+            {
+                ping.PosCounter = new Random().Next(100); // random number starting from 100
+            }
+
             _mostRecentPingSent = ping;
             _send(ping);
             _mostRecentPingSentTime = DateTime.Now;
@@ -1938,12 +1948,18 @@ namespace SPIClient
         /// <param name="m"></param>
         private void _handleIncomingPong(Message m)
         {
-            // We need to maintain this time delta otherwise the server will not accept our messages.
-            _spiMessageStamp.ServerTimeDelta = m.GetServerTimeDelta();
-
             if (_mostRecentPongReceived == null)
             {
                 // First pong received after a connection, and after the pairing process is fully finalised.
+                // Receive connection id from PinPad after first pong, store this as this needs to be passed for every request.
+                _connId = m.ConnId;
+
+                // set the serial number for auto address resolution
+                if (_pairUsingEftposAddress)
+                {
+                    GetTerminalConfiguration();
+                }
+
                 if (CurrentStatus != SpiStatus.Unpaired)
                 {
                     Log.Information("First pong of connection and in paired state.");
@@ -2104,6 +2120,9 @@ namespace SPIClient
 
         internal bool _send(Message message)
         {
+            message.PosCounter = _posCounter++;
+            message.ConnId = _connId;
+            
             var json = message.ToJson(_spiMessageStamp);
             if (_conn.Connected)
             {

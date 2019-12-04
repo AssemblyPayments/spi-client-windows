@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -90,13 +90,14 @@ namespace SPIClient
     {
         public string PosId { get; set; }
         public Secrets Secrets { get; set; }
-        public TimeSpan ServerTimeDelta { get; set; }
 
-        public MessageStamp(string posId, Secrets secrets, TimeSpan serverTimeDelta)
+
+
+
+        public MessageStamp(string posId, Secrets secrets)
         {
             PosId = posId;
             Secrets = secrets;
-            ServerTimeDelta = serverTimeDelta;
         }
     }
 
@@ -179,6 +180,12 @@ namespace SPIClient
 
         [JsonProperty("datetime")]
         public string DateTimeStamp { get; private set; }
+
+        [JsonProperty("pos_counter")]
+        internal int PosCounter { get; set; }
+
+        [JsonProperty("conn_id")]
+        internal string ConnId { get; set; }
 
         /// <summary>
         /// Pos_id is set here only for outgoing Un-encrypted messages. 
@@ -264,13 +271,6 @@ namespace SPIClient
             return defaultIfNotFound;
         }
 
-        public TimeSpan GetServerTimeDelta()
-        {
-            var now = DateTime.Now;
-            var msgTime = DateTime.Parse(DateTimeStamp);
-            return msgTime - now;
-        }
-
         public static Message FromJson(string msgJson, Secrets secrets)
         {
             var jsonSerializerSettings = new JsonSerializerSettings() { DateParseHandling = DateParseHandling.None };
@@ -296,7 +296,7 @@ namespace SPIClient
                 return new Message("_", Events.InvalidHmacSignature, null, false);
             }
             var decryptedJson = Crypto.AesDecrypt(secrets.EncKeyBytes, env.Enc);
-            //Console.WriteLine("Decrypyted Json: {0}", decryptedJson);
+            
             try
             {
                 var decryptedEnv =
@@ -314,10 +314,6 @@ namespace SPIClient
 
         public string ToJson(MessageStamp stamp)
         {
-            var now = DateTime.Now;
-            var adjustedTime = now.Add(stamp.ServerTimeDelta);
-            DateTimeStamp = adjustedTime.ToString("yyyy-MM-ddTHH:mm:ss.fff");
-
             if (!_needsEncryption)
             {
                 // Unencrypted Messages need PosID inside the message

@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
 using SPIClient;
-using System;
 using Xunit;
 
 namespace Test
@@ -70,7 +69,7 @@ namespace Test
 
             // act
             // Serialize it to Json
-            var mJson = m.ToJson(new MessageStamp("BAR1", null, TimeSpan.Zero));
+            var mJson = m.ToJson(new MessageStamp("BAR1", null));
             // Let's assert Serialize Result by parsing it back.
             var revertedM = Message.FromJson(mJson, null);
 
@@ -91,7 +90,7 @@ namespace Test
 
             // act
             // Serialize it to Json
-            var stamp = new MessageStamp("BAR1", secrets, TimeSpan.Zero);
+            var stamp = new MessageStamp("BAR1", secrets);
             var mJson = m.ToJson(stamp);
 
             // assert
