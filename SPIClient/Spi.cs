@@ -266,7 +266,7 @@ namespace SPIClient
                 }
 
                 CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.SERIAL_NUMBER_NOT_CHANGED;
-                _deviceAddressChanged(this, CurrentDeviceStatus);
+                _deviceAddressChanged?.Invoke(this, CurrentDeviceStatus);
             }
 
             return true;
@@ -472,14 +472,6 @@ namespace SPIClient
                 Log.Information("Pair Code Confirmed from POS side, and was already confirmed from Eftpos side. Pairing finalised.");
                 _onPairingSuccess();
                 _onReadyToTransact();
-
-
-
-                // set the serial number
-                //if (_pairUsingEftposAddress)
-                //{
-                //    GetTerminalConfiguration();
-                //}
             }
 
         }
@@ -2215,7 +2207,7 @@ namespace SPIClient
                 Log.Information("Address resolved, but device address has not changed.");
          
                 // even though address haven't changed - dispatch event as PoS depend on this
-                _deviceAddressChanged(this, CurrentDeviceStatus);
+                _deviceAddressChanged?.Invoke(this, CurrentDeviceStatus);
                 return;
             }
 
@@ -2225,7 +2217,8 @@ namespace SPIClient
             Log.Information($"Address resolved to {deviceAddressStatus.Address}");
 
             // dispatch event
-            _deviceAddressChanged(this, CurrentDeviceStatus);
+            _deviceAddressChanged?.Invoke(this, CurrentDeviceStatus);
+
         }
 
         #endregion
@@ -2268,6 +2261,8 @@ namespace SPIClient
         private Connection _conn;
         private readonly TimeSpan _pongTimeout = TimeSpan.FromSeconds(5);
         private readonly TimeSpan _pingFrequency = TimeSpan.FromSeconds(18);
+        private string _connId;
+        private int _posCounter;
 
         private SpiStatus _currentStatus;
         private EventHandler<SpiStatusEventArgs> _statusChanged;
