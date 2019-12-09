@@ -31,6 +31,11 @@ namespace SPIClient
     public delegate void SpiBatteryLevelChanged(Message message);
 
     /// <summary>
+    /// Delegate for transaction update message
+    /// </summary>
+    public delegate void SpiTransactionUpdateMessage(Message message);
+
+    /// <summary>
     /// These attributes work for COM interop.
     /// </summary>
     [ClassInterface(ClassInterfaceType.AutoDual)]
@@ -1682,6 +1687,14 @@ namespace SPIClient
             }
         }
 
+        private void _handleTransactionUpdateMessage(Message m)
+        {
+            lock (_txLock)
+            {
+                TransactionUpdateMessage?.Invoke(m);
+            }
+        }
+
         #endregion
 
         #region Internals for Connection Management
@@ -2082,6 +2095,9 @@ namespace SPIClient
                 case Events.BatteryLevelChanged:
                     _handleBatteryLevelChanged(m);
                     break;
+                case Events.TransactionUpdateMessage:
+                    _handleTransactionUpdateMessage(m);
+                    break;
                 case Events.Error:
                     _handleErrorEvent(m);
                     break;
@@ -2258,6 +2274,7 @@ namespace SPIClient
         public SpiTerminalStatusResponse TerminalStatusResponse;
         public SpiTerminalConfigurationResponse TerminalConfigurationResponse;
         public SpiBatteryLevelChanged BatteryLevelChanged;
+        public SpiTransactionUpdateMessage TransactionUpdateMessage;
 
         private Message _mostRecentPingSent;
         private DateTime _mostRecentPingSentTime;

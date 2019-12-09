@@ -794,4 +794,17 @@ namespace SPIClient
         }
     }
 
+    public class TransactionUpdate
+    {
+        public string DisplayMessageCode { get; }
+        public string DisplayMessageText { get; }
+
+        public TransactionUpdate() { }
+
+        public TransactionUpdate(Message m)
+        {
+            DisplayMessageCode = m.GetDataStringValue("display_message_code");
+            DisplayMessageText = m.GetDataStringValue("display_message_text");
+        }
+    }
 }
