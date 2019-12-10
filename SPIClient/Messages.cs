@@ -80,6 +80,8 @@ namespace SPIClient
         public const string PayAtTableOpenTables = "open_tables";
 
         public const string PayAtTableBillPaymentFlowEnded = "bill_payment_flow_ended";
+
+        public const string TransactionUpdateMessage = "txn_update_message";
     }
 
     /// <summary>
