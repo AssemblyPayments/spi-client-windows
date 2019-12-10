@@ -61,6 +61,14 @@ namespace SPIClient
             }
         }
 
+        public void BillPaymentReceivedAck(string BillId)
+        {
+            if (_spi.CurrentStatus == SpiStatus.PairedConnected)
+            {
+                _spi._send(new BillPaymentFlowEndedAckRequest(BillId).ToMessage());
+            }
+        }
+
         internal void _handleGetBillDetailsRequest(Message m)
         {
             var operatorId = m.GetDataStringValue("operator_id");

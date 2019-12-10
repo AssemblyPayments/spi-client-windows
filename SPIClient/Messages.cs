@@ -64,6 +64,10 @@ namespace SPIClient
         public const string PayAtTableGetBillDetails = "get_bill_details"; // incoming. When eftpos wants to aretrieve the bill for a table.
         public const string PayAtTableBillDetails = "bill_details";        // outgoing. We reply with this when eftpos requests to us get_bill_details.
         public const string PayAtTableBillPayment = "bill_payment";        // incoming. When the eftpos advices 
+        public const string PayAtTableGetOpenTables = "get_open_tables";
+        public const string PayAtTableOpenTables = "open_tables";
+        public const string PayAtTableBillPaymentFlowEnded = "bill_payment_flow_ended";
+        public const string PayAtTableBillPaymentFlowEndedAck = "bill_payment_flow_ended_ack";
 
         public const string PrintingRequest = "print";
         public const string PrintingResponse = "print_response";
@@ -76,10 +80,6 @@ namespace SPIClient
 
         public const string BatteryLevelChanged = "battery_level_changed";
 
-        public const string PayAtTableGetOpenTables = "get_open_tables";
-        public const string PayAtTableOpenTables = "open_tables";
-
-        public const string PayAtTableBillPaymentFlowEnded = "bill_payment_flow_ended";
     }
 
     /// <summary>
