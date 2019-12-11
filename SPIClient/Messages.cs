@@ -97,9 +97,6 @@ namespace SPIClient
         {
             PosId = posId;
             Secrets = secrets;
-
-            // reset the connection id and counter between terminal and library
-            ResetConnection();
         }
 
         public void ResetConnection()

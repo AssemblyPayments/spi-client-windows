@@ -1733,6 +1733,7 @@ namespace SPIClient
                     _mostRecentPongReceived = null;
                     _missedPongsCount = 0;
                     _stopPeriodicPing();
+                    _spiMessageStamp.ResetConnection();
 
                     if (CurrentStatus != SpiStatus.Unpaired)
                     {
