@@ -159,7 +159,7 @@ namespace SPIClient
             _eftposAddress = "ws://" + eftposAddress;
 
             // Our stamp for signing outgoing messages
-            _spiMessageStamp = new MessageStamp(_posId, _secrets, TimeSpan.Zero);
+            _spiMessageStamp = new MessageStamp(_posId, _secrets);
             _secrets = secrets;
 
             // We will maintain some state
@@ -271,7 +271,7 @@ namespace SPIClient
                 }
 
                 CurrentDeviceStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.SERIAL_NUMBER_NOT_CHANGED;
-                _deviceAddressChanged(this, CurrentDeviceStatus);
+                _deviceAddressChanged?.Invoke(this, CurrentDeviceStatus);
             }
 
             return true;
@@ -478,6 +478,7 @@ namespace SPIClient
                 _onPairingSuccess();
                 _onReadyToTransact();
             }
+
         }
 
         /// <summary>
@@ -1217,12 +1218,6 @@ namespace SPIClient
             CurrentStatus = SpiStatus.PairedConnected;
             _secretsChanged(this, _secrets);
             _pairingFlowStateChanged(this, CurrentPairingFlowState);
-
-            // set the serial number
-            if (_pairUsingEftposAddress)
-            {
-                GetTerminalConfiguration();
-            }
         }
 
         private void _onPairingFailed()
@@ -1725,9 +1720,11 @@ namespace SPIClient
 
                 case ConnectionState.Connected:
                     _retriesSinceLastDeviceAddressResolution = 0;
+                    _spiMessageStamp.ResetConnection();
 
                     if (CurrentFlow == SpiFlow.Pairing && CurrentStatus == SpiStatus.Unpaired)
                     {
+
                         CurrentPairingFlowState.Message = "Requesting to Pair...";
                         _pairingFlowStateChanged(this, CurrentPairingFlowState);
                         var pr = PairingHelper.NewPairequest();
@@ -1748,6 +1745,7 @@ namespace SPIClient
                     _mostRecentPongReceived = null;
                     _missedPongsCount = 0;
                     _stopPeriodicPing();
+                    _spiMessageStamp.ResetConnection();
 
                     if (CurrentStatus != SpiStatus.Unpaired)
                     {
@@ -1839,7 +1837,7 @@ namespace SPIClient
                 Thread.CurrentThread.IsBackground = true;
                 while (_conn.Connected && _secrets != null)
                 {
-                    _doPing();
+                    _doPing();// first ping
 
                     Thread.Sleep(_pongTimeout);
                     if (_mostRecentPingSent != null &&
@@ -1937,6 +1935,7 @@ namespace SPIClient
         private void _doPing()
         {
             var ping = PingHelper.GeneratePingRequest();
+
             _mostRecentPingSent = ping;
             _send(ping);
             _mostRecentPingSentTime = DateTime.Now;
@@ -1948,12 +1947,18 @@ namespace SPIClient
         /// <param name="m"></param>
         private void _handleIncomingPong(Message m)
         {
-            // We need to maintain this time delta otherwise the server will not accept our messages.
-            _spiMessageStamp.ServerTimeDelta = m.GetServerTimeDelta();
-
             if (_mostRecentPongReceived == null)
             {
                 // First pong received after a connection, and after the pairing process is fully finalised.
+                // Receive connection id from PinPad after first pong, store this as this needs to be passed for every request.
+                _spiMessageStamp.SetConnectionId(m.ConnId);
+
+                // set the serial number for auto address resolution
+                if (_pairUsingEftposAddress)
+                {
+                    GetTerminalConfiguration();
+                }
+
                 if (CurrentStatus != SpiStatus.Unpaired)
                 {
                     Log.Information("First pong of connection and in paired state.");
@@ -2116,7 +2121,7 @@ namespace SPIClient
         }
 
         internal bool _send(Message message)
-        {
+        {   
             var json = message.ToJson(_spiMessageStamp);
             if (_conn.Connected)
             {
@@ -2209,7 +2214,7 @@ namespace SPIClient
                 Log.Information("Address resolved, but device address has not changed.");
          
                 // even though address haven't changed - dispatch event as PoS depend on this
-                _deviceAddressChanged(this, CurrentDeviceStatus);
+                _deviceAddressChanged?.Invoke(this, CurrentDeviceStatus);
                 return;
             }
 
@@ -2219,7 +2224,8 @@ namespace SPIClient
             Log.Information($"Address resolved to {deviceAddressStatus.Address}");
 
             // dispatch event
-            _deviceAddressChanged(this, CurrentDeviceStatus);
+            _deviceAddressChanged?.Invoke(this, CurrentDeviceStatus);
+
         }
 
         #endregion
