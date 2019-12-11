@@ -90,14 +90,28 @@ namespace SPIClient
     {
         public string PosId { get; set; }
         public Secrets Secrets { get; set; }
-
-
-
+        public int PosCounter { get; set; }
+        public string ConnId { get; private set; }
 
         public MessageStamp(string posId, Secrets secrets)
         {
             PosId = posId;
             Secrets = secrets;
+
+            // reset the connection id and counter between terminal and library
+            ResetConnection();
+        }
+
+        public void ResetConnection()
+        {
+            SetConnectionId("");
+            PosCounter = new Random().Next(100); // pseudo random number starting from 100
+        }
+
+        public void SetConnectionId(string connId)
+        {
+            if (connId != null)
+                ConnId = connId;
         }
     }
 
@@ -314,6 +328,9 @@ namespace SPIClient
 
         public string ToJson(MessageStamp stamp)
         {
+            PosCounter = stamp.PosCounter++;
+            ConnId = stamp.ConnId;
+
             if (!_needsEncryption)
             {
                 // Unencrypted Messages need PosID inside the message

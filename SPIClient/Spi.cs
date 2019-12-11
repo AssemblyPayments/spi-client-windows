@@ -1923,12 +1923,6 @@ namespace SPIClient
         {
             var ping = PingHelper.GeneratePingRequest();
 
-            // first ping, generate a pseudo random number
-            if (_mostRecentPingSent == null)
-            {
-                ping.PosCounter = new Random().Next(100); // random number starting from 100
-            }
-
             _mostRecentPingSent = ping;
             _send(ping);
             _mostRecentPingSentTime = DateTime.Now;
@@ -1944,7 +1938,7 @@ namespace SPIClient
             {
                 // First pong received after a connection, and after the pairing process is fully finalised.
                 // Receive connection id from PinPad after first pong, store this as this needs to be passed for every request.
-                _connId = m.ConnId;
+                _spiMessageStamp.SetConnectionId(m.ConnId);
 
                 // set the serial number for auto address resolution
                 if (_pairUsingEftposAddress)
@@ -2111,10 +2105,7 @@ namespace SPIClient
         }
 
         internal bool _send(Message message)
-        {
-            message.PosCounter = _posCounter++;
-            message.ConnId = _connId;
-            
+        {   
             var json = message.ToJson(_spiMessageStamp);
             if (_conn.Connected)
             {
@@ -2261,8 +2252,6 @@ namespace SPIClient
         private Connection _conn;
         private readonly TimeSpan _pongTimeout = TimeSpan.FromSeconds(5);
         private readonly TimeSpan _pingFrequency = TimeSpan.FromSeconds(18);
-        private string _connId;
-        private int _posCounter;
 
         private SpiStatus _currentStatus;
         private EventHandler<SpiStatusEventArgs> _statusChanged;
