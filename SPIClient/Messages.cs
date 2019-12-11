@@ -99,13 +99,13 @@ namespace SPIClient
             Secrets = secrets;
         }
 
-        public void ResetConnection()
+        internal void ResetConnection()
         {
             SetConnectionId("");
             PosCounter = new Random().Next(100); // pseudo random number starting from 100
         }
 
-        public void SetConnectionId(string connId)
+        internal void SetConnectionId(string connId)
         {
             if (connId != null)
                 ConnId = connId;
