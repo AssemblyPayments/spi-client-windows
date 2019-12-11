@@ -1710,9 +1710,11 @@ namespace SPIClient
 
                 case ConnectionState.Connected:
                     _retriesSinceLastDeviceAddressResolution = 0;
+                    _spiMessageStamp.ResetConnection();
 
                     if (CurrentFlow == SpiFlow.Pairing && CurrentStatus == SpiStatus.Unpaired)
                     {
+
                         CurrentPairingFlowState.Message = "Requesting to Pair...";
                         _pairingFlowStateChanged(this, CurrentPairingFlowState);
                         var pr = PairingHelper.NewPairequest();
