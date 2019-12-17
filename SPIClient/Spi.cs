@@ -663,6 +663,12 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
+            // no printing available, reset header and footer
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            {
+                options = new TransactionOptions();
+            }
+
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
@@ -878,6 +884,12 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
+            // no printing available, reset header and footer
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            {
+                options = new TransactionOptions();
+            }
+
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
@@ -920,6 +932,12 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
+            // no printing available, reset header and footer
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            {
+                options = new TransactionOptions();
+            }
+
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
@@ -955,6 +973,12 @@ namespace SPIClient
         public InitiateTxResult InitiateSettlementEnquiry(string posRefId, TransactionOptions options)
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
+
+            // no printing available, reset header and footer
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            {
+                options = new TransactionOptions();
+            }
 
             lock (_txLock)
             {
