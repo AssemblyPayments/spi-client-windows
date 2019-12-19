@@ -347,4 +347,25 @@ namespace SPIClient
             CashTotalAmount = m.GetDataIntValue("cash_total_amount");
         }
     }
+
+    public class BillPaymentFlowEndedAckRequest
+    {
+        public int Id { get; }
+        public string BillId { get; }
+
+        public BillPaymentFlowEndedAckRequest(string billId)
+        {
+            BillId = billId;
+            Id = Id;
+        }
+
+        public Message ToMessage()
+        {
+            var data = new JObject(
+                new JProperty("bill_id", BillId)
+            );
+
+            return new Message(RequestIdHelper.Id("authad"), Events.PayAtTableBillPaymentFlowEndedAck, data, true);
+        }
+    }
 }
