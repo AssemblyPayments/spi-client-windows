@@ -29,6 +29,8 @@ namespace SPIClient
         public const string CancelTransactionResponse = "cancel_response";
         public const string GetLastTransactionRequest = "get_last_transaction";
         public const string GetLastTransactionResponse = "last_transaction";
+        public const string GetTransactionRequest = "get_transaction";
+        public const string GetTransactionResponse = "get_transaction_response";
         public const string RefundRequest = "refund";
         public const string RefundResponse = "refund_response";
         public const string SignatureRequired = "signature_required";

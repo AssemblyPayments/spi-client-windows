@@ -281,6 +281,86 @@ namespace SPIClient
         }
     }
 
+    public class GetTransactionRequest
+    {
+        public string PosRefId { get; }
+
+        public GetTransactionRequest(string posRefId)
+        {
+            PosRefId = posRefId;
+        }
+
+        public Message ToMessage()
+        {
+
+            var data = new JObject(
+                new JProperty("pos_ref_id", PosRefId));
+
+            return new Message(RequestIdHelper.Id("gt"), Events.GetTransactionRequest, data, true);
+        }
+    }
+
+    public class GetTransactionResponse
+    {
+        private readonly Message _m;
+
+        public GetTransactionResponse() { }
+
+        public GetTransactionResponse(Message m)
+        {
+            _m = m;
+        }
+
+        public bool WasRetrievedSuccessfully()
+        {
+            // We can't rely on checking "success" flag or "error" fields here,
+            // as retrieval may be successful, but the retrieved transaction was a fail.
+            // So we check if we got back an ResponseCode.
+            // (as opposed to say an operation_in_progress_error)
+            return !string.IsNullOrEmpty(GetResponseCode());
+        }
+
+        public bool WasOperationInProgressError()
+        {
+            return _m.GetError().StartsWith("OPERATION_IN_PROGRESS");
+        }
+
+        public bool IsStillInProgress(string posRefId)
+        {
+            return WasOperationInProgressError() && (GetPosRefId().Equals(posRefId) || GetPosRefId() == null);
+        }
+
+        public bool IsWaitingForSignatureResponse()
+        {
+            return _m.GetError().StartsWith("OPERATION_IN_PROGRESS_AWAITING_SIGNATURE");
+        }
+
+        public bool IsWaitingForAuthCode()
+        {
+            return _m.GetError().StartsWith("OPERATION_IN_PROGRESS_AWAITING_PHONE_AUTH_CODE");
+        }
+
+        public string GetPosRefId()
+        {
+            return _m.GetDataStringValue("pos_ref_id");
+        }
+
+        public void CopyMerchantReceiptToCustomerReceipt()
+        {
+            var cr = _m.GetDataStringValue("customer_receipt");
+            var mr = _m.GetDataStringValue("merchant_receipt");
+            if (mr != "" && cr == "")
+            {
+                _m.Data["customer_receipt"] = new JValue(mr);
+            }
+        }
+
+        public string GetResponseCode()
+        {
+            return _m.GetDataStringValue("host_response_code");
+        }
+    }
+
     public class GetLastTransactionRequest
     {
         public Message ToMessage()
@@ -315,11 +395,6 @@ namespace SPIClient
             // So we check if we got back an ResponseCode.
             // (as opposed to say an operation_in_progress_error)
             return !string.IsNullOrEmpty(GetResponseCode());
-        }
-
-        public bool WasTimeOutOfSyncError()
-        {
-            return _m.GetError().StartsWith("TIME_OUT_OF_SYNC");
         }
 
         public bool WasOperationInProgressError()
