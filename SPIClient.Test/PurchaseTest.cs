@@ -265,33 +265,6 @@ namespace Test
         }
 
         [Fact]
-        public void GetLastTransactionResponse_OnValidResponseTimeOutOfSyncError_ReturnObjects()
-        {
-            // arrange
-            var secrets = SpiClientTestUtils.SetTestSecrets();
-            const string jsonStr = @"{""message"":{""data"":{""account_type"":""NOT-SET"",""bank_date"":""07062019"",""bank_settlement_date"":""06062019"",""bank_time"":""143821"",""card_entry"":""NOT-SET"",""error_detail"":""see 'host_response_text' for details"",""error_reason"":""TIME_OUT_OF_SYNC"",""host_response_code"":""511"",""host_response_text"":""TRANS CANCELLED"",""pos_ref_id"":""prchs-07-06-2019-14-38-20"",""rrn"":""190606000000"",""scheme_name"":""TOTAL"",""stan"":""000000"",""success"":false,""terminal_ref_id"":""12348842_07062019144136""},""datetime"":""2019-06-07T14:41:36.857"",""event"":""last_transaction"",""id"":""glt18""}}";
-
-            // act
-            var msg = Message.FromJson(jsonStr, secrets);
-            var response = new GetLastTransactionResponse(msg);
-
-            // assert
-            Assert.Equal("last_transaction", msg.EventName);
-            Assert.Equal("see 'host_response_text' for details", msg.GetErrorDetail());
-            Assert.True(response.WasTimeOutOfSyncError());
-            Assert.True(response.WasRetrievedSuccessfully());
-            Assert.Equal(Message.SuccessState.Failed, response.GetSuccessState());
-            Assert.False(response.WasSuccessfulTx());
-            Assert.Equal("prchs-07-06-2019-14-38-20", response.GetPosRefId());
-            Assert.Equal(0, response.GetBankNonCashAmount());
-            Assert.Equal("TOTAL", response.GetSchemeName());
-            Assert.Equal("07062019143821", response.GetBankDateTimeString());
-            Assert.Equal("190606000000", response.GetRRN());
-            Assert.Equal("TRANS CANCELLED", response.GetResponseText());
-            Assert.Equal("511", response.GetResponseCode());
-        }
-
-        [Fact]
         public void GetLastTransactionResponse_OnValidResponseOperationInProgressError_ReturnObjects()
         {
             // arrange

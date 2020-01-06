@@ -118,7 +118,8 @@ namespace SPIClient
         SettlementEnquiry,
         GetLastTransaction,
         Preauth,
-        AccountVerify
+        AccountVerify,
+        GetTransaction
     }
 
     /// <summary>
@@ -240,6 +241,11 @@ namespace SPIClient
         public string LastGltRequestId { get; internal set; }
 
         /// <summary>
+        /// The id of the last glt request message that was sent. used to match with the response.
+        /// </summary>
+        public string LastGtRequestId { get; internal set; }
+
+        /// <summary>
         /// Whether we're currently attempting to Cancel the transaction.
         /// </summary>
         public bool AttemptingToCancel { get; internal set; }
@@ -300,6 +306,11 @@ namespace SPIClient
         /// </summary>
         internal bool AwaitingGltResponse { get; set; }
 
+        /// <summary>
+        /// Whether we're currently waiting for a Get Transaction Response to get an update. 
+        /// </summary>
+        internal bool AwaitingGtResponse { get; set; }
+
         [Obsolete("Use PosRefId instead.")]
         public string Id { get; internal set; }
 
@@ -348,6 +359,18 @@ namespace SPIClient
         internal void GotGltResponse()
         {
             AwaitingGltResponse = false;
+        }
+
+        internal void CallingGt(string gtRequestId)
+        {
+            AwaitingGtResponse = true;
+            LastStateRequestTime = DateTime.Now;
+            LastGtRequestId = gtRequestId;
+        }
+
+        internal void GotGtResponse()
+        {
+            AwaitingGtResponse = false;
         }
 
         internal void Failed(Message response, string msg)
