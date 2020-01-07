@@ -476,7 +476,6 @@ namespace SPIClient
                 // Already confirmed from Eftpos - So all good now. We're Paired also from the POS perspective.
                 Log.Information("Pair Code Confirmed from POS side, and was already confirmed from Eftpos side. Pairing finalised.");
                 _onPairingSuccess();
-                _onReadyToTransact();
             }
 
         }
@@ -1193,7 +1192,7 @@ namespace SPIClient
 
                 Log.Information("Got Pair Confirm from Eftpos, and already had confirm from POS. Now just waiting for first pong.");
                 _onPairingSuccess();
-            
+
                 // I need to ping even if the pos user has not said yes yet, 
                 // because otherwise within 5 seconds connection will be dropped by eftpos.
                 _startPeriodicPing();
@@ -1897,17 +1896,18 @@ namespace SPIClient
                 }
                 else
                 {
-                    if (!_hasSetInfo) 
-                    { 
-                        _callSetPosInfo(); 
-                    }
-                    
-                    if (_pairUsingEftposAddress) { 
-                        GetTerminalConfiguration();
+                    if (!_hasSetInfo)
+                    {
+                        _callSetPosInfo();
                     }
 
                     // let's also tell the eftpos our latest table configuration.
                     _spiPat?.PushPayAtTableConfig();
+
+                    if (_pairUsingEftposAddress)
+                    {
+                        GetTerminalConfiguration();
+                    }
                 }
             }
         }
@@ -1952,12 +1952,6 @@ namespace SPIClient
                 // First pong received after a connection, and after the pairing process is fully finalised.
                 // Receive connection id from PinPad after first pong, store this as this needs to be passed for every request.
                 _spiMessageStamp.SetConnectionId(m.ConnId);
-
-                // set the serial number for auto address resolution
-                if (_pairUsingEftposAddress)
-                {
-                    GetTerminalConfiguration();
-                }
 
                 if (CurrentStatus != SpiStatus.Unpaired)
                 {
