@@ -311,12 +311,13 @@ namespace SPIClient
             _m = m;
         }
 
+        public bool PosRefIdNotFound()
+        {
+            return _m.ErrorReason.StartsWith("POS_REF_ID_NOT_FOUND");
+        }
+
         public bool WasRetrievedSuccessfully()
         {
-            // We can't rely on checking "success" flag or "error" fields here,
-            // as retrieval may be successful, but the retrieved transaction was a fail.
-            // So we check if we got back an ResponseCode.
-            // (as opposed to say an operation_in_progress_error)
             return !string.IsNullOrEmpty(GetResponseCode());
         }
 
@@ -332,12 +333,12 @@ namespace SPIClient
 
         public bool IsWaitingForSignatureResponse()
         {
-            return _m.GetError().StartsWith("OPERATION_IN_PROGRESS_AWAITING_SIGNATURE");
+            return _m.GetError().StartsWith("OPERATION_IN_PROGRESS_AWAITING_SIGNATURE"); // VSV-2777 - TRANSACTION_IN_PROGRESS_AWAITING_SIGNATURE
         }
 
         public bool IsWaitingForAuthCode()
         {
-            return _m.GetError().StartsWith("OPERATION_IN_PROGRESS_AWAITING_PHONE_AUTH_CODE");
+            return _m.GetError().StartsWith("OPERATION_IN_PROGRESS_AWAITING_PHONE_AUTH_CODE"); // VSV-2777 - TRANSACTION_IN_PROGRESS_AWAITING_PHONE_AUTH_CODE
         }
 
         public string GetPosRefId()

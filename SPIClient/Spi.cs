@@ -1509,7 +1509,7 @@ namespace SPIClient
                     return;
                 }
 
-                ////This is commented out for now, VAA bug where message Id returned is incorrect.
+                // This is commented out for now, VAA bug where message Id returned is incorrect.
                 //if (txState.LastGtRequestId != m.Id)
                 //    {
                 //        Log.Information($"Received a gt response but the message id does not match the gt request that we sent. strange. ignoring.");
@@ -1521,6 +1521,14 @@ namespace SPIClient
                 Log.Information($"Got Transaction..");
                 txState.GotGtResponse(); 
                 var gtResponse = new GetTransactionResponse(m);
+
+                if (gtResponse.PosRefIdNotFound()) // the likely scenario of this happening is if transaction times out. 
+                {
+                    Log.Information($"Unexpected Response in Get Transaction. Error: {m.ErrorReason}. Ignoring."); // library stuck in a state, if we force GT, then should be unknown state?
+                    txState.UnknownCompleted("Get Transaction cannot find transaction. Check Eftpos.");
+                    return;
+                }
+
                 if (!gtResponse.WasRetrievedSuccessfully())
                 {
                     if (gtResponse.IsStillInProgress(txState.PosRefId))
