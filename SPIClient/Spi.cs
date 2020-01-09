@@ -1522,10 +1522,12 @@ namespace SPIClient
                 txState.GotGtResponse(); 
                 var gtResponse = new GetTransactionResponse(m);
 
+
                 if (gtResponse.PosRefIdNotFound()) // the likely scenario of this happening is if transaction times out. 
                 {
-                    Log.Information($"Unexpected Response in Get Transaction. Error: {m.ErrorReason}. Ignoring."); // library stuck in a state, if we force GT, then should be unknown state?
-                    txState.UnknownCompleted("Get Transaction cannot find transaction. Check Eftpos.");
+                    // VSV-XXX - When a transaction has timed out, VAA returns a POS_REF_ID_NOT_FOUND error. To make sure this is right, we will be doing a GLT as backup 
+                    Log.Information($"Unexpected Response in Get Transaction. Error: {m.ErrorReason}. Ignoring.");
+                    _callGetLastTransaction();
                     return;
                 }
 

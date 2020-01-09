@@ -313,7 +313,10 @@ namespace SPIClient
 
         public bool PosRefIdNotFound()
         {
-            return _m.ErrorReason.StartsWith("POS_REF_ID_NOT_FOUND");
+            if (_m.ErrorReason != null)
+                return _m.ErrorReason.StartsWith("POS_REF_ID_NOT_FOUND");
+
+            return false;
         }
 
         public bool WasRetrievedSuccessfully()
