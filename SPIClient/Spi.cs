@@ -601,6 +601,12 @@ namespace SPIClient
 
             if (tipAmount > 0 && (cashoutAmount > 0 || promptForCashout)) return new InitiateTxResult(false, "Cannot Accept Tips and Cashout at the same time.");
 
+            // no printing available, reset header and footer
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            {
+                options = new TransactionOptions();
+            }
+
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
@@ -656,6 +662,12 @@ namespace SPIClient
         public InitiateTxResult InitiateRefundTx(string posRefId, int amountCents, bool suppressMerchantPassword, TransactionOptions options)
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
+
+            // no printing available, reset header and footer
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            {
+                options = new TransactionOptions();
+            }
 
             lock (_txLock)
             {
@@ -872,6 +884,12 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
+            // no printing available, reset header and footer
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            {
+                options = new TransactionOptions();
+            }
+
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
@@ -914,6 +932,12 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
+            // no printing available, reset header and footer
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            {
+                options = new TransactionOptions();
+            }
+
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
@@ -949,6 +973,12 @@ namespace SPIClient
         public InitiateTxResult InitiateSettlementEnquiry(string posRefId, TransactionOptions options)
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
+
+            // no printing available, reset header and footer
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            {
+                options = new TransactionOptions();
+            }
 
             lock (_txLock)
             {
@@ -1666,6 +1696,7 @@ namespace SPIClient
                     if (response.isSuccess())
                     {
                         _serialNumber = response.GetSerialNumber();
+                        _terminalModel = response.GetTerminalModel();
                     }
                 }
 
@@ -2250,6 +2281,7 @@ namespace SPIClient
         private string _serialNumber;
         private string _deviceApiKey;
         private string _acquirerCode;
+        private string _terminalModel;
         private bool _inTestMode;
         private bool _autoAddressResolutionEnabled = true; // enabled by default
         private Secrets _secrets;

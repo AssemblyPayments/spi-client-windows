@@ -112,6 +112,7 @@
     <Compile Include="SpiPayAtTable.cs" />
     <Compile Include="SpiPreauth.cs" />
     <Compile Include="Terminal.cs" />
+    <Compile Include="TerminalHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App.config" />
