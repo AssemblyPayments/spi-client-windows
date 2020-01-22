@@ -61,14 +61,6 @@ namespace SPIClient
             }
         }
 
-        public void BillPaymentReceivedAck(string BillId)
-        {
-            if (_spi.CurrentStatus == SpiStatus.PairedConnected)
-            {
-                _spi._send(new BillPaymentFlowEndedAckRequest(BillId).ToMessage());
-            }
-        }
-
         internal void _handleGetBillDetailsRequest(Message m)
         {
             var operatorId = m.GetDataStringValue("operator_id");
@@ -166,7 +158,15 @@ namespace SPIClient
 
         internal void _handleBillPaymentFlowEnded(Message m)
         {
-            BillPaymentFlowEnded(m);
+           BillPaymentFlowEnded(m);
+            
+            // bill payment flow has ended, we need to respond with an ack
+            if (_spi.CurrentStatus == SpiStatus.PairedConnected)
+            {
+                var billPaymentFlowEndedResponse = new BillPaymentFlowEndedResponse(m);
+
+                _spi._send(new BillPaymentFlowEndedAckRequest(billPaymentFlowEndedResponse.BillId).ToMessage());
+            }
         }
     }
 
