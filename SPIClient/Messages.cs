@@ -329,6 +329,7 @@ namespace SPIClient
         {
             PosCounter = stamp.PosCounter++;
             ConnId = stamp.ConnId;
+            DateTimeStamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.fff");
 
             if (!_needsEncryption)
             {
