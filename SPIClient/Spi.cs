@@ -601,10 +601,13 @@ namespace SPIClient
 
             if (tipAmount > 0 && (cashoutAmount > 0 || promptForCashout)) return new InitiateTxResult(false, "Cannot Accept Tips and Cashout at the same time.");
 
-            // no printing available, reset header and footer
+            // no printing available, reset header and footer and disable print
             if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
             {
                 options = new TransactionOptions();
+                Config.PromptForCustomerCopyOnEftpos = false;
+                Config.PrintMerchantCopy = false;
+                Config.SignatureFlowOnEftpos = false;
             }
 
             lock (_txLock)
@@ -663,10 +666,13 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
-            // no printing available, reset header and footer
+            // no printing available, reset header and footer and disable print
             if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
             {
                 options = new TransactionOptions();
+                Config.PromptForCustomerCopyOnEftpos = false;
+                Config.PrintMerchantCopy = false;
+                Config.SignatureFlowOnEftpos = false;
             }
 
             lock (_txLock)
@@ -812,6 +818,15 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
+            // no printing available, reset header and footer and disable print
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            {
+                options = new TransactionOptions();
+                Config.PromptForCustomerCopyOnEftpos = false;
+                Config.PrintMerchantCopy = false;
+                Config.SignatureFlowOnEftpos = false;
+            }
+
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
@@ -888,6 +903,15 @@ namespace SPIClient
             if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
             {
                 options = new TransactionOptions();
+            }
+
+            // no printing available, reset header and footer and disable print
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            {
+                options = new TransactionOptions();
+                Config.PromptForCustomerCopyOnEftpos = false;
+                Config.PrintMerchantCopy = false;
+                Config.SignatureFlowOnEftpos = false;
             }
 
             lock (_txLock)
