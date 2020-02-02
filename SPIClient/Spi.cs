@@ -601,10 +601,14 @@ namespace SPIClient
 
             if (tipAmount > 0 && (cashoutAmount > 0 || promptForCashout)) return new InitiateTxResult(false, "Cannot Accept Tips and Cashout at the same time.");
 
-            // no printing available, reset header and footer
-            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            // no printing available, reset header and footer and disable print
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel) && _isPrintingConfigEnabled())
             {
                 options = new TransactionOptions();
+                Config.PromptForCustomerCopyOnEftpos = false;
+                Config.PrintMerchantCopy = false;
+                Config.SignatureFlowOnEftpos = false;
+                Log.Warning("Printing is enabled on a terminal without printer. Printing options will now be disabled.");
             }
 
             lock (_txLock)
@@ -663,10 +667,14 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
-            // no printing available, reset header and footer
-            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            // no printing available, reset header and footer and disable print
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel) && _isPrintingConfigEnabled())
             {
                 options = new TransactionOptions();
+                Config.PromptForCustomerCopyOnEftpos = false;
+                Config.PrintMerchantCopy = false;
+                Config.SignatureFlowOnEftpos = false;
+                Log.Warning("Printing is enabled on a terminal without printer. Printing options will now be disabled.");
             }
 
             lock (_txLock)
@@ -812,6 +820,16 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
+            // no printing available, reset header and footer and disable print
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel) && _isPrintingConfigEnabled())
+            {
+                options = new TransactionOptions();
+                Config.PromptForCustomerCopyOnEftpos = false;
+                Config.PrintMerchantCopy = false;
+                Config.SignatureFlowOnEftpos = false;
+                Log.Warning("Printing is enabled on a terminal without printer. Printing options will now be disabled.");
+            }
+
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
@@ -884,10 +902,14 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
-            // no printing available, reset header and footer
-            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            // no printing available, reset header and footer and disable print
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel) && _isPrintingConfigEnabled())
             {
                 options = new TransactionOptions();
+                Config.PromptForCustomerCopyOnEftpos = false;
+                Config.PrintMerchantCopy = false;
+                Config.SignatureFlowOnEftpos = false;
+                Log.Warning("Printing is enabled on a terminal without printer. Printing options will now be disabled.");
             }
 
             lock (_txLock)
@@ -932,10 +954,14 @@ namespace SPIClient
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
 
-            // no printing available, reset header and footer
-            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
+            // no printing available, reset header and footer and disable print
+            if (!TerminalHelper.IsPrinterAvailable(_terminalModel) && _isPrintingConfigEnabled())
             {
                 options = new TransactionOptions();
+                Config.PromptForCustomerCopyOnEftpos = false;
+                Config.PrintMerchantCopy = false;
+                Config.SignatureFlowOnEftpos = false;
+                Log.Warning("Printing is enabled on a terminal without printer. Printing options will now be disabled.");
             }
 
             lock (_txLock)
@@ -973,12 +999,6 @@ namespace SPIClient
         public InitiateTxResult InitiateSettlementEnquiry(string posRefId, TransactionOptions options)
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
-
-            // no printing available, reset header and footer
-            if (!TerminalHelper.IsPrinterAvailable(_terminalModel))
-            {
-                options = new TransactionOptions();
-            }
 
             lock (_txLock)
             {
@@ -1718,6 +1738,16 @@ namespace SPIClient
             {
                 TransactionUpdateMessage?.Invoke(m);
             }
+        }
+
+        private bool _isPrintingConfigEnabled()
+        {
+            if (Config.PromptForCustomerCopyOnEftpos || Config.PrintMerchantCopy || Config.SignatureFlowOnEftpos)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         #endregion
