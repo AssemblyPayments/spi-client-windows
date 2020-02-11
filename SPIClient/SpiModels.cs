@@ -302,6 +302,11 @@ namespace SPIClient
         internal bool AwaitingGtResponse { get; set; }
 
 
+        /// <summary>
+        /// The time when the transaction was completed
+        /// </summary>
+        internal DateTime CompletedTime { get; set; }
+
         [Obsolete("Use PosRefId instead.")]
         public string Id { get; internal set; }
 
@@ -358,6 +363,7 @@ namespace SPIClient
             Finished = true;
             Response = response;
             DisplayMessage = msg;
+            CompletedTime = DateTime.Now;
         }
 
         internal void SignatureRequired(SignatureRequired spiMessage, string msg)
@@ -396,6 +402,7 @@ namespace SPIClient
             AwaitingSignatureCheck = false;
             AwaitingPhoneForAuth = false;
             DisplayMessage = msg;
+            CompletedTime = DateTime.Now;
         }
 
         internal void UnknownCompleted(string msg)
@@ -408,6 +415,7 @@ namespace SPIClient
             AwaitingSignatureCheck = false;
             AwaitingPhoneForAuth = false;
             DisplayMessage = msg;
+            CompletedTime = DateTime.Now;
         }
     }
 

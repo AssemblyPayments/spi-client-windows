@@ -2,7 +2,7 @@
 {
     public static class PongHelper
     {
-        public static Message GeneratePongRessponse(Message ping)
+        public static Message GeneratePongResponse(Message ping)
         {
             return new Message(ping.Id, Events.Pong, null, true);
         }

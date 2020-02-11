@@ -782,6 +782,8 @@ namespace SPIClient
                 }
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
+            _sendTransactionReport();
+
             return new MidTxResult(true, "");
         }
 
@@ -1344,6 +1346,7 @@ namespace SPIClient
                 // TH-6A, TH-6E
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
+            _sendTransactionReport();
         }
 
         /// <summary>
@@ -1366,6 +1369,7 @@ namespace SPIClient
                 // TH-6A, TH-6E
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
+            _sendTransactionReport();
         }
 
         /// <summary>
@@ -1388,6 +1392,7 @@ namespace SPIClient
                 // TH-6A, TH-6E
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
+            _sendTransactionReport();
         }
 
         /// <summary>
@@ -1410,6 +1415,7 @@ namespace SPIClient
                 // TH-6A, TH-6E
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
+            _sendTransactionReport();
         }
 
         /// <summary>
@@ -1431,6 +1437,7 @@ namespace SPIClient
                 // TH-6A, TH-6E
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
+            _sendTransactionReport();
         }
 
         /// <summary>
@@ -1452,6 +1459,7 @@ namespace SPIClient
                 // TH-6A, TH-6E
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
+            _sendTransactionReport();
         }
 
         /// <summary>
@@ -1583,6 +1591,7 @@ namespace SPIClient
                 }
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
+            _sendTransactionReport();
         }
 
         /// <summary>
@@ -1643,6 +1652,7 @@ namespace SPIClient
             }
 
             _txFlowStateChanged(this, CurrentTxFlowState);
+            _sendTransactionReport();
         }
 
         private void _handleSetPosInfoResponse(Message m)
@@ -1980,6 +1990,7 @@ namespace SPIClient
                     if (!_hasSetInfo)
                     {
                         _callSetPosInfo();
+                        transactionReport = TransactionReportHelper.CreateTransactionReportEnvelope(_posVendorId, _posVersion, _libraryLanguage, GetVersion(), _serialNumber);
                     }
 
                     // let's also tell the eftpos our latest table configuration.
@@ -1995,7 +2006,7 @@ namespace SPIClient
 
         private void _callSetPosInfo()
         {
-            SetPosInfoRequest setPosInfoRequest = new SetPosInfoRequest(_posVersion, _posVendorId, ".net", GetVersion(), DeviceInfo.GetAppDeviceInfo());
+            SetPosInfoRequest setPosInfoRequest = new SetPosInfoRequest(_posVersion, _posVendorId, _libraryLanguage, GetVersion(), DeviceInfo.GetAppDeviceInfo());
             _send(setPosInfoRequest.toMessage());
         }
 
@@ -2055,7 +2066,7 @@ namespace SPIClient
         /// <param name="m"></param>
         private void _handleIncomingPing(Message m)
         {
-            var pong = PongHelper.GeneratePongRessponse(m);
+            var pong = PongHelper.GeneratePongResponse(m);
             _send(pong);
         }
 
@@ -2308,6 +2319,49 @@ namespace SPIClient
 
         #endregion
 
+        #region Analytics
+        private void _sendTransactionReport()
+        {
+            transactionReport.TxType = CurrentTxFlowState.Type.ToString();
+            transactionReport.TxResult = CurrentTxFlowState.Success.ToString();
+            transactionReport.TxStartTime = DateTimeToUnixTimeStamp(CurrentTxFlowState.RequestTime);
+            transactionReport.TxEndTime = DateTimeToUnixTimeStamp(CurrentTxFlowState.RequestTime);
+            transactionReport.DurationMs = (int)(CurrentTxFlowState.CompletedTime - CurrentTxFlowState.RequestTime).TotalMilliseconds;
+            transactionReport.CurrentFlow = CurrentFlow.ToString();
+            transactionReport.CurrentTxFlowState = CurrentTxFlowState.Type.ToString();
+            transactionReport.CurrentStatus = CurrentStatus.ToString();
+            transactionReport.PosRefId = CurrentTxFlowState.PosRefId;
+            transactionReport.Event = $"Waiting for Signature: {CurrentTxFlowState.AwaitingSignatureCheck}, " +
+                $"Attemtping to Cancel: {CurrentTxFlowState.AttemptingToCancel}, Finished: {CurrentTxFlowState.Finished}";
+            transactionReport.SerialNumber = _serialNumber;
+
+            _ = Task.Factory.StartNew(() =>
+                {
+                    var service = new AnalyticsService();
+                    var analyticsResponse = service.ReportTransaction(transactionReport, _deviceApiKey, _acquirerCode, _inTestMode);
+
+                    if (analyticsResponse.Result == null)
+                    {
+                        Log.Warning("Error reporting to anaytics service.");
+                        return;
+                    }
+                });
+        }
+
+        /// <summary>
+        /// Private method for converting date time to unix time
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        private static long DateTimeToUnixTimeStamp(DateTime dateTime)
+        {
+            var unixStart = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            var unixTimeStampInTicks = (dateTime.ToUniversalTime() - unixStart).Ticks;
+
+            return unixTimeStampInTicks / TimeSpan.TicksPerSecond;
+        }
+        #endregion
+
         #region IDisposable
 
         public void Dispose()
@@ -2343,6 +2397,7 @@ namespace SPIClient
         private string _posVersion;
         private bool _hasSetInfo;
         private bool _pairUsingEftposAddress;
+        private const string _libraryLanguage = ".net";
 
         private Connection _conn;
         private readonly TimeSpan _pongTimeout = TimeSpan.FromSeconds(5);
@@ -2360,6 +2415,8 @@ namespace SPIClient
         public SpiTerminalConfigurationResponse TerminalConfigurationResponse;
         public SpiBatteryLevelChanged BatteryLevelChanged;
         public SpiTransactionUpdateMessage TransactionUpdateMessage;
+
+        private TransactionReport transactionReport;
 
         private Message _mostRecentPingSent;
         private DateTime _mostRecentPingSentTime;
