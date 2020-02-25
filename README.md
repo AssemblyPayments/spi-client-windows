@@ -1,4 +1,4 @@
-# SPI Client Windows [![Build status](https://ci.appveyor.com/api/projects/status/joflawbb90p1dv6j?svg=true)](https://ci.appveyor.com/project/AssemblyPayments/spi-client-windows) [![NuGet](https://img.shields.io/nuget/v/SPIClient.svg)](https://www.nuget.org/packages/SPIClient/)
+# SPI Client Windows [![Build status](https://ci.appveyor.com/api/projects/status/joflawbb90p1dv6j?svg=true)](https://ci.appveyor.com/project/mx51/spi-client-windows) [![NuGet](https://img.shields.io/nuget/v/SPIClient.svg)](https://www.nuget.org/packages/SPIClient/)
 
 This is the Windows Client Library for mx51's In-Store Integration.
 
