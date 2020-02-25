@@ -218,7 +218,7 @@ namespace SPIClient
 
 
         /// <summary>
-        /// Set the acquirer code of your bank, please contact Assembly's Integration Engineers for acquirer code.
+        /// Set the acquirer code of your bank, please contact mx51's for acquirer code.
         /// </summary>
         public bool SetAcquirerCode(string acquirerCode)
         {
@@ -227,7 +227,7 @@ namespace SPIClient
         }
 
         /// <summary>
-        /// Set the api key used for auto address discovery feature, please contact Assembly's Integration Engineers for Api key.
+        /// Set the api key used for auto address discovery feature, please contact mx51 for Api key.
         /// </summary>
         /// <returns></returns>
         public bool SetDeviceApiKey(string deviceApiKey)
