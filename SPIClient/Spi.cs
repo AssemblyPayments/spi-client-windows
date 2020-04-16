@@ -2129,10 +2129,6 @@ namespace SPIClient
         }
 
         /// <summary>
-        /// Ask the PinPad to tell us what the Most Recent Transaction Was
-        /// </summary>
-
-        /// <summary>
         /// This method will be called whenever we receive a message from the Connection
         /// </summary>
         /// <param name="sender"></param>
