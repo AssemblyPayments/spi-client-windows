@@ -235,6 +235,7 @@ namespace SPIClient
         /// </summary>
         public DateTime LastStateRequestTime { get; internal set; }
 
+        [Obsolete("Use Get Transaction instead, GtRequestId.")]
         /// <summary>
         /// The id of the last glt request message that was sent. used to match with the response.
         /// </summary>
@@ -243,7 +244,11 @@ namespace SPIClient
         /// <summary>
         /// The id of the last glt request message that was sent. used to match with the response.
         /// </summary>
-        public string LastGtRequestId { get; internal set; }
+        public string GtRequestId { get; internal set; }
+
+        /// <summary>
+        /// </summary>
+        public bool AttemptingToRecover { get; internal set; }
 
         /// <summary>
         /// Whether we're currently attempting to Cancel the transaction.
@@ -361,11 +366,22 @@ namespace SPIClient
             AwaitingGltResponse = false;
         }
 
-        internal void CallingGt(string gtRequestId)
+        internal void CallingGt(string gtRequestId, bool attemptingRecovery)
         {
             AwaitingGtResponse = true;
             LastStateRequestTime = DateTime.Now;
-            LastGtRequestId = gtRequestId;
+            GtRequestId = gtRequestId;
+            AttemptingToRecover = attemptingRecovery;
+        }
+
+        internal void AttemptingRecovery()
+        {
+            AttemptingToRecover = true;
+        }
+
+        internal void RecoveryComplete()
+        {
+            AttemptingToRecover= false;
         }
 
         internal void GotGtResponse()

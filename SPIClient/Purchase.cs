@@ -302,6 +302,8 @@ namespace SPIClient
 
     public class GetTransactionResponse
     {
+        public bool Success;
+
         private readonly Message _m;
 
         public GetTransactionResponse() { }
@@ -311,17 +313,60 @@ namespace SPIClient
             _m = m;
         }
 
+        public string GetPosRefId()
+        {
+            return _m.GetDataStringValue("pos_ref_id");
+        }
+
+        public string GetError()
+        {
+            JToken e = null;
+            var found = _m.Data.TryGetValue("error_reason", out e);
+            if (found) return (string)e;
+            return null;
+        }
+
+        /// <summary>
+        /// Tx is a sub object of the payload, so we will copy this into a message for convenience. 
+        /// </summary>
+        public Message GetTxMessage()
+        {
+            var txFound = _m.Data.TryGetValue("tx", out var tx);
+            if (txFound)
+            {
+                return new Message(_m.Id, "gt", (JObject)tx, false);
+            }
+
+            return null;
+        }
+
         public bool PosRefIdNotFound()
         {
-            if (_m.ErrorReason != null)
-                return _m.ErrorReason.StartsWith("POS_REF_ID_NOT_FOUND");
+            if (_m.GetError() != null)
+                return  _m.GetError().StartsWith("POS_REF_ID_NOT_FOUND");
+
+            return false;
+        }
+
+        public bool PosRefIdInvalid()
+        {
+            if (_m.GetError() != null)
+                return _m.GetError().StartsWith("INVALID_ARGUMENTS");
+
+            return false;
+        }
+
+        internal bool PosRefIdMissing()
+        {
+            if (_m.GetError() != null)
+                return _m.GetError().StartsWith("MISSING_ARGUMENTS");
 
             return false;
         }
 
         public bool WasRetrievedSuccessfully()
         {
-            return !string.IsNullOrEmpty(GetResponseCode());
+            return _m.GetSuccessState() == Message.SuccessState.Success;
         }
 
         public bool WasOperationInProgressError()
@@ -329,24 +374,24 @@ namespace SPIClient
             return _m.GetError().StartsWith("OPERATION_IN_PROGRESS");
         }
 
+        public bool WasTransactionInProgressError()
+        {
+            return _m.GetError().StartsWith("TRANSACTION_IN_PROGRESS");
+        }
+        
         public bool IsStillInProgress(string posRefId)
         {
-            return WasOperationInProgressError() && (GetPosRefId().Equals(posRefId) || GetPosRefId() == null);
+            return (WasOperationInProgressError() || WasTransactionInProgressError()) && (GetPosRefId().Equals(posRefId) || GetPosRefId() == null);
         }
 
         public bool IsWaitingForSignatureResponse()
         {
-            return _m.GetError().StartsWith("OPERATION_IN_PROGRESS_AWAITING_SIGNATURE"); // VSV-2777 - TRANSACTION_IN_PROGRESS_AWAITING_SIGNATURE
+            return _m.GetError().StartsWith("TRANSACTION_IN_PROGRESS_AWAITING_SIGNATURE");
         }
 
         public bool IsWaitingForAuthCode()
         {
-            return _m.GetError().StartsWith("OPERATION_IN_PROGRESS_AWAITING_PHONE_AUTH_CODE"); // VSV-2777 - TRANSACTION_IN_PROGRESS_AWAITING_PHONE_AUTH_CODE
-        }
-
-        public string GetPosRefId()
-        {
-            return _m.GetDataStringValue("pos_ref_id");
+            return _m.GetError().StartsWith("TRANSACTION_IN_PROGRESS_AWAITING_PHONE_AUTH_CODE");
         }
 
         public void CopyMerchantReceiptToCustomerReceipt()
@@ -357,11 +402,6 @@ namespace SPIClient
             {
                 _m.Data["customer_receipt"] = new JValue(mr);
             }
-        }
-
-        public string GetResponseCode()
-        {
-            return _m.GetDataStringValue("host_response_code");
         }
     }
 

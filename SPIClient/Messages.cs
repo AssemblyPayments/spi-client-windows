@@ -202,9 +202,6 @@ namespace SPIClient
         [JsonProperty("conn_id")]
         internal string ConnId { get; set; }
 
-        [JsonProperty("error_reason")]
-        internal string ErrorReason { get; set; }
-
         /// <summary>
         /// Pos_id is set here only for outgoing Un-encrypted messages. 
         /// (not in the envelope's top level which would just have the "message" field.)

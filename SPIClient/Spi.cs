@@ -1018,10 +1018,8 @@ namespace SPIClient
 
                 var gtRequestMsg = new GetTransactionRequest(posRefId).ToMessage();
                 CurrentFlow = SpiFlow.Transaction;
-                CurrentTxFlowState = new TransactionFlowState(
-                    posRefId, TransactionType.GetTransaction, 0, gtRequestMsg,
-                    $"Waiting for EFTPOS connection to make a Get Transaction request.");
-                CurrentTxFlowState.CallingGt(gtRequestMsg.Id);
+                CurrentTxFlowState = new TransactionFlowState(posRefId, TransactionType.GetTransaction, 0, gtRequestMsg, $"Waiting for EFTPOS connection to make a Get Transaction request.");
+                CurrentTxFlowState.CallingGt(gtRequestMsg.Id, false);
                 if (_send(gtRequestMsg))
                 {
                     CurrentTxFlowState.Sent($"Asked EFTPOS to Get Transaction {posRefId}.");
@@ -1052,12 +1050,11 @@ namespace SPIClient
 
                 CurrentFlow = SpiFlow.Transaction;
 
-                var gltRequestMsg = new GetTransactionRequest(posRefId).ToMessage();
-                CurrentTxFlowState = new TransactionFlowState(
-                    posRefId, txType, 0, gltRequestMsg,
-                    $"Waiting for EFTPOS connection to attempt recovery.");
+                var gtRequestMsg = new GetTransactionRequest(posRefId).ToMessage();
+                CurrentTxFlowState = new TransactionFlowState(posRefId, txType, 0, gtRequestMsg, $"Waiting for EFTPOS connection to attempt recovery.");
+                CurrentTxFlowState.CallingGt(gtRequestMsg.Id, true);
 
-                if (_send(gltRequestMsg))
+                if (_send(gtRequestMsg))
                 {
                     CurrentTxFlowState.Sent($"Asked EFTPOS to recover state.");
                 }
@@ -1509,33 +1506,21 @@ namespace SPIClient
                     return;
                 }
 
-                // This is commented out for now, VAA bug where message Id returned is incorrect.
-                //if (txState.LastGtRequestId != m.Id)
-                //    {
-                //        Log.Information($"Received a gt response but the message id does not match the gt request that we sent. strange. ignoring.");
-                //        return;
-                //    }
-
-                // TH-4 We were in the middle of a transaction.
-                // Let's attempt recovery. This is step 4 of Transaction Processing Handling
-                Log.Information($"Got Transaction..");
-                txState.GotGtResponse(); 
-                var gtResponse = new GetTransactionResponse(m);
-
-
-                if (gtResponse.PosRefIdNotFound()) // the likely scenario of this happening is if transaction times out. 
+                if (txState.GtRequestId != m.Id)
                 {
-                    // VSV-XXX - When a transaction has timed out, VAA returns a POS_REF_ID_NOT_FOUND error. To make sure this is right, we will be doing a GLT as backup 
-                    Log.Information($"Unexpected Response in Get Transaction. Error: {m.ErrorReason}. Ignoring.");
-                    _callGetLastTransaction();
+                    Log.Information($"Received a gt response but the message id does not match the gt request that we sent. strange. ignoring.");
                     return;
                 }
 
+                Log.Information($"Got Transaction response.");
+                txState.GotGtResponse(); 
+                var gtResponse = new GetTransactionResponse(m);
+
+                // check if GT is returned successfully
                 if (!gtResponse.WasRetrievedSuccessfully())
                 {
                     if (gtResponse.IsStillInProgress(txState.PosRefId))
                     {
-                        // TH-4E - Operation In Progress
                         if (gtResponse.IsWaitingForSignatureResponse() && !txState.AwaitingSignatureCheck)
                         {
                             Log.Information($"Eftpos is waiting for us to send it signature accept/decline, but we were not aware of this. " +
@@ -1548,32 +1533,60 @@ namespace SPIClient
                                       $"We can only cancel the transaction at this stage as we don't have enough information to recover from this.");
                             CurrentTxFlowState.PhoneForAuthRequired(new PhoneForAuthRequired(txState.PosRefId, m.Id, "UNKNOWN", "UNKNOWN"), "Recovered mid Phone-For-Auth but don't have details. You may Cancel then Retry.");
                         }
+                        else if (gtResponse.WasTransactionInProgressError())
+                        {
+                            Log.Information($"Transaction is currently in progress... stay waiting.");
+                            return;
+                        }
                         else
                         {
                             Log.Information($"Operation still in progress... stay waiting.");
-                            // No need to publish txFlowStateChanged. Can return;
                             return;
                         }
                     }
-                    else
+                    else if (gtResponse.PosRefIdNotFound()) 
                     {
-                        // TH-4X - Unexpected Response when recovering
-                        Log.Information($"Unexpected Response in Get Transaction during - Received posRefId:{gtResponse.GetPosRefId()} Error:{m.GetError()}. Ignoring.");
-                        return;
+                        Log.Information($"Get transaction did not match.");
+                        txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
+                    }
+                    else if (gtResponse.PosRefIdInvalid())
+                    {
+                        Log.Information($"Get transaction did not match, PosRefId is invalid.");
+                        txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
+                    }
+                    else if (gtResponse.PosRefIdMissing())
+                    {
+                        Log.Information($"Get transaction did not match, PosRefId is invalid.");
+                        txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
                     }
                 }
                 else
                 {
-                    if (txState.Type == TransactionType.GetTransaction) // this is an explicit get transaction call
+                    if (txState.AttemptingToRecover == true) 
                     {
-                        Log.Information($"Retrieved Transaction as asked directly by the user.");
+                        // this was an explicit call to recover
+                        Log.Information($"Retrieved transaction as asked directly by the user.");
+                        var tx = gtResponse.GetTxMessage();
                         gtResponse.CopyMerchantReceiptToCustomerReceipt();
-                        txState.Completed(m.GetSuccessState(), m, "Transaction Retrieved");
+                        txState.RecoveryComplete();
+                        txState.Completed(tx.GetSuccessState(), tx, $"Transaction Retrieved for {gtResponse.GetPosRefId()}");
                     }
-                    else // this is called for recovery purposes
+                    else
                     {
-                        gtResponse.CopyMerchantReceiptToCustomerReceipt();
-                        txState.Completed(m.GetSuccessState(), m, "Transaction Ended.");
+                        var tx = gtResponse.GetTxMessage();
+
+                        if (tx != null)
+                        {
+                            Log.Information("$Retrieved transaction during recovery.");
+                            gtResponse.CopyMerchantReceiptToCustomerReceipt();
+                            txState.Completed(tx.GetSuccessState(), tx, "Transaction Ended.");
+                        }
+                        else
+                        {
+                            // unexpected response during gt
+                            Log.Information($"Unexpected Response in Get Transaction.");
+                            txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
+                        }
                     }
                 }
             }
@@ -2096,12 +2109,12 @@ namespace SPIClient
         }
 
         /// <summary>
-        /// Ask the PinPad to tell us what the Most Recent Transaction was
+        /// Ask the PinPad to tell us about the transaction with the posRefId
         /// </summary>
         private void _callGetTransaction(string posRefId)
         {
             var gtRequestMsg = new GetTransactionRequest(posRefId).ToMessage();
-            CurrentTxFlowState.CallingGt(gtRequestMsg.Id);
+            CurrentTxFlowState.CallingGt(gtRequestMsg.Id, false);
             _send(gtRequestMsg);
         }
 
