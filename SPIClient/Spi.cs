@@ -2121,17 +2121,7 @@ namespace SPIClient
             CurrentTxFlowState.CallingGt(gtRequestMsg.Id);
             _send(gtRequestMsg);
         }
-
-        ///// <summary>
-        ///// Ask the PinPad to tell us what the Most Recent Transaction was
-        ///// </summary>
-        private void _callGetLastTransaction()
-        {
-            var gltRequestMsg = new GetLastTransactionRequest().ToMessage();
-            CurrentTxFlowState.CallingGlt(gltRequestMsg.Id);
-            _send(gltRequestMsg);
-        }
-
+        
         /// <summary>
         /// This method will be called whenever we receive a message from the Connection
         /// </summary>
