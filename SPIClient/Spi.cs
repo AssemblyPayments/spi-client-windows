@@ -1559,6 +1559,12 @@ namespace SPIClient
                         Log.Information($"Get transaction failed, PosRefId is missing.");
                         txState.Completed(Message.SuccessState.Failed, m, $"PosRefId is missing for {gtResponse.GetPosRefId()}.");
                     }
+                    else
+                    {
+                        // get transaction failed, but we weren't given a specific reason 
+                        Log.Information($"Unexpected Response in Get Transaction - Received posRefId:{gtResponse.GetPosRefId()} Error:{m.GetError()}. Ignoring.");
+                        return;
+                    }
                 }
                 else
                 {
