@@ -1546,18 +1546,18 @@ namespace SPIClient
                     }
                     else if (gtResponse.PosRefIdNotFound()) 
                     {
-                        Log.Information($"Get transaction did not match.");
-                        txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
+                        Log.Information($"Get transaction failed, PosRefId is not found.");
+                        txState.Completed(Message.SuccessState.Failed, m, $"PosRefId not found for {gtResponse.GetPosRefId()}.");
                     }
                     else if (gtResponse.PosRefIdInvalid())
                     {
-                        Log.Information($"Get transaction did not match, PosRefId is invalid.");
-                        txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
+                        Log.Information($"Get transaction failed, PosRefId is invalid.");
+                        txState.Completed(Message.SuccessState.Failed, m, $"PosRefId invalid for {gtResponse.GetPosRefId()}.");
                     }
                     else if (gtResponse.PosRefIdMissing())
                     {
-                        Log.Information($"Get transaction did not match, PosRefId is invalid.");
-                        txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
+                        Log.Information($"Get transaction failed, PosRefId is missing.");
+                        txState.Completed(Message.SuccessState.Failed, m, $"PosRefId is missing for {gtResponse.GetPosRefId()}.");
                     }
                 }
                 else
@@ -1578,11 +1578,10 @@ namespace SPIClient
                             Log.Information("$Retrieved transaction during recovery.");
                         }
                         gtResponse.CopyMerchantReceiptToCustomerReceipt();
-                        txState.Completed(tx.GetSuccessState(), tx, $"Transaction Retrieved for {gtResponse.GetPosRefId()}");
+                        txState.Completed(tx.GetSuccessState(), tx, $"Transaction Retrieved for {gtResponse.GetPosRefId()}.");
                     }
                     else
                     {
-                        // unexpected response during gt
                         Log.Information($"Unexpected Response in Get Transaction.");
                         txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
                     }
