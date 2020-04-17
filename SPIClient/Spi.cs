@@ -1019,7 +1019,7 @@ namespace SPIClient
                 var gtRequestMsg = new GetTransactionRequest(posRefId).ToMessage();
                 CurrentFlow = SpiFlow.Transaction;
                 CurrentTxFlowState = new TransactionFlowState(posRefId, TransactionType.GetTransaction, 0, gtRequestMsg, $"Waiting for EFTPOS connection to make a Get Transaction request.");
-                CurrentTxFlowState.CallingGt(gtRequestMsg.Id, false);
+                CurrentTxFlowState.CallingGt(gtRequestMsg.Id);
                 if (_send(gtRequestMsg))
                 {
                     CurrentTxFlowState.Sent($"Asked EFTPOS to Get Transaction {posRefId}.");
@@ -1052,7 +1052,7 @@ namespace SPIClient
 
                 var gtRequestMsg = new GetTransactionRequest(posRefId).ToMessage();
                 CurrentTxFlowState = new TransactionFlowState(posRefId, txType, 0, gtRequestMsg, $"Waiting for EFTPOS connection to attempt recovery.");
-                CurrentTxFlowState.CallingGt(gtRequestMsg.Id, true);
+                CurrentTxFlowState.CallingGt(gtRequestMsg.Id);
 
                 if (_send(gtRequestMsg))
                 {
@@ -1562,31 +1562,29 @@ namespace SPIClient
                 }
                 else
                 {
-                    if (txState.AttemptingToRecover == true) 
+                    // get transaction was successful
+                    var tx = gtResponse.GetTxMessage();
+
+                    if (tx != null)
                     {
-                        // this was an explicit call to recover
-                        Log.Information($"Retrieved transaction as asked directly by the user.");
-                        var tx = gtResponse.GetTxMessage();
+                        if (txState.Type == TransactionType.GetTransaction)
+                        {
+                            // this was a get transaction request, not for recovery
+                            Log.Information($"Retrieved Transaction as asked directly by the user.");
+                        }
+                        else
+                        {
+                            // this was a get transaction from a recovery
+                            Log.Information("$Retrieved transaction during recovery.");
+                        }
                         gtResponse.CopyMerchantReceiptToCustomerReceipt();
-                        txState.RecoveryComplete();
                         txState.Completed(tx.GetSuccessState(), tx, $"Transaction Retrieved for {gtResponse.GetPosRefId()}");
                     }
                     else
                     {
-                        var tx = gtResponse.GetTxMessage();
-
-                        if (tx != null)
-                        {
-                            Log.Information("$Retrieved transaction during recovery.");
-                            gtResponse.CopyMerchantReceiptToCustomerReceipt();
-                            txState.Completed(tx.GetSuccessState(), tx, "Transaction Ended.");
-                        }
-                        else
-                        {
-                            // unexpected response during gt
-                            Log.Information($"Unexpected Response in Get Transaction.");
-                            txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
-                        }
+                        // unexpected response during gt
+                        Log.Information($"Unexpected Response in Get Transaction.");
+                        txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
                     }
                 }
             }
@@ -2114,7 +2112,7 @@ namespace SPIClient
         private void _callGetTransaction(string posRefId)
         {
             var gtRequestMsg = new GetTransactionRequest(posRefId).ToMessage();
-            CurrentTxFlowState.CallingGt(gtRequestMsg.Id, false);
+            CurrentTxFlowState.CallingGt(gtRequestMsg.Id);
             _send(gtRequestMsg);
         }
 

@@ -247,10 +247,6 @@ namespace SPIClient
         public string GtRequestId { get; internal set; }
 
         /// <summary>
-        /// </summary>
-        public bool AttemptingToRecover { get; internal set; }
-
-        /// <summary>
         /// Whether we're currently attempting to Cancel the transaction.
         /// </summary>
         public bool AttemptingToCancel { get; internal set; }
@@ -316,6 +312,7 @@ namespace SPIClient
         /// </summary>
         internal bool AwaitingGtResponse { get; set; }
 
+
         [Obsolete("Use PosRefId instead.")]
         public string Id { get; internal set; }
 
@@ -366,22 +363,11 @@ namespace SPIClient
             AwaitingGltResponse = false;
         }
 
-        internal void CallingGt(string gtRequestId, bool attemptingRecovery)
+        internal void CallingGt(string gtRequestId)
         {
             AwaitingGtResponse = true;
             LastStateRequestTime = DateTime.Now;
             GtRequestId = gtRequestId;
-            AttemptingToRecover = attemptingRecovery;
-        }
-
-        internal void AttemptingRecovery()
-        {
-            AttemptingToRecover = true;
-        }
-
-        internal void RecoveryComplete()
-        {
-            AttemptingToRecover= false;
         }
 
         internal void GotGtResponse()
