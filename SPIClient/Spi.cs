@@ -1582,6 +1582,7 @@ namespace SPIClient
                     }
                     else
                     {
+                        // tx payload missing from get transaction protocol, could be a VAA issue
                         Log.Information($"Unexpected Response in Get Transaction.");
                         txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
                     }
