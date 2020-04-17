@@ -379,9 +379,9 @@ namespace SPIClient
             return _m.GetError().StartsWith("TRANSACTION_IN_PROGRESS");
         }
         
-        public bool IsStillInProgress(string posRefId)
+        public bool IsStillInProgress()
         {
-            return (WasOperationInProgressError() || WasTransactionInProgressError()) && (GetPosRefId().Equals(posRefId) || GetPosRefId() == null);
+            return WasOperationInProgressError() || WasTransactionInProgressError();
         }
 
         public bool IsWaitingForSignatureResponse()

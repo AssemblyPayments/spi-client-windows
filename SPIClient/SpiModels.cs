@@ -242,7 +242,7 @@ namespace SPIClient
         public string LastGltRequestId { get; internal set; }
 
         /// <summary>
-        /// The id of the last gt request message that was sent. used to match with the response.
+        /// The id of the gt request message that was sent. Used to match with the response.
         /// </summary>
         public string GtRequestId { get; internal set; }
 

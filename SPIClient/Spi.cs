@@ -1519,7 +1519,7 @@ namespace SPIClient
                 // check if GT is returned successfully
                 if (!gtResponse.WasRetrievedSuccessfully())
                 {
-                    if (gtResponse.IsStillInProgress(txState.PosRefId))
+                    if (gtResponse.IsStillInProgress())
                     {
                         if (gtResponse.IsWaitingForSignatureResponse() && !txState.AwaitingSignatureCheck)
                         {
