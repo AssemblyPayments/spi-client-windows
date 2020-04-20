@@ -368,32 +368,27 @@ namespace SPIClient
         {
             return _m.GetSuccessState() == Message.SuccessState.Success;
         }
-
-        public bool WasOperationInProgressError()
+     
+        public bool IsTransactionInProgress()
         {
-            return _m.GetError().StartsWith("OPERATION_IN_PROGRESS");
-        }
-
-        public bool WasTransactionInProgressError()
-        {
-            return _m.GetError().StartsWith("TRANSACTION_IN_PROGRESS");
+            return _m.GetError().Equals("TRANSACTION_IN_PROGRESS");
         }
         
-        public bool IsStillInProgress()
-        {
-            return WasOperationInProgressError() || WasTransactionInProgressError();
-        }
-
         public bool IsWaitingForSignatureResponse()
         {
-            return _m.GetError().StartsWith("TRANSACTION_IN_PROGRESS_AWAITING_SIGNATURE");
+            return _m.GetError().Equals("TRANSACTION_IN_PROGRESS_AWAITING_SIGNATURE");
         }
 
         public bool IsWaitingForAuthCode()
         {
-            return _m.GetError().StartsWith("TRANSACTION_IN_PROGRESS_AWAITING_PHONE_AUTH_CODE");
+            return _m.GetError().Equals("TRANSACTION_IN_PROGRESS_AWAITING_PHONE_AUTH_CODE");
         }
 
+        public bool IsSomethingElseBlocking()
+        {
+            return _m.GetError().Equals("OPERATION_IN_PROGRESS");
+        }
+        
         public void CopyMerchantReceiptToCustomerReceipt()
         {
             var cr = _m.GetDataStringValue("customer_receipt");

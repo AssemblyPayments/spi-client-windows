@@ -1516,81 +1516,76 @@ namespace SPIClient
                 txState.GotGtResponse(); 
                 var gtResponse = new GetTransactionResponse(m);
 
-                // check if GT is returned successfully
                 if (!gtResponse.WasRetrievedSuccessfully())
                 {
-                    if (gtResponse.IsStillInProgress())
+                    // GetTransaction Failed... let's figure out one of reason and act accordingly
+                    if (gtResponse.IsWaitingForSignatureResponse() && !txState.AwaitingSignatureCheck)
                     {
-                        if (gtResponse.IsWaitingForSignatureResponse() && !txState.AwaitingSignatureCheck)
-                        {
-                            Log.Information($"Eftpos is waiting for us to send it signature accept/decline, but we were not aware of this. " +
-                                      $"The user can only really decline at this stage as there is no receipt to print for signing.");
-                            CurrentTxFlowState.SignatureRequired(new SignatureRequired(txState.PosRefId, m.Id, "MISSING RECEIPT\n DECLINE AND TRY AGAIN."), "Recovered in Signature Required but we don't have receipt. You may Decline then Retry.");
-                        }
-                        else if (gtResponse.IsWaitingForAuthCode() && !txState.AwaitingPhoneForAuth)
-                        {
-                            Log.Information($"Eftpos is waiting for us to send it auth code, but we were not aware of this. " +
-                                      $"We can only cancel the transaction at this stage as we don't have enough information to recover from this.");
-                            CurrentTxFlowState.PhoneForAuthRequired(new PhoneForAuthRequired(txState.PosRefId, m.Id, "UNKNOWN", "UNKNOWN"), "Recovered mid Phone-For-Auth but don't have details. You may Cancel then Retry.");
-                        }
-                        else if (gtResponse.WasTransactionInProgressError())
-                        {
-                            Log.Information($"Transaction is currently in progress... stay waiting.");
-                            return;
-                        }
-                        else
-                        {
-                            Log.Information($"Operation still in progress... stay waiting.");
-                            return;
-                        }
+                        Log.Information($"GTR-01: Eftpos is waiting for us to send it signature accept/decline, but we were not aware of this. " +
+                                  $"The user can only really decline at this stage as there is no receipt to print for signing.");
+                        CurrentTxFlowState.SignatureRequired(new SignatureRequired(txState.PosRefId, m.Id, "MISSING RECEIPT\n DECLINE AND TRY AGAIN."), "Recovered in Signature Required but we don't have receipt. You may Decline then Retry.");
+                    }
+                    else if (gtResponse.IsWaitingForAuthCode() && !txState.AwaitingPhoneForAuth)
+                    {
+                        Log.Information($"GTR-02: Eftpos is waiting for us to send it auth code, but we were not aware of this. " +
+                                  $"We can only cancel the transaction at this stage as we don't have enough information to recover from this.");
+                        CurrentTxFlowState.PhoneForAuthRequired(new PhoneForAuthRequired(txState.PosRefId, m.Id, "UNKNOWN", "UNKNOWN"), "Recovered mid Phone-For-Auth but don't have details. You may Cancel then Retry.");
+                    }
+                    else if (gtResponse.IsTransactionInProgress())
+                    {
+                        Log.Information($"GTR-03: Transaction is currently in progress... stay waiting.");
+                        return;
                     }
                     else if (gtResponse.PosRefIdNotFound()) 
                     {
-                        Log.Information($"Get transaction failed, PosRefId is not found.");
+                        Log.Information($"GTR-04: Get transaction failed, PosRefId is not found.");
                         txState.Completed(Message.SuccessState.Failed, m, $"PosRefId not found for {gtResponse.GetPosRefId()}.");
                     }
                     else if (gtResponse.PosRefIdInvalid())
                     {
-                        Log.Information($"Get transaction failed, PosRefId is invalid.");
+                        Log.Information($"GTR-05: Get transaction failed, PosRefId is invalid.");
                         txState.Completed(Message.SuccessState.Failed, m, $"PosRefId invalid for {gtResponse.GetPosRefId()}.");
                     }
                     else if (gtResponse.PosRefIdMissing())
                     {
-                        Log.Information($"Get transaction failed, PosRefId is missing.");
+                        Log.Information($"GTR-06: Get transaction failed, PosRefId is missing.");
                         txState.Completed(Message.SuccessState.Failed, m, $"PosRefId is missing for {gtResponse.GetPosRefId()}.");
+                    }
+                    else if (gtResponse.IsSomethingElseBlocking())
+                    {
+                        Log.Information($"GTR-07: Terminal is Blocked by something else... stay waiting.");
+                        return;
                     }
                     else
                     {
                         // get transaction failed, but we weren't given a specific reason 
-                        Log.Information($"Unexpected Response in Get Transaction - Received posRefId:{gtResponse.GetPosRefId()} Error:{m.GetError()}. Ignoring.");
+                        Log.Information($"GTR-08: Unexpected Response in Get Transaction - Received posRefId:{gtResponse.GetPosRefId()} Error:{m.GetError()}. Ignoring.");
                         return;
                     }
                 }
                 else
                 {
-                    // get transaction was successful
                     var tx = gtResponse.GetTxMessage();
-
-                    if (tx != null)
+                    if (tx == null)
                     {
-                        if (txState.Type == TransactionType.GetTransaction)
-                        {
-                            // this was a get transaction request, not for recovery
-                            Log.Information($"Retrieved Transaction as asked directly by the user.");
-                        }
-                        else
-                        {
-                            // this was a get transaction from a recovery
-                            Log.Information("$Retrieved transaction during recovery.");
-                        }
-                        gtResponse.CopyMerchantReceiptToCustomerReceipt();
+                        // tx payload missing from get transaction protocol, could be a VAA issue.
+                        Log.Information("GTR-09: Unexpected Response in Get Transaction. Missing TX payload... stay waiting");
+                        return;
+                    }
+                    
+                    // get transaction was successful
+                    gtResponse.CopyMerchantReceiptToCustomerReceipt();
+                    if (txState.Type == TransactionType.GetTransaction)
+                    {
+                        // this was a get transaction request, not for recovery
+                        Log.Information("GTR-10: Retrieved Transaction as asked directly by the user.");
                         txState.Completed(tx.GetSuccessState(), tx, $"Transaction Retrieved for {gtResponse.GetPosRefId()}.");
                     }
                     else
                     {
-                        // tx payload missing from get transaction protocol, could be a VAA issue
-                        Log.Information($"Unexpected Response in Get Transaction.");
-                        txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
+                        // this was a get transaction from a recovery
+                        Log.Information("GTR-11: Retrieved transaction during recovery.");
+                        txState.Completed(tx.GetSuccessState(), tx, $"Transaction Recovered for {gtResponse.GetPosRefId()}.");
                     }
                 }
             }
