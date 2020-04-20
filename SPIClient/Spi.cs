@@ -1062,64 +1062,7 @@ namespace SPIClient
             _txFlowStateChanged(this, CurrentTxFlowState);
             return new InitiateTxResult(true, "Recovery Initiated");
         }
-
-        /// <summary>
-        /// GltMatch attempts to conclude whether a gltResponse matches an expected transaction and returns
-        /// the outcome. 
-        /// If Success/Failed is returned, it means that the gtlResponse did match, and that transaction was succesful/failed.
-        /// If Unknown is returned, it means that the gltResponse does not match the expected transaction. 
-        /// </summary>
-        /// <param name="gltResponse">The GetLastTransactionResponse message to check</param>
-        /// <param name="posRefId">The Reference Id that you passed in with the original request.</param>
-        /// <returns></returns>
-        [Obsolete("This should no longer be used as Get Last Transaction is replaced by Get Transaction")]
-        public Message.SuccessState GltMatch(GetLastTransactionResponse gltResponse, string posRefId)
-        {
-            Log.Information($"GLT CHECK: PosRefId: {posRefId}->{gltResponse.GetPosRefId()}");
-
-            if (!posRefId.Equals(gltResponse.GetPosRefId()))
-            {
-                return Message.SuccessState.Unknown;
-            }
-
-            return gltResponse.GetSuccessState();
-        }
-
-        /// <summary>
-        /// See GltMatch. VSV-2277 This prevents issue with PosRefId associated with the wrong transaction - for purchase only.
-        /// </summary>
-        /// <param name="gltResponse">The GetLastTransactionResponse message to check</param>
-        /// <param name="posRefId">The Reference Id that you passed in with the original request</param>
-        /// <param name="expectedAmount">The total amount in the original request</param>
-        /// <param name="requestTime">The request time</param>
-        /// <returns></returns>
-        [Obsolete("This should no longer be used as Get Last Transaction is replaced by Get Transaction")]
-        public Message.SuccessState GltMatch(GetLastTransactionResponse gltResponse, string posRefId, int expectedAmount, DateTime requestTime)
-        {
-            Log.Information($"GLT CHECK: PosRefId: {posRefId}->{gltResponse.GetPosRefId()}");
-
-            var gltBankDateTime = DateTime.ParseExact(gltResponse.GetBankDateTimeString(), "ddMMyyyyHHmmss", System.Globalization.CultureInfo.InvariantCulture);
-            var compare = DateTime.Compare(requestTime, gltBankDateTime);
-
-            if (!posRefId.Equals(gltResponse.GetPosRefId()))
-            {
-                return Message.SuccessState.Unknown;
-            }
-
-            if (gltResponse.GetTxType().ToUpper() == "PURCHASE" && gltResponse.GetPurchaseAmount() != expectedAmount && compare > 0)
-            {
-                return Message.SuccessState.Unknown;
-            }
-
-            return gltResponse.GetSuccessState();
-        }
-
-        [Obsolete("This should no longer be used as Get Last Transaction is replaced by Get Transaction")]
-        public Message.SuccessState GltMatch(GetLastTransactionResponse gltResponse, TransactionType expectedType, int expectedAmount, DateTime requestTime, string posRefId)
-        {
-            return GltMatch(gltResponse, posRefId);
-        }
-
+        
         public void PrintReport(string key, string payload)
         {
             if (CurrentStatus == SpiStatus.PairedConnected)
@@ -1619,8 +1562,6 @@ namespace SPIClient
                     return;
                 }
 
-                // TH-4 We were in the middle of a transaction.
-                // Let's attempt recovery. This is step 4 of Transaction Processing Handling
                 Log.Information($"Got Last Transaction..");
                 txState.GotGltResponse();
                 var gtlResponse = new GetLastTransactionResponse(m);
@@ -1629,7 +1570,6 @@ namespace SPIClient
                     if (gtlResponse.IsStillInProgress(txState.PosRefId))
                     {
                         // TH-4E - Operation In Progress
-
                         if (gtlResponse.IsWaitingForSignatureResponse() && !txState.AwaitingSignatureCheck)
                         {
                             Log.Information($"Eftpos is waiting for us to send it signature accept/decline, but we were not aware of this. " +
@@ -1651,7 +1591,7 @@ namespace SPIClient
                     }
                     else
                     {
-                        // TH-4X - Unexpected Response when recovering
+                        // TH-4X - Unexpected Response when getting last transaction
                         Log.Information($"Unexpected Response in Get Last Transaction during - Received posRefId:{gtlResponse.GetPosRefId()} Error:{m.GetError()}. Ignoring.");
                         return;
                     }
@@ -1664,23 +1604,6 @@ namespace SPIClient
                         Log.Information($"Retrieved Last Transaction as asked directly by the user.");
                         gtlResponse.CopyMerchantReceiptToCustomerReceipt();
                         txState.Completed(m.GetSuccessState(), m, "Last Transaction Retrieved");
-                    }
-                    else
-                    {
-                        // TH-4A - Let's try to match the received last transaction against the current transaction
-                        var successState = GltMatch(gtlResponse, txState.PosRefId, txState.AmountCents, txState.RequestTime);
-                        if (successState == Message.SuccessState.Unknown)
-                        {
-                            // TH-4N: Didn't Match our transaction. Consider Unknown State.
-                            Log.Information($"Did not match transaction.");
-                            txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
-                        }
-                        else
-                        {
-                            // TH-4Y: We Matched, transaction finished, let's update ourselves
-                            gtlResponse.CopyMerchantReceiptToCustomerReceipt();
-                            txState.Completed(successState, m, "Transaction Ended.");
-                        }
                     }
                 }
             }
