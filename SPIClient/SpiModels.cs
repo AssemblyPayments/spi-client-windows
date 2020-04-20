@@ -235,12 +235,6 @@ namespace SPIClient
         /// </summary>
         public DateTime LastStateRequestTime { get; internal set; }
 
-        [Obsolete("Use Get Transaction instead, GtRequestId.")]
-        /// <summary>
-        /// The id of the last glt request message that was sent. used to match with the response.
-        /// </summary>
-        public string LastGltRequestId { get; internal set; }
-
         /// <summary>
         /// The id of the gt request message that was sent. Used to match with the response.
         /// </summary>
@@ -303,11 +297,6 @@ namespace SPIClient
         internal Message Request { get; set; }
 
         /// <summary>
-        /// Whether we're currently waiting for a Get Last Transaction Response to get an update. 
-        /// </summary>
-        internal bool AwaitingGltResponse { get; set; }
-
-        /// <summary>
         /// Whether we're currently waiting for a Get Transaction Response to get an update. 
         /// </summary>
         internal bool AwaitingGtResponse { get; set; }
@@ -349,18 +338,6 @@ namespace SPIClient
         {
             AttemptingToCancel = false;
             DisplayMessage = msg;
-        }
-
-        internal void CallingGlt(string gltRequestId)
-        {
-            AwaitingGltResponse = true;
-            LastStateRequestTime = DateTime.Now;
-            LastGltRequestId = gltRequestId;
-        }
-
-        internal void GotGltResponse()
-        {
-            AwaitingGltResponse = false;
         }
 
         internal void CallingGt(string gtRequestId)
@@ -415,7 +392,7 @@ namespace SPIClient
             Response = response;
             Finished = true;
             AttemptingToCancel = false;
-            AwaitingGltResponse = false;
+            AwaitingGtResponse = false;
             AwaitingSignatureCheck = false;
             AwaitingPhoneForAuth = false;
             DisplayMessage = msg;
@@ -427,7 +404,7 @@ namespace SPIClient
             Response = null;
             Finished = true;
             AttemptingToCancel = false;
-            AwaitingGltResponse = false;
+            AwaitingGtResponse = false;
             AwaitingSignatureCheck = false;
             AwaitingPhoneForAuth = false;
             DisplayMessage = msg;
