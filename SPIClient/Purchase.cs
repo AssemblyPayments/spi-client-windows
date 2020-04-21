@@ -281,6 +281,125 @@ namespace SPIClient
         }
     }
 
+    public class GetTransactionRequest
+    {
+        public string PosRefId { get; }
+
+        public GetTransactionRequest(string posRefId)
+        {
+            PosRefId = posRefId;
+        }
+
+        public Message ToMessage()
+        {
+
+            var data = new JObject(
+                new JProperty("pos_ref_id", PosRefId));
+
+            return new Message(RequestIdHelper.Id("gt"), Events.GetTransactionRequest, data, true);
+        }
+    }
+
+    public class GetTransactionResponse
+    {
+        public bool Success;
+
+        private readonly Message _m;
+
+        public GetTransactionResponse() { }
+
+        public GetTransactionResponse(Message m)
+        {
+            _m = m;
+        }
+
+        public string GetPosRefId()
+        {
+            return _m.GetDataStringValue("pos_ref_id");
+        }
+
+        public string GetError()
+        {
+            JToken e = null;
+            var found = _m.Data.TryGetValue("error_reason", out e);
+            if (found) return (string)e;
+            return null;
+        }
+
+        /// <summary>
+        /// Tx is a sub object of the payload, so we will copy this into a message for convenience. 
+        /// </summary>
+        public Message GetTxMessage()
+        {
+            var txFound = _m.Data.TryGetValue("tx", out var tx);
+            if (txFound)
+            {
+                return new Message(_m.Id, "gt", (JObject)tx, false);
+            }
+
+            return null;
+        }
+
+        public bool PosRefIdNotFound()
+        {
+            if (_m.GetError() != null)
+                return  _m.GetError().StartsWith("POS_REF_ID_NOT_FOUND");
+
+            return false;
+        }
+
+        public bool PosRefIdInvalid()
+        {
+            if (_m.GetError() != null)
+                return _m.GetError().StartsWith("INVALID_ARGUMENTS");
+
+            return false;
+        }
+
+        internal bool PosRefIdMissing()
+        {
+            if (_m.GetError() != null)
+                return _m.GetError().StartsWith("MISSING_ARGUMENTS");
+
+            return false;
+        }
+
+        public bool WasRetrievedSuccessfully()
+        {
+            return _m.GetSuccessState() == Message.SuccessState.Success;
+        }
+     
+        public bool IsTransactionInProgress()
+        {
+            return _m.GetError().Equals("TRANSACTION_IN_PROGRESS");
+        }
+        
+        public bool IsWaitingForSignatureResponse()
+        {
+            return _m.GetError().Equals("TRANSACTION_IN_PROGRESS_AWAITING_SIGNATURE");
+        }
+
+        public bool IsWaitingForAuthCode()
+        {
+            return _m.GetError().Equals("TRANSACTION_IN_PROGRESS_AWAITING_PHONE_AUTH_CODE");
+        }
+
+        public bool IsSomethingElseBlocking()
+        {
+            return _m.GetError().Equals("OPERATION_IN_PROGRESS");
+        }
+        
+        public void CopyMerchantReceiptToCustomerReceipt()
+        {
+            var cr = _m.GetDataStringValue("customer_receipt");
+            var mr = _m.GetDataStringValue("merchant_receipt");
+            if (mr != "" && cr == "")
+            {
+                _m.Data["customer_receipt"] = new JValue(mr);
+            }
+        }
+    }
+
     public class GetLastTransactionRequest
     {
         public Message ToMessage()
@@ -315,11 +434,6 @@ namespace SPIClient
             // So we check if we got back an ResponseCode.
             // (as opposed to say an operation_in_progress_error)
             return !string.IsNullOrEmpty(GetResponseCode());
-        }
-
-        public bool WasTimeOutOfSyncError()
-        {
-            return _m.GetError().StartsWith("TIME_OUT_OF_SYNC");
         }
 
         public bool WasOperationInProgressError()

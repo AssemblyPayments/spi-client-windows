@@ -1027,6 +1027,7 @@ namespace SPIClient
         /// that was processed by the Eftpos.
         /// Be subscribed to TxFlowStateChanged event to get updates on the process.
         /// </summary>
+        [Obsolete("Use InitiateGetTx()")]
         public InitiateTxResult InitiateGetLastTx()
         {
             if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
@@ -1034,14 +1035,14 @@ namespace SPIClient
             lock (_txLock)
             {
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
-
-                var gltRequestMsg = new GetLastTransactionRequest().ToMessage();
+                
                 CurrentFlow = SpiFlow.Transaction;
+                var gltRequestMsg = new GetLastTransactionRequest().ToMessage();
                 var posRefId = gltRequestMsg.Id; // GetLastTx is not trying to get anything specific back. So we just use the message id.
+                
                 CurrentTxFlowState = new TransactionFlowState(
                     posRefId, TransactionType.GetLastTransaction, 0, gltRequestMsg,
                     $"Waiting for EFTPOS connection to make a Get-Last-Transaction request.");
-                CurrentTxFlowState.CallingGlt(gltRequestMsg.Id);
                 if (_send(gltRequestMsg))
                 {
                     CurrentTxFlowState.Sent($"Asked EFTPOS to Get Last Transaction.");
@@ -1049,6 +1050,34 @@ namespace SPIClient
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
             return new InitiateTxResult(true, "GLT Initiated");
+        }
+
+        /// <summary>
+        /// Initiates a Get Transaction request. Use this when you want to retrieve from one of the last 10 transactions
+        /// that was processed by the Eftpos.
+        /// Be subscribed to TxFlowStateChanged event to get updates on the process.
+        /// </summary>
+        /// <param name="posRefId">This is the posRefId of the transaction you are trying to retrieve</param>
+        public InitiateTxResult InitiateGetTx(string posRefId)
+        {
+            if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
+
+            lock (_txLock)
+            {
+                if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
+
+                var gtRequestMsg = new GetTransactionRequest(posRefId).ToMessage();
+                CurrentFlow = SpiFlow.Transaction;
+                CurrentTxFlowState = new TransactionFlowState(posRefId, TransactionType.GetTransaction, 0, gtRequestMsg, $"Waiting for EFTPOS connection to make a Get Transaction request.");
+                CurrentTxFlowState.CallingGt(gtRequestMsg.Id);
+                if (_send(gtRequestMsg))
+                {
+                    CurrentTxFlowState.Sent($"Asked EFTPOS to Get Transaction {posRefId}.");
+                }
+            }
+            _txFlowStateChanged(this, CurrentTxFlowState);
+            return new InitiateTxResult(true, "GT Initiated");
+
         }
 
         /// <summary>
@@ -1071,12 +1100,11 @@ namespace SPIClient
 
                 CurrentFlow = SpiFlow.Transaction;
 
-                var gltRequestMsg = new GetLastTransactionRequest().ToMessage();
-                CurrentTxFlowState = new TransactionFlowState(
-                    posRefId, txType, 0, gltRequestMsg,
-                    $"Waiting for EFTPOS connection to attempt recovery.");
+                var gtRequestMsg = new GetTransactionRequest(posRefId).ToMessage();
+                CurrentTxFlowState = new TransactionFlowState(posRefId, txType, 0, gtRequestMsg, $"Waiting for EFTPOS connection to attempt recovery.");
+                CurrentTxFlowState.CallingGt(gtRequestMsg.Id);
 
-                if (_send(gltRequestMsg))
+                if (_send(gtRequestMsg))
                 {
                     CurrentTxFlowState.Sent($"Asked EFTPOS to recover state.");
                 }
@@ -1084,63 +1112,7 @@ namespace SPIClient
             _txFlowStateChanged(this, CurrentTxFlowState);
             return new InitiateTxResult(true, "Recovery Initiated");
         }
-
-        /// <summary>
-        /// GltMatch attempts to conclude whether a gltResponse matches an expected transaction and returns
-        /// the outcome. 
-        /// If Success/Failed is returned, it means that the gtlResponse did match, and that transaction was succesful/failed.
-        /// If Unknown is returned, it means that the gltResponse does not match the expected transaction. 
-        /// </summary>
-        /// <param name="gltResponse">The GetLastTransactionResponse message to check</param>
-        /// <param name="posRefId">The Reference Id that you passed in with the original request.</param>
-
-        /// <returns></returns>
-        public Message.SuccessState GltMatch(GetLastTransactionResponse gltResponse, string posRefId)
-        {
-            Log.Information($"GLT CHECK: PosRefId: {posRefId}->{gltResponse.GetPosRefId()}");
-
-            if (!posRefId.Equals(gltResponse.GetPosRefId()))
-            {
-                return Message.SuccessState.Unknown;
-            }
-
-            return gltResponse.GetSuccessState();
-        }
-
-        /// <summary>
-        /// See GltMatch. VSV-2277 This prevents issue with PosRefId associated with the wrong transaction - for purchase only.
-        /// </summary>
-        /// <param name="gltResponse">The GetLastTransactionResponse message to check</param>
-        /// <param name="posRefId">The Reference Id that you passed in with the original request</param>
-        /// <param name="expectedAmount">The total amount in the original request</param>
-        /// <param name="requestTime">The request time</param>
-        /// <returns></returns>
-        public Message.SuccessState GltMatch(GetLastTransactionResponse gltResponse, string posRefId, int expectedAmount, DateTime requestTime)
-        {
-            Log.Information($"GLT CHECK: PosRefId: {posRefId}->{gltResponse.GetPosRefId()}");
-
-            var gltBankDateTime = DateTime.ParseExact(gltResponse.GetBankDateTimeString(), "ddMMyyyyHHmmss", System.Globalization.CultureInfo.InvariantCulture);
-            var compare = DateTime.Compare(requestTime, gltBankDateTime);
-
-            if (!posRefId.Equals(gltResponse.GetPosRefId()))
-            {
-                return Message.SuccessState.Unknown;
-            }
-
-            if (gltResponse.GetTxType().ToUpper() == "PURCHASE" && gltResponse.GetPurchaseAmount() != expectedAmount && compare > 0)
-            {
-                return Message.SuccessState.Unknown;
-            }
-
-            return gltResponse.GetSuccessState();
-        }
-
-        [Obsolete("Use GltMatch(GetLastTransactionResponse gltResponse, string posRefId, TransactionType expectedType)")]
-        public Message.SuccessState GltMatch(GetLastTransactionResponse gltResponse, TransactionType expectedType, int expectedAmount, DateTime requestTime, string posRefId)
-        {
-            return GltMatch(gltResponse, posRefId);
-        }
-
+        
         public void PrintReport(string key, string payload)
         {
             if (CurrentStatus == SpiStatus.PairedConnected)
@@ -1496,14 +1468,121 @@ namespace SPIClient
                     && m.GetError() == "NO_TRANSACTION")
                 {
                     // TH-2E
-                    Log.Information($"Was trying to cancel a transaction but there is nothing to cancel. Calling GLT to see what's up");
-                    _callGetLastTransaction();
+                    Log.Information($"Was trying to cancel a transaction but there is nothing to cancel. Calling GT to see what's up");
+                    _callGetTransaction(CurrentTxFlowState.PosRefId);
                 }
                 else
                 {
                     Log.Information($"Received Error Event But Don't know what to do with it. {m.DecryptedJson}");
                 }
             }
+        }
+
+        /// <summary>
+        /// When the PinPad returns to us what the Transaction was.
+        /// </summary>
+        /// <param name="m"></param>
+        private void _handleGetTransactionResponse(Message m)
+        {
+            lock (_txLock)
+            {
+                var txState = CurrentTxFlowState;
+                if (CurrentFlow != SpiFlow.Transaction || txState.Finished)
+                {
+                    Log.Information($"Received gt response but we were not in the middle of a tx. ignoring.");
+                    return;
+                }
+
+                if (!txState.AwaitingGtResponse)
+                {
+                    Log.Information($"Received a gt response but we had not asked for one within this transaction. Perhaps leftover from previous one. ignoring.");
+                    return;
+                }
+
+                if (txState.GtRequestId != m.Id)
+                {
+                    Log.Information($"Received a gt response but the message id does not match the gt request that we sent. strange. ignoring.");
+                    return;
+                }
+
+                Log.Information($"Got Transaction response.");
+                txState.GotGtResponse(); 
+                var gtResponse = new GetTransactionResponse(m);
+
+                if (!gtResponse.WasRetrievedSuccessfully())
+                {
+                    // GetTransaction Failed... let's figure out one of reason and act accordingly
+                    if (gtResponse.IsWaitingForSignatureResponse() && !txState.AwaitingSignatureCheck)
+                    {
+                        Log.Information($"GTR-01: Eftpos is waiting for us to send it signature accept/decline, but we were not aware of this. " +
+                                  $"The user can only really decline at this stage as there is no receipt to print for signing.");
+                        CurrentTxFlowState.SignatureRequired(new SignatureRequired(txState.PosRefId, m.Id, "MISSING RECEIPT\n DECLINE AND TRY AGAIN."), "Recovered in Signature Required but we don't have receipt. You may Decline then Retry.");
+                    }
+                    else if (gtResponse.IsWaitingForAuthCode() && !txState.AwaitingPhoneForAuth)
+                    {
+                        Log.Information($"GTR-02: Eftpos is waiting for us to send it auth code, but we were not aware of this. " +
+                                  $"We can only cancel the transaction at this stage as we don't have enough information to recover from this.");
+                        CurrentTxFlowState.PhoneForAuthRequired(new PhoneForAuthRequired(txState.PosRefId, m.Id, "UNKNOWN", "UNKNOWN"), "Recovered mid Phone-For-Auth but don't have details. You may Cancel then Retry.");
+                    }
+                    else if (gtResponse.IsTransactionInProgress())
+                    {
+                        Log.Information($"GTR-03: Transaction is currently in progress... stay waiting.");
+                        return;
+                    }
+                    else if (gtResponse.PosRefIdNotFound()) 
+                    {
+                        Log.Information($"GTR-04: Get transaction failed, PosRefId is not found.");
+                        txState.Completed(Message.SuccessState.Failed, m, $"PosRefId not found for {gtResponse.GetPosRefId()}.");
+                    }
+                    else if (gtResponse.PosRefIdInvalid())
+                    {
+                        Log.Information($"GTR-05: Get transaction failed, PosRefId is invalid.");
+                        txState.Completed(Message.SuccessState.Failed, m, $"PosRefId invalid for {gtResponse.GetPosRefId()}.");
+                    }
+                    else if (gtResponse.PosRefIdMissing())
+                    {
+                        Log.Information($"GTR-06: Get transaction failed, PosRefId is missing.");
+                        txState.Completed(Message.SuccessState.Failed, m, $"PosRefId is missing for {gtResponse.GetPosRefId()}.");
+                    }
+                    else if (gtResponse.IsSomethingElseBlocking())
+                    {
+                        Log.Information($"GTR-07: Terminal is Blocked by something else... stay waiting.");
+                        return;
+                    }
+                    else
+                    {
+                        // get transaction failed, but we weren't given a specific reason 
+                        Log.Information($"GTR-08: Unexpected Response in Get Transaction - Received posRefId:{gtResponse.GetPosRefId()} Error:{m.GetError()}. Ignoring.");
+                        return;
+                    }
+                }
+                else
+                {
+                    var tx = gtResponse.GetTxMessage();
+                    if (tx == null)
+                    {
+                        // tx payload missing from get transaction protocol, could be a VAA issue.
+                        Log.Information("GTR-09: Unexpected Response in Get Transaction. Missing TX payload... stay waiting");
+                        return;
+                    }
+                    
+                    // get transaction was successful
+                    gtResponse.CopyMerchantReceiptToCustomerReceipt();
+                    if (txState.Type == TransactionType.GetTransaction)
+                    {
+                        // this was a get transaction request, not for recovery
+                        Log.Information("GTR-10: Retrieved Transaction as asked directly by the user.");
+                        txState.Completed(tx.GetSuccessState(), tx, $"Transaction Retrieved for {gtResponse.GetPosRefId()}.");
+                    }
+                    else
+                    {
+                        // this was a get transaction from a recovery
+                        Log.Information("GTR-11: Retrieved transaction during recovery.");
+                        txState.Completed(tx.GetSuccessState(), tx, $"Transaction Recovered for {gtResponse.GetPosRefId()}.");
+                    }
+                }
+            }
+            _txFlowStateChanged(this, CurrentTxFlowState);
         }
 
         /// <summary>
@@ -1515,95 +1594,24 @@ namespace SPIClient
             lock (_txLock)
             {
                 var txState = CurrentTxFlowState;
-                if (CurrentFlow != SpiFlow.Transaction || txState.Finished)
+                if (CurrentFlow != SpiFlow.Transaction || txState.Finished || txState.Type != TransactionType.GetLastTransaction)
                 {
-                    Log.Information($"Received glt response but we were not in the middle of a tx. ignoring.");
+                    Log.Information($"Received glt response but we were not expecting one. ignoring.");
                     return;
                 }
 
-                if (!txState.AwaitingGltResponse)
-                {
-                    Log.Information($"received a glt response but we had not asked for one within this transaction. Perhaps leftover from previous one. ignoring.");
-                    return;
-                }
-
-                if (txState.LastGltRequestId != m.Id)
-                {
-                    Log.Information($"received a glt response but the message id does not match the glt request that we sent. strange. ignoring.");
-                    return;
-                }
-
-                // TH-4 We were in the middle of a transaction.
-                // Let's attempt recovery. This is step 4 of Transaction Processing Handling
-                Log.Information($"Got Last Transaction..");
-                txState.GotGltResponse();
+                Log.Information($"Got Last Transaction Response..");
                 var gtlResponse = new GetLastTransactionResponse(m);
                 if (!gtlResponse.WasRetrievedSuccessfully())
                 {
-                    if (gtlResponse.IsStillInProgress(txState.PosRefId))
-                    {
-                        // TH-4E - Operation In Progress
-
-                        if (gtlResponse.IsWaitingForSignatureResponse() && !txState.AwaitingSignatureCheck)
-                        {
-                            Log.Information($"Eftpos is waiting for us to send it signature accept/decline, but we were not aware of this. " +
-                                      $"The user can only really decline at this stage as there is no receipt to print for signing.");
-                            CurrentTxFlowState.SignatureRequired(new SignatureRequired(txState.PosRefId, m.Id, "MISSING RECEIPT\n DECLINE AND TRY AGAIN."), "Recovered in Signature Required but we don't have receipt. You may Decline then Retry.");
-                        }
-                        else if (gtlResponse.IsWaitingForAuthCode() && !txState.AwaitingPhoneForAuth)
-                        {
-                            Log.Information($"Eftpos is waiting for us to send it auth code, but we were not aware of this. " +
-                                      $"We can only cancel the transaction at this stage as we don't have enough information to recover from this.");
-                            CurrentTxFlowState.PhoneForAuthRequired(new PhoneForAuthRequired(txState.PosRefId, m.Id, "UNKNOWN", "UNKNOWN"), "Recovered mid Phone-For-Auth but don't have details. You may Cancel then Retry.");
-                        }
-                        else
-                        {
-                            Log.Information($"Operation still in progress... stay waiting.");
-                            // No need to publish txFlowStateChanged. Can return;
-                            return;
-                        }
-                    }
-                    else if (gtlResponse.WasTimeOutOfSyncError())
-                    {
-                        // Let's not give up based on a TOOS error.
-                        // Let's log it, and ignore it. 
-                        Log.Information($"Time-Out-Of-Sync error in Get Last Transaction response. Let's ignore it and we'll try again.");
-                        // No need to publish txFlowStateChanged. Can return;
-                        return;
-                    }
-                    else
-                    {
-                        // TH-4X - Unexpected Response when recovering
-                        Log.Information($"Unexpected Response in Get Last Transaction during - Received posRefId:{gtlResponse.GetPosRefId()} Error:{m.GetError()}. Ignoring.");
-                        return;
-                    }
+                    Log.Information($"Error in Response for Get Last Transaction - Received posRefId:{gtlResponse.GetPosRefId()} Error:{m.GetError()}. UnknownCompleted.");
+                    txState.UnknownCompleted("Failed to Retrieve Last Transaction");
                 }
                 else
                 {
-                    if (txState.Type == TransactionType.GetLastTransaction)
-                    {
-                        // THIS WAS A PLAIN GET LAST TRANSACTION REQUEST, NOT FOR RECOVERY PURPOSES.
-                        Log.Information($"Retrieved Last Transaction as asked directly by the user.");
-                        gtlResponse.CopyMerchantReceiptToCustomerReceipt();
-                        txState.Completed(m.GetSuccessState(), m, "Last Transaction Retrieved");
-                    }
-                    else
-                    {
-                        // TH-4A - Let's try to match the received last transaction against the current transaction
-                        var successState = GltMatch(gtlResponse, txState.PosRefId, txState.AmountCents, txState.RequestTime);
-                        if (successState == Message.SuccessState.Unknown)
-                        {
-                            // TH-4N: Didn't Match our transaction. Consider Unknown State.
-                            Log.Information($"Did not match transaction.");
-                            txState.UnknownCompleted("Failed to recover Transaction Status. Check EFTPOS. ");
-                        }
-                        else
-                        {
-                            // TH-4Y: We Matched, transaction finished, let's update ourselves
-                            gtlResponse.CopyMerchantReceiptToCustomerReceipt();
-                            txState.Completed(successState, m, "Transaction Ended.");
-                        }
-                    }
+                    Log.Information($"Retrieved Last Transaction as asked directly by the user.");
+                    gtlResponse.CopyMerchantReceiptToCustomerReceipt();
+                    txState.Completed(m.GetSuccessState(), m, "Last Transaction Retrieved");
                 }
             }
             _txFlowStateChanged(this, CurrentTxFlowState);
@@ -1677,9 +1685,21 @@ namespace SPIClient
                             }
                             else if (state.RequestSent && DateTime.Now > state.LastStateRequestTime.Add(_checkOnTxFrequency))
                             {
-                                // TH-1T, TH-4T - It's been a while since we received an update, let's call a GLT
-                                Log.Information($"Checking on our transaction. Last we asked was at {state.LastStateRequestTime}...");
-                                _callGetLastTransaction();
+                                // It's been a while since we received an update.
+                                
+                                if (txState.Type == TransactionType.GetLastTransaction)
+                                {
+                                    // It is not possible to recover a GLT with a GT, so we send another GLT
+                                    txState.LastStateRequestTime = DateTime.Now;
+                                    _send(new GetLastTransactionRequest().ToMessage());
+                                    Log.Information($"Been to long waiting for GLT response. Sending another GLT. Last checked at {state.LastStateRequestTime}...");
+                                }
+                                else
+                                {
+                                    // let's call a GT to see what is happening
+                                    Log.Information($"Checking on our transaction. Last checked at {state.LastStateRequestTime}...");
+                                    _callGetTransaction(CurrentTxFlowState.PosRefId);
+                                }
                             }
                         }
                     }
@@ -1944,8 +1964,8 @@ namespace SPIClient
                     if (CurrentTxFlowState.RequestSent)
                     {
                         // TH-3A - We've just reconnected and were in the middle of Tx.
-                        // Let's get the last transaction to check what we might have missed out on.
-                        _callGetLastTransaction();
+                        // Let's get the transaction to check what we might have missed out on.
+                        _callGetTransaction(CurrentTxFlowState.PosRefId);
                     }
                     else
                     {
@@ -2040,15 +2060,15 @@ namespace SPIClient
         }
 
         /// <summary>
-        /// Ask the PinPad to tell us what the Most Recent Transaction was
+        /// Ask the PinPad to tell us about the transaction with the posRefId
         /// </summary>
-        private void _callGetLastTransaction()
+        private void _callGetTransaction(string posRefId)
         {
-            var gltRequestMsg = new GetLastTransactionRequest().ToMessage();
-            CurrentTxFlowState.CallingGlt(gltRequestMsg.Id);
-            _send(gltRequestMsg);
+            var gtRequestMsg = new GetTransactionRequest(posRefId).ToMessage();
+            CurrentTxFlowState.CallingGt(gtRequestMsg.Id);
+            _send(gtRequestMsg);
         }
-
+        
         /// <summary>
         /// This method will be called whenever we receive a message from the Connection
         /// </summary>
@@ -2098,6 +2118,9 @@ namespace SPIClient
                     break;
                 case Events.AuthCodeRequired:
                     _handleAuthCodeRequired(m);
+                    break;
+                case Events.GetTransactionResponse:
+                    _handleGetTransactionResponse(m);
                     break;
                 case Events.GetLastTransactionResponse:
                     _handleGetLastTransactionResponse(m);

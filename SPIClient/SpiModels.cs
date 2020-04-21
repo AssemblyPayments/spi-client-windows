@@ -118,7 +118,8 @@ namespace SPIClient
         SettlementEnquiry,
         GetLastTransaction,
         Preauth,
-        AccountVerify
+        AccountVerify,
+        GetTransaction
     }
 
     /// <summary>
@@ -235,9 +236,9 @@ namespace SPIClient
         public DateTime LastStateRequestTime { get; internal set; }
 
         /// <summary>
-        /// The id of the last glt request message that was sent. used to match with the response.
+        /// The id of the gt request message that was sent. Used to match with the response.
         /// </summary>
-        public string LastGltRequestId { get; internal set; }
+        public string GtRequestId { get; internal set; }
 
         /// <summary>
         /// Whether we're currently attempting to Cancel the transaction.
@@ -296,9 +297,10 @@ namespace SPIClient
         internal Message Request { get; set; }
 
         /// <summary>
-        /// Whether we're currently waiting for a Get Last Transaction Response to get an update. 
+        /// Whether we're currently waiting for a Get Transaction Response to get an update. 
         /// </summary>
-        internal bool AwaitingGltResponse { get; set; }
+        internal bool AwaitingGtResponse { get; set; }
+
 
         [Obsolete("Use PosRefId instead.")]
         public string Id { get; internal set; }
@@ -338,16 +340,16 @@ namespace SPIClient
             DisplayMessage = msg;
         }
 
-        internal void CallingGlt(string gltRequestId)
+        internal void CallingGt(string gtRequestId)
         {
-            AwaitingGltResponse = true;
+            AwaitingGtResponse = true;
             LastStateRequestTime = DateTime.Now;
-            LastGltRequestId = gltRequestId;
+            GtRequestId = gtRequestId;
         }
 
-        internal void GotGltResponse()
+        internal void GotGtResponse()
         {
-            AwaitingGltResponse = false;
+            AwaitingGtResponse = false;
         }
 
         internal void Failed(Message response, string msg)
@@ -390,7 +392,7 @@ namespace SPIClient
             Response = response;
             Finished = true;
             AttemptingToCancel = false;
-            AwaitingGltResponse = false;
+            AwaitingGtResponse = false;
             AwaitingSignatureCheck = false;
             AwaitingPhoneForAuth = false;
             DisplayMessage = msg;
@@ -402,7 +404,7 @@ namespace SPIClient
             Response = null;
             Finished = true;
             AttemptingToCancel = false;
-            AwaitingGltResponse = false;
+            AwaitingGtResponse = false;
             AwaitingSignatureCheck = false;
             AwaitingPhoneForAuth = false;
             DisplayMessage = msg;
