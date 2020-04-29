@@ -53,10 +53,10 @@ namespace SPIClient.Service
 
         public Task<IRestResponse<TransactionReport>> ReportTransaction(TransactionReport transactionReport, string apiKey, string acquirerCode, bool isTestMode)
         {
-            var transactionServiceUri = isTestMode ? $"https://spi-analytics-api-sb.{acquirerCode}.msp.assemblypayments.com/v1/report-transaction" : $"https://device-address-api.{acquirerCode}.msp.assemblypayments.com/v1/report-transaction";
+            var transactionServiceUri = isTestMode ? $"https://spi-analytics-api-sb.{acquirerCode}.mspenv.io/v1/report-transaction" : $"https://spi-analytics-api.{acquirerCode}.mspenv.io/v1/report-transaction";
 
 #if DEBUG
-            transactionServiceUri = "https://spi-analytics-api-dev.nonprod-wbc.msp.assemblypayments.com/v1/report-transaction";
+            transactionServiceUri = "https://spi-analytics-api-qa.eng.mspenv.io/v1/report-transaction";
 #endif
             var message = transactionReport.ToMessage();
 
