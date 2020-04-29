@@ -40,7 +40,7 @@ namespace SPIClient.Service
 
         public async Task<IRestResponse<DeviceAddressStatus>> RetrieveService(string serialNumber, string apiKey, string acquirerCode, bool isTestMode)
         {
-            var deviceAddressUri = isTestMode ? $"https://device-address-api-sb.{acquirerCode}.msp.assemblypayments.com/v1/{serialNumber}/ip" : $"https://device-address-api.{acquirerCode}.msp.assemblypayments.com/v1/{serialNumber}/ip";
+            var deviceAddressUri = isTestMode ? $"https://device-address-api-sb.{acquirerCode}.mspenv.io/v1/{serialNumber}/ip" : $"https://device-address-api.{acquirerCode}.mspenv.io/v1/{serialNumber}/ip";
 
             var addressService = new HttpBaseService(deviceAddressUri);
             var request = new RestRequest(Method.GET);
