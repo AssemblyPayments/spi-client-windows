@@ -22,9 +22,10 @@ namespace SPIClient
                 return deviceAddressStatus;
             }
 
-            if (serviceResponse.Data.Address == currentEftposAddress)
+            if (serviceResponse.Data.Address == currentEftposAddress.Replace("ws://", ""))
             {
-                deviceAddressStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.SERIAL_NUMBER_NOT_CHANGED;
+                deviceAddressStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.ADDRESS_NOT_CHANGED;
+                return deviceAddressStatus;
             }
 
             deviceAddressStatus.DeviceAddressResponseCode = DeviceAddressResponseCode.SUCCESS;
