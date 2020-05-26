@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("SPIClient")]
-[assembly: AssemblyDescription("Client for Assembly Payments Instore Simple Payments Integration (SPI) API")]
+[assembly: AssemblyDescription("mx51 Instore Simple Payments Integration (SPI) API")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Assembly Payments")]
+[assembly: AssemblyCompany("mx51")]
 [assembly: AssemblyProduct("Instore")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
+[assembly: AssemblyCopyright("Copyright © 2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
