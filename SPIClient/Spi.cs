@@ -2298,7 +2298,7 @@ namespace SPIClient
                 Log.Warning("Could not communicate with device address service.");
                 return;
             }
-            else if (deviceAddressStatus.DeviceAddressResponseCode != DeviceAddressResponseCode.SUCCESS)
+            else if (deviceAddressStatus.DeviceAddressResponseCode == DeviceAddressResponseCode.ADDRESS_NOT_CHANGED)
             {
                 Log.Information("Address resolved, but device address has not changed.");
          
