@@ -81,6 +81,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Reversal.cs" />
     <Compile Include="TransactionReportHelper.cs" />
     <Compile Include="Cashout.cs" />
     <Compile Include="ComWrapper.cs" />

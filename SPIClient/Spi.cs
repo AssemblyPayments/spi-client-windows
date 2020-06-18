@@ -1114,6 +1114,32 @@ namespace SPIClient
             _txFlowStateChanged(this, CurrentTxFlowState);
             return new InitiateTxResult(true, "Recovery Initiated");
         }
+
+        /// <summary>
+        /// Alpha Build - Please do not use
+        /// </summary>
+        /// <param name="posRefId"></param>
+        /// <returns></returns>
+        public InitiateTxResult InitiateReversal(string posRefId)
+        {
+            if (CurrentStatus == SpiStatus.Unpaired) return new InitiateTxResult(false, "Not Paired");
+
+            lock (_txLock)
+            {
+                if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
+
+                CurrentFlow = SpiFlow.Transaction;
+
+                var reversalRequestMsg = new ReversalRequest(posRefId).ToMessage();
+                CurrentTxFlowState = new TransactionFlowState(posRefId, TransactionType.Reversal, 0, reversalRequestMsg, $"Waiting for EFTPOS to make a reversal request");
+                if (_send(reversalRequestMsg))
+                {
+                    CurrentTxFlowState.Sent($"Asked EFTPOS reversal");
+                }
+            }
+
+            return new InitiateTxResult(true, "Reversal Initiated");
+        }
         
         public void PrintReport(string key, string payload)
         {
@@ -1461,6 +1487,28 @@ namespace SPIClient
             _txFlowStateChanged(this, CurrentTxFlowState);
             _sendTransactionReport();
         }
+
+        /// <summary>
+        /// Handle the Reversal Response received from the PinPad
+        /// </summary>
+        /// <param name="m"></param>
+        private void _handleReversalTransaction(Message m)
+        {
+            lock (_txLock)
+            {
+                var incomingPosRefId = m.GetDataStringValue("pos_ref_id");
+                if (CurrentFlow != SpiFlow.Transaction || CurrentTxFlowState.Finished || !CurrentTxFlowState.PosRefId.Equals(incomingPosRefId))
+                {
+                    Log.Information($"Received Reversal response but I was not waiting for this one. Incoming Pos Ref ID: {incomingPosRefId}");
+                    return;
+                }
+
+                CurrentTxFlowState.Completed(m.GetSuccessState(), m, "Reversal Transaction Ended.");
+            }
+            _txFlowStateChanged(this, CurrentTxFlowState);
+            _sendTransactionReport();
+        }
+
 
         /// <summary>
         /// Sometimes we receive event type "error" from the server, such as when calling cancel_transaction and there is no transaction in progress.
@@ -2141,6 +2189,9 @@ namespace SPIClient
                     break;
                 case Events.SettlementEnquiryResponse:
                     _handleSettlementEnquiryResponse(m);
+                    break;
+                case Events.ReversalResponse:
+                    _handleReversalTransaction(m);
                     break;
                 case Events.Ping:
                     _handleIncomingPing(m);

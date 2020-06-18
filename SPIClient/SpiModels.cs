@@ -110,16 +110,17 @@ namespace SPIClient
 
     public enum TransactionType
     {
+        AccountVerify,
+        CashoutOnly,
+        GetLastTransaction,
+        GetTransaction,
+        MOTO,
+        Preauth,
         Purchase,
         Refund,
-        CashoutOnly,
-        MOTO,
+        Reversal,
         Settle,
-        SettlementEnquiry,
-        GetLastTransaction,
-        Preauth,
-        AccountVerify,
-        GetTransaction
+        SettlementEnquiry
     }
 
     /// <summary>

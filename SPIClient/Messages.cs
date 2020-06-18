@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Diagnostics;
 
 namespace SPIClient
 {
@@ -31,6 +32,8 @@ namespace SPIClient
         public const string GetLastTransactionResponse = "last_transaction";
         public const string GetTransactionRequest = "get_transaction";
         public const string GetTransactionResponse = "get_transaction_response";
+        public const string ReversalRequest = "reverse_transaction";
+        public const string ReversalResponse = "reverse_transaction_response";
         public const string RefundRequest = "refund";
         public const string RefundResponse = "refund_response";
         public const string SignatureRequired = "signature_required";
