@@ -1561,7 +1561,7 @@ namespace SPIClient
                     {
                         // get transaction failed, but we weren't given a specific reason 
                         Log.Information($"GTR-08: Unexpected Response in Get Transaction - Received posRefId:{gtResponse.GetPosRefId()} Error:{m.GetError()}. Ignoring.");
-                        return;
+                        txState.Completed(Message.SuccessState.Failed, m, $"Get Transaction failed, {m.GetError()}.");
                     }
                 }
                 else
