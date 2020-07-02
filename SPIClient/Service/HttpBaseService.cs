@@ -2,6 +2,7 @@
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using RestSharp;
 using Serilog;
 
@@ -22,6 +23,23 @@ namespace SPIClient.Service
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         }
 
+        public class ErrorResponse_Legacy
+        {
+            public string error { get; set; }
+        }
+
+        public class ErrorResponse
+        {
+            public Error Error { get; set; }
+        }
+
+        public class Error
+        {
+            public string Code { get; set; }
+            public string Message { get; set; }
+        }
+
+
         public async Task<IRestResponse<T>> SendRequest<T>(IRestRequest request) where T : new()
         {
             var cancellationTokenSource = new CancellationTokenSource(_timeOut);
@@ -32,7 +50,19 @@ namespace SPIClient.Service
 
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
-                    Log.Error($"Status code {(int)response.StatusCode} received from {Url} - Exception {response.ErrorException}");
+                    string errorMessage;
+
+                    try
+                    {
+                        var result = JsonConvert.DeserializeObject<ErrorResponse>(response.Content);
+                        errorMessage = result.Error.Message;
+                    }
+                    catch
+                    {
+                        var result = JsonConvert.DeserializeObject<ErrorResponse_Legacy>(response.Content);
+                        errorMessage = result.error;
+                    }
+                    Log.Error($"Status code {(int)response.StatusCode} received from {Url} - Error {errorMessage}");
                 }
                 else
                 {
@@ -48,7 +78,5 @@ namespace SPIClient.Service
             }
         }
     }
-    
-
 }
 
