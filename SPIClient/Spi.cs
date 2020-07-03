@@ -1568,11 +1568,20 @@ namespace SPIClient
                 if (!gtResponse.WasRetrievedSuccessfully())
                 {
                     // GetTransaction Failed... let's figure out one of reason and act accordingly
-                    if (gtResponse.IsWaitingForSignatureResponse() && !txState.AwaitingSignatureCheck)
+                    if (gtResponse.IsWaitingForSignatureResponse())
                     {
-                        Log.Information($"GTR-01: Eftpos is waiting for us to send it signature accept/decline, but we were not aware of this. " +
-                                  $"The user can only really decline at this stage as there is no receipt to print for signing.");
-                        CurrentTxFlowState.SignatureRequired(new SignatureRequired(txState.PosRefId, m.Id, "MISSING RECEIPT\n DECLINE AND TRY AGAIN."), "Recovered in Signature Required but we don't have receipt. You may Decline then Retry.");
+                        if (!txState.AwaitingSignatureCheck)
+                        {
+                            Log.Information($"GTR-01: Eftpos is waiting for us to send it signature accept/decline, but we were not aware of this. " +
+                                      $"The user can only really decline at this stage as there is no receipt to print for signing.");
+                            CurrentTxFlowState.SignatureRequired(new SignatureRequired(txState.PosRefId, m.Id, "MISSING RECEIPT\n DECLINE AND TRY AGAIN."), "Recovered in Signature Required but we don't have receipt. You may Decline then Retry.");
+                        }
+                        else
+                        {
+                            Log.Information($"Waiting for Signature response ... stay waiting.");
+                            // No need to publish txFlowStateChanged. Can return;
+                            return;
+                        }
                     }
                     else if (gtResponse.IsWaitingForAuthCode() && !txState.AwaitingPhoneForAuth)
                     {
