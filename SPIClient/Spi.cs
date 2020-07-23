@@ -1126,6 +1126,7 @@ namespace SPIClient
 
             lock (_txLock)
             {
+
                 if (CurrentFlow != SpiFlow.Idle) return new InitiateTxResult(false, "Not Idle");
 
                 CurrentFlow = SpiFlow.Transaction;
@@ -2465,7 +2466,6 @@ namespace SPIClient
         private bool _hasSetInfo;
         private bool _pairUsingEftposAddress;
         private const string _libraryLanguage = ".net";
-
         private Connection _conn;
         private readonly TimeSpan _pongTimeout = TimeSpan.FromSeconds(5);
         private readonly TimeSpan _pingFrequency = TimeSpan.FromSeconds(18);
@@ -2482,9 +2482,7 @@ namespace SPIClient
         public SpiTerminalConfigurationResponse TerminalConfigurationResponse;
         public SpiBatteryLevelChanged BatteryLevelChanged;
         public SpiTransactionUpdateMessage TransactionUpdateMessage;
-
         private TransactionReport transactionReport;
-
         private Message _mostRecentPingSent;
         private DateTime _mostRecentPingSentTime;
         private Message _mostRecentPongReceived;
