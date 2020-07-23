@@ -24,7 +24,7 @@ namespace Test
 
             // act
             var msg = Message.FromJson(jsonStr, secrets);
-            var message = PongHelper.GeneratePongRessponse(msg);
+            var message = PongHelper.GeneratePongResponse(msg);
 
             // assert
             Assert.Equal(msg.EventName, "pong");

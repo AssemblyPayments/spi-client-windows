@@ -74,33 +74,33 @@ namespace Test
         }
 
         [Fact]
-        public void TransactionFlowState_OnValidRequestCallingGlt_ReturnObjects()
+        public void TransactionFlowState_OnValidRequestCallingGt_ReturnObjects()
         {
             // arrange
             var stlEnqMsg = new SettlementEnquiryRequest(RequestIdHelper.Id("stlenq")).ToMessage();
             var transactionFlowState = new TransactionFlowState("1", TransactionType.SettlementEnquiry, 0, stlEnqMsg, $"Waiting for EFTPOS connection to make a settlement enquiry");
 
             // act
-            transactionFlowState.CallingGlt("25");
+            transactionFlowState.CallingGt("25");
 
             // assert
-            Assert.True(transactionFlowState.AwaitingGltResponse);
+            Assert.True(transactionFlowState.AwaitingGtResponse);
             Assert.NotNull(transactionFlowState.LastStateRequestTime);
-            Assert.Equal("25", transactionFlowState.LastGltRequestId);
+            Assert.Equal("25", transactionFlowState.GtRequestId);
         }
 
         [Fact]
-        public void TransactionFlowState_OnValidRequestGotGltResponse_ReturnObject()
+        public void TransactionFlowState_OnValidRequestGotGtResponse_ReturnObject()
         {
             // arrange
             var stlEnqMsg = new SettlementEnquiryRequest(RequestIdHelper.Id("stlenq")).ToMessage();
             var transactionFlowState = new TransactionFlowState("1", TransactionType.SettlementEnquiry, 0, stlEnqMsg, $"Waiting for EFTPOS connection to make a settlement enquiry");
 
             // act
-            transactionFlowState.GotGltResponse();
+            transactionFlowState.GotGtResponse();
 
             // assert
-            Assert.False(transactionFlowState.AwaitingGltResponse);
+            Assert.False(transactionFlowState.AwaitingGtResponse);
         }
 
         [Fact]
@@ -205,7 +205,7 @@ namespace Test
             Assert.Equal(msg, transactionFlowState.Response);
             Assert.True(transactionFlowState.Finished);
             Assert.False(transactionFlowState.AttemptingToCancel);
-            Assert.False(transactionFlowState.AwaitingGltResponse);
+            Assert.False(transactionFlowState.AwaitingGtResponse);
             Assert.False(transactionFlowState.AwaitingSignatureCheck);
             Assert.False(transactionFlowState.AwaitingPhoneForAuth);
             Assert.Equal("Completed", transactionFlowState.DisplayMessage);
@@ -228,7 +228,7 @@ namespace Test
             Assert.Null(transactionFlowState.Response);
             Assert.True(transactionFlowState.Finished);
             Assert.False(transactionFlowState.AttemptingToCancel);
-            Assert.False(transactionFlowState.AwaitingGltResponse);
+            Assert.False(transactionFlowState.AwaitingGtResponse);
             Assert.False(transactionFlowState.AwaitingSignatureCheck);
             Assert.False(transactionFlowState.AwaitingPhoneForAuth);
             Assert.Equal("UnknownCompleted", transactionFlowState.DisplayMessage);
