@@ -1909,7 +1909,7 @@ namespace SPIClient
                             }
 
                             // As we have no way to recover from a reversal in the event of a disconnection, we will fail the reversal.
-                            if (CurrentTxFlowState.Type == TransactionType.Reversal)
+                            if (CurrentFlow == SpiFlow.Transaction && CurrentTxFlowState?.Type == TransactionType.Reversal)
                             {
                                 CurrentTxFlowState.Completed(Message.SuccessState.Failed, null, $"We were in the middle of a reversal when a disconnection happened, let's fail the reversal.");
                                 _txFlowStateChanged(this, CurrentTxFlowState);
