@@ -50,12 +50,14 @@ namespace SPIClient.Service
 
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
-                    string errorMessage;
+                    string errorMessage = "";
 
                     try
                     {
                         var result = JsonConvert.DeserializeObject<ErrorResponse>(response.Content);
-                        errorMessage = result.Error.Message;
+
+                        if (result != null)
+                            errorMessage = result.Error.Message;
                     }
                     catch
                     {
