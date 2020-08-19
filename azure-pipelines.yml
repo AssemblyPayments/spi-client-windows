@@ -1,0 +1,78 @@
+# Pipeline will be triggered based if the following are satisfied:
+# - Any commits on any branch excluding 'prototype'
+# - Tags on any branch
+# - All pull requests
+
+trigger:
+  branches:
+    include:
+      - '*'
+    exclude:
+      - 'prototype/*'
+  tags:
+    include: 
+       - '*'
+
+pr:
+  branches:
+    include:
+    - '*'
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildVersion: '15.0'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+jobs:
+- job: build
+  displayName: 'Building SPIClient'
+  steps:
+      # acquire nuget and add it to path
+      - task: NuGetToolInstaller@1
+        displayName: 'Acquire Nuget'
+
+      # restore nuget packages from solution
+      - task: NuGetCommand@2
+        displayName: 'Restore nuget solution'
+        inputs:
+          restoreSolution: '$(solution)'
+
+      # build solution
+      - task: VSBuild@1
+        displayName: 'Build SPIClient'
+        inputs:
+          solution: '$(solution)'
+          vsVersion: '$(buildVersion)'
+          platform: '$(buildPlatform)'
+          configuration: '$(buildConfiguration)'
+
+      # run visual studio unit tests
+      - task: VSTest@2
+        displayName: 'Run VSTests'
+        inputs:
+          platform: '$(buildPlatform)'
+          configuration: '$(buildConfiguration)'
+
+- job: deployment 
+  displayName: 'Deploying SPIClient to Nuget'
+  steps:
+  - task: NuGetCommand@2
+    condition: and(succeeded(), 'refs/tags/')
+    inputs:
+        command: pack
+        packagesToPack: '.\SPIClient\SPIClient.csproj'
+        configuration: '$(buildConfiguration)'
+    
+  - task: NuGetAuthenticate@0
+    displayName: 'NuGet Authenticate'
+  - task: NuGetCommand@2
+    condition: and(succeeded(), 'refs/tags/')
+    displayName: 'NuGet Deploy'
+    inputs:
+      command: push
+      publishVstsFeed: '<projectName>/<feed>'
+      allowPackageConflicts: true
