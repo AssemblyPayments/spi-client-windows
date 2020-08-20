@@ -55,10 +55,10 @@ jobs:
 
 - job: deployment 
   displayName: 'Deploying SPIClient to Nuget'
+  condition: and(succeeded(), contains(variables['BRANCH_NAME'], 'refs/tags/'))
   steps:
   - task: NuGetCommand@2
     displayName: 'Package SPIClient'
-    condition: and(succeeded(), 'refs/tags/')
     inputs:
         command: 'pack'
         packagesToPack: '.\SPIClient\SPIClient.csproj'
@@ -71,7 +71,6 @@ jobs:
   
   - task: NuGetCommand@2
     displayName: 'Deploy SPIClient to NuGet' 
-    condition: and(succeeded(), 'refs/tags/')
     inputs:
       command: 'push'
       packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
