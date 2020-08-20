@@ -55,7 +55,7 @@ jobs:
 
 - job: deployment 
   displayName: 'Deploying SPIClient to Nuget'
-  condition: and(succeeded(), contains($(Build.SourceBranch), 'refs/tags/'))
+  condition: and(succeeded(), contains('$(Build.SourceBranch)', 'refs/tags/'))
   steps:
   - task: NuGetCommand@2
     displayName: 'Package SPIClient'
