@@ -31,10 +31,6 @@ jobs:
 - job: build
   displayName: 'Building SPIClient'
   steps:
-      # acquire nuget and add it to path
-      - task: NuGetToolInstaller@1
-        displayName: 'Acquire Nuget'
-
       # restore nuget packages from solution
       - task: NuGetCommand@2
         displayName: 'Restore nuget solution'
@@ -61,18 +57,23 @@ jobs:
   displayName: 'Deploying SPIClient to Nuget'
   steps:
   - task: NuGetCommand@2
+    displayName: 'Package SPIClient'
     condition: and(succeeded(), 'refs/tags/')
     inputs:
-        command: pack
+        command: 'pack'
         packagesToPack: '.\SPIClient\SPIClient.csproj'
         configuration: '$(buildConfiguration)'
     
   - task: NuGetAuthenticate@0
-    displayName: 'NuGet Authenticate'
-  - task: NuGetCommand@2
-    condition: and(succeeded(), 'refs/tags/')
-    displayName: 'NuGet Deploy'
+    displayName: 'Authenticate NuGet Service Connection'
     inputs:
-      command: push
-      publishVstsFeed: '<projectName>/<feed>'
-      allowPackageConflicts: true
+      nuGetServiceConnections: 'NuGet - SPIClient'
+  
+  - task: NuGetCommand@2
+    displayName: 'Deploy SPIClient to NuGet' 
+    condition: and(succeeded(), 'refs/tags/')
+    inputs:
+      command: 'push'
+      packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
+      nuGetFeedType: external
+      publishFeedCredentials: 'NuGet - SPIClient'
