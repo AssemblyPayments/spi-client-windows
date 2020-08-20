@@ -23,7 +23,7 @@ pool:
 
 variables:
   solution: '**/*.sln'
-  buildVersion: '15.0'
+  buildVersion: '16.0'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
@@ -55,7 +55,7 @@ jobs:
 
 - job: deployment 
   displayName: 'Deploying SPIClient to Nuget'
-  condition: and(succeeded(), contains(variables['BRANCH_NAME'], 'refs/tags/'))
+  condition: and(succeeded(), contains($(Build.SourceBranch), 'refs/tags/'))
   steps:
   - task: NuGetCommand@2
     displayName: 'Package SPIClient'
