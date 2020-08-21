@@ -54,25 +54,16 @@ jobs:
           configuration: '$(buildConfiguration)'
 
 - job: deployment 
-  displayName: 'Deploying SPIClient to Nuget'
-  condition: and(succeeded(), contains('$(Build.SourceBranch)', 'refs/tags/'))
+  displayName: 'Build Nuget Package'
+  #condition: and(succeeded(), contains('$(Build.SourceBranch)', 'refs/tags/'))
   steps:
   - task: NuGetCommand@2
     displayName: 'Package SPIClient'
     inputs:
         command: 'pack'
         packagesToPack: '.\SPIClient\SPIClient.csproj'
-        configuration: '$(buildConfiguration)'
-    
-  - task: NuGetAuthenticate@0
-    displayName: 'Authenticate NuGet Service Connection'
+        configuration: '$(buildConfiguration)'    
+  - task: PublishPipelineArtifact@1
     inputs:
-      nuGetServiceConnections: 'NuGet - SPIClient'
-  
-  - task: NuGetCommand@2
-    displayName: 'Deploy SPIClient to NuGet' 
-    inputs:
-      command: 'push'
-      packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
-      nuGetFeedType: external
-      publishFeedCredentials: 'NuGet - SPIClient'
+      targetPath: $(System.DefaultWorkingDirectory)/bin/SPIClient
+      artifactName: SPIClient
