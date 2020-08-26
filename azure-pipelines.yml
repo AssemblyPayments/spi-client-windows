@@ -53,7 +53,6 @@ jobs:
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
 
-      #condition: and(succeeded(), contains('$(Build.SourceBranch)', 'refs/tags/'))
       - task: NuGetCommand@2
         displayName: 'Package SPIClient'
         inputs:
@@ -61,6 +60,6 @@ jobs:
             packagesToPack: '.\SPIClient\SPIClient.csproj'
             configuration: '$(buildConfiguration)'    
       - task: PublishPipelineArtifact@1
+        condition: and(succeeded(), contains('$(Build.SourceBranch)', 'refs/tags/'))      
         inputs:
-          targetPath: $(System.DefaultWorkingDirectory)/bin/SPIClient
           artifactName: SPIClient
