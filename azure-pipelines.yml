@@ -37,13 +37,13 @@ stages:
     steps:
         # restore nuget packages from solution
         - task: NuGetCommand@2
-          displayName: 'Restore nuget solution'
+          displayName: Restore nuget solution
           inputs:
             restoreSolution: '$(solution)'
 
         # build solution
         - task: VSBuild@1
-          displayName: 'Build SPIClient'
+          displayName: Build SPIClient
           inputs:
             solution: '$(solution)'
             vsVersion: '$(buildVersion)'
@@ -52,11 +52,12 @@ stages:
 
         # run visual studio unit tests
         - task: VSTest@2
-          displayName: 'Run VSTests'
+          displayName: Run VSTests
           inputs:
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
-            
+
+        # publish artifact  
         - publish: $(System.DefaultWorkingDirectory)
           artifact: $(ARTIFACT_NAME)
           condition: and(succeeded(), contains('$(Build.SourceBranch)', 'refs/tags/'))      
@@ -76,12 +77,13 @@ stages:
           steps:
           # package SPIClient 
           - task: NuGetCommand@2
-            displayName: 'Package SPIClient'
+            displayName: Package SPIClient
             inputs:
                 command: 'pack'
                 packagesToPack: '.\SPIClient\SPIClient.csproj'
                 configuration: '$(buildConfiguration)'    
           # publish to NuGet
           - task: PublishPipelineArtifact@1
+            displayName: Publish SPIClient to NuGet
             inputs:
               artifactName: SPIClient
