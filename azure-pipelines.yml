@@ -63,6 +63,7 @@ stages:
           displayName: 'Publish Arfifact'
 
 - stage: deploy
+  condition: and(succeeded(), contains(variables['BRANCH_NAME'], 'refs/tags/'))
   displayName: Deploy
   dependsOn: build
   jobs:
