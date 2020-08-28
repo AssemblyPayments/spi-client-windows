@@ -59,11 +59,11 @@ stages:
             
         - publish: $(System.DefaultWorkingDirectory)
           artifact: $(ARTIFACT_NAME)
-          condition: and(succeeded(), contains(variables['BRANCH_NAME'], 'refs/tags/'))
+          condition: and(succeeded(), contains('$(Build.SourceBranch)', 'refs/tags/'))      
           displayName: 'Publish Arfifact'
 
 - stage: deploy
-  condition: and(succeeded(), contains(variables['BRANCH_NAME'], 'refs/tags/'))
+  condition: and(succeeded(), contains('$(Build.SourceBranch)', 'refs/tags/'))      
   displayName: Deploy
   dependsOn: build
   jobs:
@@ -83,6 +83,5 @@ stages:
                 configuration: '$(buildConfiguration)'    
           # publish to NuGet
           - task: PublishPipelineArtifact@1
-            condition: and(succeeded(), contains('$(Build.SourceBranch)', 'refs/tags/'))      
             inputs:
               artifactName: SPIClient
