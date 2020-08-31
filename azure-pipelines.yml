@@ -32,6 +32,8 @@ variables:
     value: Any CPU
   - name: BUILD_CONFIGURATION
     value: Release
+  - name: BRANCH_NAME
+    value: $[variables['Build.SourceBranch']]    
 
 stages:
 - stage: build
@@ -65,11 +67,11 @@ stages:
         # publish artifact  
         - publish: $(System.DefaultWorkingDirectory)
           artifact: $(ARTIFACT_NAME)
-          condition: and(succeeded(), contains('$(Build.SourceBranch)', 'refs/tags/'))      
+          condition: and(succeeded(), contains('$(BRANCH_NAME)', 'refs/tags/'))      
           displayName: 'Publish Arfifact'
 
 - stage: deploy
-  condition: and(succeeded(), contains('$(Build.SourceBranch)', 'refs/tags/'))      
+  condition: and(succeeded(), contains('$(BRANCH_NAME)', 'refs/tags/'))      
   displayName: Deploy
   dependsOn: build
   jobs:
