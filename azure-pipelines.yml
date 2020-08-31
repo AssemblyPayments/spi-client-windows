@@ -87,7 +87,8 @@ stages:
             displayName: Package SPIClient
             inputs:
                 command: 'pack'
-                packagesToPack: '.\SPIClient\SPIClient.csproj'
+                packagesToPack: '**/*.csproj'
+                packDestination: '$(Build.ArtifactStagingDirectory)'
                 configuration: '$(buildConfiguration)'    
           # publish to NuGet
           - task: NuGetCommand@2
