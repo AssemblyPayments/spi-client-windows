@@ -88,7 +88,9 @@ stages:
                 packagesToPack: '.\SPIClient\SPIClient.csproj'
                 configuration: '$(buildConfiguration)'    
           # publish to NuGet
-          - task: PublishPipelineArtifact@1
+          - task: NuGetCommand@2
             displayName: Publish SPIClient to NuGet
             inputs:
-              artifactName: SPIClient
+              command: 'push'
+              feedsToUse: 'config'
+              includeNugetOrg: true
