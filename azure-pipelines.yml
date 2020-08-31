@@ -22,11 +22,16 @@ trigger:
        - '*'
 
 variables:
-  
-  solution: '**/*.sln'
-  buildVersion: '16.0'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  - name: SOLUTION
+    value: '**/*.sln'
+  - name: ARTIFACT_NAME
+    value: SPIClient
+  - name: BUILD_VERSION_VS
+    value: 16.0
+  - name: BUILD_PLATFORM
+    value: Any CPU
+  - name: BUILD_CONFIGURATION
+    value: Release
 
 stages:
 - stage: build
@@ -39,22 +44,22 @@ stages:
         - task: NuGetCommand@2
           displayName: Restore nuget solution
           inputs:
-            restoreSolution: '$(solution)'
+            restoreSolution: '$(SOLUTION)'
 
         # build solution
         - task: VSBuild@1
           displayName: Build SPIClient
           inputs:
-            solution: '$(solution)'
-            vsVersion: '$(buildVersion)'
-            platform: '$(buildPlatform)'
+            solution: '$(SOLUTION)'
+            vsVersion: '$(BUILD_VERSION_VS)'
+            platform: '$(BUILD_PLATFORM)'
             configuration: '$(buildConfiguration)'
 
         # run visual studio unit tests
         - task: VSTest@2
           displayName: Run VSTests
           inputs:
-            platform: '$(buildPlatform)'
+            platform: '$(BUILD_PLATFORM)'
             configuration: '$(buildConfiguration)'
 
         # publish artifact  
