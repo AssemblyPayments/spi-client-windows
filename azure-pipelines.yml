@@ -53,14 +53,14 @@ stages:
             solution: '$(SOLUTION)'
             vsVersion: '$(BUILD_VERSION_VS)'
             platform: '$(BUILD_PLATFORM)'
-            configuration: '$(buildConfiguration)'
+            configuration: '$(BUILD_CONFIGURATION)'
 
         # run visual studio unit tests
         - task: VSTest@2
           displayName: Run VSTests
           inputs:
             platform: '$(BUILD_PLATFORM)'
-            configuration: '$(buildConfiguration)'
+            configuration: '$(BUILD_CONFIGURATION)'
 
         # publish artifact  
         - publish: $(System.DefaultWorkingDirectory)
