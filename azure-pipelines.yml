@@ -34,8 +34,6 @@ variables:
     value: Release
   - name: BRANCH_NAME
     value: $[variables['Build.SourceBranch']]
-  - name: AGENT_BUILD_DIRECTORY
-    value: $[variables['Agent.BuildDirectory']]
 
 stages:
 - stage: build
@@ -85,11 +83,8 @@ stages:
         deploy:
           steps:
           - script: dir
-            workingDirectory: $(Agent.BuildDirectory)/SPIClient/SPIClient/
+            workingDirectory: $(Agent.BuildDirectory)/SPIClient/SPIClient/bin
             displayName: List contents of a folder          
-          - script: dir
-            workingDirectory: variables['AGENT_BUILD_DIRECTORY']/SPIClient/SPIClient/
-            displayName: List contents of a folder
           # package SPIClient 
           - task: NuGetCommand@2
             displayName: Package SPIClient
