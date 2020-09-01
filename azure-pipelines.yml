@@ -106,5 +106,6 @@ stages:
             inputs:
               command: 'push'
               packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
+              feedsToUse: 'config'
               verbosityPush: Detailed
               includeNugetOrg: true
