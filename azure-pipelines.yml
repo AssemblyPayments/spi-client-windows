@@ -33,7 +33,7 @@ variables:
   - name: BUILD_CONFIGURATION
     value: Release
   - name: BRANCH_NAME
-    value: $[variables['Build.SourceBranch']]    
+    value: $[variables['Build.SourceBranch']]
 
 stages:
 - stage: build
@@ -82,6 +82,9 @@ stages:
       runOnce:
         deploy:
           steps:
+          - script: dir
+            workingDirectory: $(Agent.BuildDirectory)/SPIClient/SPIClient/Release
+            displayName: List contents of a folder
           # package SPIClient 
           - task: NuGetCommand@2
             displayName: Package SPIClient
@@ -90,7 +93,7 @@ stages:
                 packagesToPack: $(Agent.BuildDirectory)/SPIClient/SPIClient/*.csproj
                 packDestination: '$(Build.ArtifactStagingDirectory)'
                 verbosityPack: Detailed
-                configuration: '$(buildConfiguration)'    
+                configuration: '$(BUILD_CONFIGURATION)'
           # publish to NuGet
           - task: NuGetCommand@2
             displayName: Publish SPIClient to NuGet
