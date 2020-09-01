@@ -85,10 +85,10 @@ stages:
         deploy:
           steps:
           - script: dir
-            workingDirectory: $(AGENT_BUILD_DIRECTORY)/SPIClient/SPIClient/bin
+            workingDirectory: $(Agent.BuildDirectory)/SPIClient/SPIClient/
             displayName: List contents of a folder          
           - script: dir
-            workingDirectory: $(AGENT_BUILD_DIRECTORY)/SPIClient/SPIClient/bin/Release
+            workingDirectory: $(AGENT_BUILD_DIRECTORY)/SPIClient/SPIClient/
             displayName: List contents of a folder
           # package SPIClient 
           - task: NuGetCommand@2
