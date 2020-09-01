@@ -82,18 +82,12 @@ stages:
       runOnce:
         deploy:
           steps:
-          - script: dir
-            workingDirectory: $(Agent.BuildDirectory)
-            displayName: List contents of a folder          
-          - script: dir
-            workingDirectory: $(Agent.BuildDirectory)/SPIClient/SPIClient
-            displayName: List contents of a folder
           # package SPIClient 
           - task: NuGetCommand@2
             displayName: Package SPIClient
             inputs:
                 command: 'pack'
-                packagesToPack: $(Agent.BuildDirectory)/SPIClient/SPIClient/*.nuspec
+                packagesToPack: $(Agent.BuildDirectory)/SPIClient/SPIClient/*.csproj
                 packDestination: '$(Build.ArtifactStagingDirectory)'
                 verbosityPack: Detailed
                 configuration: '$(buildConfiguration)'    
