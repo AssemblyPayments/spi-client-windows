@@ -86,7 +86,7 @@ stages:
             workingDirectory: $(Agent.BuildDirectory)
             displayName: List contents of a folder          
           - script: dir
-            workingDirectory: $(Agent.BuildDirectory)
+            workingDirectory: $(Agent.BuildDirectory)/SPIClient
             displayName: List contents of a folder
           # package SPIClient 
           - task: NuGetCommand@2
