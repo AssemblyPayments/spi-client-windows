@@ -85,6 +85,9 @@ stages:
           - script: dir
             workingDirectory: $(Agent.BuildDirectory)/SPIClient/SPIClient/bin
             displayName: List contents of a folder          
+          - script: dir
+            workingDirectory: $(Build.ArtifactStagingDirectory)
+            displayName: List contents of a folder                      
           # package SPIClient 
           - task: NuGetCommand@2
             displayName: Package SPIClient
