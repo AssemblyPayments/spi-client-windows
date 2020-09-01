@@ -82,13 +82,13 @@ stages:
       runOnce:
         deploy:
           steps:
-          - script: echo 'hello world'
+          - script: echo '$(Build.ArtifactStagingDirectory)'
           # package SPIClient 
           - task: NuGetCommand@2
             displayName: Package SPIClient
             inputs:
                 command: 'pack'
-                packagesToPack: '**/*.nuspec'
+                packagesToPack: '**/SPIClient/*.nuspec'
                 packDestination: '$(Build.ArtifactStagingDirectory)'
                 verbosityPack: Detailed
                 configuration: '$(buildConfiguration)'    
