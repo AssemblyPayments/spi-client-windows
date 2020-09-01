@@ -95,7 +95,7 @@ stages:
                 verbosityPack: Detailed
                 configuration: '$(BUILD_CONFIGURATION)'
           - script: dir
-            workingDirectory: $(Build.ArtifactStagingDirectory)/**/*.nupkg
+            workingDirectory: $(Build.ArtifactStagingDirectory)
             displayName: List contents of a folder          
           # publish to NuGet
           - task: NuGetCommand@2
