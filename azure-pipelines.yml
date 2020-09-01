@@ -34,6 +34,8 @@ variables:
     value: Release
   - name: BRANCH_NAME
     value: $[variables['Build.SourceBranch']]
+  - name: AGENT_BUILD_DIRECTORY
+    value: $[variables['Agent.BuildDirectory']]
 
 stages:
 - stage: build
@@ -83,20 +85,23 @@ stages:
         deploy:
           steps:
           - script: dir
-            workingDirectory: $(Agent.BuildDirectory)/SPIClient/SPIClient/bin
+            workingDirectory: $(AGENT_BUILD_DIRECTORY)/SPIClient/SPIClient/bin
             displayName: List contents of a folder          
           - script: dir
-            workingDirectory: $(Agent.BuildDirectory)/SPIClient/SPIClient/bin/Release
+            workingDirectory: $(AGENT_BUILD_DIRECTORY)/SPIClient/SPIClient/bin/Release
             displayName: List contents of a folder
           # package SPIClient 
           - task: NuGetCommand@2
             displayName: Package SPIClient
             inputs:
                 command: 'pack'
-                packagesToPack: $(Agent.BuildDirectory)/SPIClient/SPIClient/*.csproj
+                packagesToPack: $(AGENT_BUILD_DIRECTORY)/SPIClient/SPIClient/*.csproj
                 packDestination: '$(Build.ArtifactStagingDirectory)'
                 verbosityPack: Detailed
                 configuration: '$(BUILD_CONFIGURATION)'
+          - script: dir
+            workingDirectory: $(Build.ArtifactStagingDirectory)/**/*.nupkg
+            displayName: List contents of a folder          
           # publish to NuGet
           - task: NuGetCommand@2
             displayName: Publish SPIClient to NuGet
