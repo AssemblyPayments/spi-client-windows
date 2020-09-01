@@ -67,11 +67,11 @@ stages:
         # publish artifact  
         - publish: $(System.DefaultWorkingDirectory)
           artifact: $(ARTIFACT_NAME)
-          #condition: and(succeeded(), contains(variables['BRANCH_NAME'], 'refs/tags/'))      
+          condition: and(succeeded(), contains(variables['BRANCH_NAME'], 'refs/tags/'))      
           displayName: 'Publish Arfifact'
 
 - stage: deploy
-  #condition: and(succeeded(), contains(variables['BRANCH_NAME'], 'refs/tags/'))      
+  condition: and(succeeded(), contains(variables['BRANCH_NAME'], 'refs/tags/'))      
   displayName: Deploy
   dependsOn: build
   jobs:
@@ -82,13 +82,7 @@ stages:
       runOnce:
         deploy:
           steps:
-          - script: dir
-            workingDirectory: $(Agent.BuildDirectory)/SPIClient/SPIClient/bin
-            displayName: List contents of a folder          
-          - script: dir
-            workingDirectory: $(Build.ArtifactStagingDirectory)
-            displayName: List contents of a folder                      
-          # package SPIClient 
+          # pack SPIClient 
           - task: NuGetCommand@2
             displayName: Package SPIClient
             inputs:
@@ -97,10 +91,7 @@ stages:
                 packDestination: '$(Build.ArtifactStagingDirectory)'
                 verbosityPack: Detailed
                 configuration: '$(BUILD_CONFIGURATION)'
-          - script: dir
-            workingDirectory: $(Build.ArtifactStagingDirectory)
-            displayName: List contents of a folder          
-          # publish to NuGet
+          # publish to NuGet using NuGet Service feed
           - task: NuGetCommand@2
             displayName: Publish SPIClient to NuGet
             inputs:
