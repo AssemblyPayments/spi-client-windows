@@ -95,6 +95,6 @@ stages:
             displayName: Publish SPIClient to NuGet
             inputs:
               command: 'push'
-              packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
+              packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
               feedsToUse: 'config'
               includeNugetOrg: true
