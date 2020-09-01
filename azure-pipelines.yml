@@ -86,14 +86,14 @@ stages:
             workingDirectory: $(Agent.BuildDirectory)
             displayName: List contents of a folder          
           - script: dir
-            workingDirectory: $(Agent.BuildDirectory)/SPIClient
+            workingDirectory: $(Agent.BuildDirectory)/SPIClient/SPIClient
             displayName: List contents of a folder
           # package SPIClient 
           - task: NuGetCommand@2
             displayName: Package SPIClient
             inputs:
                 command: 'pack'
-                packagesToPack: '**/SPIClient/*.nuspec'
+                packagesToPack: $(Agent.BuildDirectory)/SPIClient/SPIClient/*.nuspec
                 packDestination: '$(Build.ArtifactStagingDirectory)'
                 verbosityPack: Detailed
                 configuration: '$(buildConfiguration)'    
