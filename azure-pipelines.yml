@@ -89,14 +89,15 @@ stages:
                 command: 'pack'
                 packagesToPack: '**/*.csproj'
                 packDestination: '$(Build.ArtifactStagingDirectory)'
+                verbosityPack: Detailed
                 configuration: '$(buildConfiguration)'    
           # publish to NuGet
           - task: NuGetCommand@2
             displayName: Publish SPIClient to NuGet
             inputs:
               command: 'push'
-              packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
-              feedsToUse: 'config'
+              packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
+              verbosityPush: Detailed
               includeNugetOrg: true
 
           - task: PowerShell@2
