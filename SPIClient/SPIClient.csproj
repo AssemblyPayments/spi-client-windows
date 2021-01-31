@@ -81,7 +81,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Tenants.cs" />
     <Compile Include="Reversal.cs" />
+    <Compile Include="Service\TenantsService.cs" />
     <Compile Include="TransactionReportHelper.cs" />
     <Compile Include="Cashout.cs" />
     <Compile Include="ComWrapper.cs" />
