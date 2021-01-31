@@ -17,7 +17,7 @@ namespace SPIClient.Service
 
     public class TenantsService
     {
-        internal async Task<IRestResponse<List<Tenants>>> RetrieveTenantsList(string countryCode, string posVendorId, string apiKey)
+        internal async Task<IRestResponse<List<Tenants>>> RetrieveTenantsList(string posVendorId, string apiKey, string countryCode)
         {
             var tenantServiceUri = $"https://spi.integration.mspenv.io/tenants?country-code={countryCode}&pos-vendor-id={posVendorId}&api-key={apiKey}";
 

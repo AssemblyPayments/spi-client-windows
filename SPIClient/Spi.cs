@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using SPIClient.Service;
-using Newtonsoft.Json;
 
 namespace SPIClient
 {
@@ -1192,13 +1191,13 @@ namespace SPIClient
         /// <summary>
         /// Static call to retrieve the available tenants (payment providers) for mx51. This is used to display the payment providers available in your Simple Payments Integration setup.
         /// </summary>
-        /// <param name="countryCode">2 digit ISO Country code, eg. AU</param>
         /// <param name="posVendorId">This is the POS identifier, same as the one you provided in SetPosInfo() method</param>
-        /// <param name="apiKey">ApiKey provided by mx51</param>
-        public static async Task<Tenants> GetAvailableTenants(string countryCode, string posVendorId, string apiKey)
+        /// <param name="apiKey">apiKey provided by mx51</param>
+        /// <param name="countryCode">2 digit ISO Country code, eg. AU</param>
+        public static async Task<Tenants> GetAvailableTenants(string posVendorId, string apiKey, string countryCode)
         {
             var service = new TenantsService();
-            var tenantsResponse = await service.RetrieveTenantsList(countryCode, posVendorId, apiKey);
+            var tenantsResponse = await service.RetrieveTenantsList(posVendorId, apiKey, countryCode);
             var availableTenants = TenantsHelper.GetAvailableTenants(tenantsResponse);
 
             return availableTenants;
