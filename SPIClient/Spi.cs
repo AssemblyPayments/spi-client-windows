@@ -242,7 +242,7 @@ namespace SPIClient
         }
 
         /// <summary>
-        /// Set the api key used for auto address discovery feature, please contact mx51 for Api key.
+        /// Set the api key, please contact mx51 for Api key.
         /// </summary>
         /// <returns></returns>
         public bool SetDeviceApiKey(string deviceApiKey)
@@ -300,8 +300,7 @@ namespace SPIClient
         /// Set it to true only while you are developing the integration. 
         /// It defaults to false. For a real merchant, always leave it set to false. 
         /// </summary>
-        /// <param name="testMode"></param>
-        /// <returns></returns>
+        /// <param name="testMode">True if you want to test this against our sandbox environment</param>
         public bool SetTestMode(bool testMode)
         {
             if (testMode == _inTestMode)
@@ -359,14 +358,11 @@ namespace SPIClient
             return true;
         }
 
-        /**
-         * Sets values used to identify the POS software to the EFTPOS terminal.
-         * <p>
-         * Must be set before starting!
-         *
-         * @param posVendorId Vendor identifier of the POS itself.
-         * @param posVersion  Version string of the POS itself.
-         */
+        /// <summary>
+        /// Set values used to identify the POS software to the EFTPOS terminal.
+        /// </summary>   
+        /// <param name="posVendorId">This is the POS identifier</param>
+        /// <param name="posVersion">Version of the POS</param>
         public void SetPosInfo(string posVendorId, string posVersion)
         {
             _posVendorId = posVendorId;
@@ -1188,6 +1184,23 @@ namespace SPIClient
             var deviceAddressStatus = DeviceHelper.GenerateDeviceAddressStatus(addressResponse, _eftposAddress);
 
             return deviceAddressStatus.Address;
+        }
+        #endregion
+
+        #region Static Methods
+        /// <summary>
+        /// Static call to retrieve the available tenants (payment providers) for mx51. This is used to display the payment providers available in your Simple Payments Integration setup.
+        /// </summary>
+        /// <param name="posVendorId">This is the POS identifier, same as the one you provided in SetPosInfo() method</param>
+        /// <param name="apiKey">apiKey provided by mx51</param>
+        /// <param name="countryCode">2 digit ISO Country code, eg. AU</param>
+        public static async Task<Tenants> GetAvailableTenants(string posVendorId, string apiKey, string countryCode)
+        {
+            var service = new TenantsService();
+            var tenantsResponse = await service.RetrieveTenantsList(posVendorId, apiKey, countryCode);
+            var availableTenants = TenantsHelper.GetAvailableTenants(tenantsResponse);
+
+            return availableTenants;
         }
         #endregion
 
@@ -2338,7 +2351,7 @@ namespace SPIClient
 
         #endregion
 
-        #region Device Management 
+        #region Internals for Device Management 
 
         private bool HasSerialNumberChanged(string updatedSerialNumber)
         {
