@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("mx51")]
 [assembly: AssemblyProduct("Instore")]
-[assembly: AssemblyCopyright("Copyright © 2020")]
+[assembly: AssemblyCopyright("Copyright © 2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -33,5 +33,5 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("2.8.*")]
-[assembly: AssemblyInformationalVersion("2.8.1")]
+[assembly: AssemblyInformationalVersion("2.8.2")]
 [assembly: InternalsVisibleTo("Test, PublicKey=00240000048000009400000006020000002400005253413100040000010001008544b98e052c8caaf98a80a8bf2856c3c781101b8c2ae2c5e0e0d6d0a45c5de39ac9dd708cb1d08fe255f2b9903a35471e28c7fac6ba7caf1eb8a1309ad981089f4754f781fad3867b87bdc374ca27e1831433b011d358276f86ac6e795a5a03f33ff33911c32c34a5024da1e1d9d17a9c44e93cbef2e57e36eecd59524794b8")]
