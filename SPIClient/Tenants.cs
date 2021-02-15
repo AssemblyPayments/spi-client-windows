@@ -9,7 +9,10 @@ namespace SPIClient
     {
         internal static Tenants GetAvailableTenants(IRestResponse<List<Tenants>> serviceResponse)
         {
-            var tenants = JsonConvert.DeserializeObject<Tenants>(serviceResponse.Content);
+            Tenants tenants = new Tenants();
+
+            if (serviceResponse?.Data != null)
+                tenants = JsonConvert.DeserializeObject<Tenants>(serviceResponse.Content);
 
             return tenants;
         }
