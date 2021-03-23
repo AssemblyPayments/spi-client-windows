@@ -334,12 +334,7 @@ namespace SPIClient
             PosCounter = stamp.PosCounter++;
             ConnId = stamp.ConnId;
             DateTimeStamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.fff");
-
-            if (!_needsEncryption)
-            {
-                // Unencrypted Messages need PosID inside the message
-                PosId = stamp.PosId;
-            }
+            PosId = stamp.PosId;
 
             DecryptedJson = JsonConvert.SerializeObject(new MessageEnvelope(this));
 
