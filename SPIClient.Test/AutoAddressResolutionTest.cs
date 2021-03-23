@@ -43,12 +43,12 @@ namespace Test
         {
             // arrange
             const string apiKey = "RamenPosDeviceAddressApiKey";
-            const string acquirerCode = "wbc";
+            const string tenantCode = "wbc";
             const string serialNumber = "111-111-111"; // invalid serial number
             var deviceService = new DeviceAddressService();
 
             // act
-            var addressResponse = await deviceService.RetrieveDeviceAddress(serialNumber, apiKey, acquirerCode, true);
+            var addressResponse = await deviceService.RetrieveDeviceAddress(serialNumber, apiKey, tenantCode, true);
 
             // assert
             Assert.NotNull(addressResponse);
@@ -62,12 +62,12 @@ namespace Test
         {
             // arrange
             const string apiKey = "RamenPosDeviceAddressApiKey";
-            const string acquirerCode = "wbc";
+            const string tenantCode = "wbc";
             const string serialNumber = "321-404-842";
             var deviceService = new DeviceAddressService();
 
             // act
-            var addressResponse = await deviceService.RetrieveDeviceAddress(serialNumber, apiKey, acquirerCode, true);
+            var addressResponse = await deviceService.RetrieveDeviceAddress(serialNumber, apiKey, tenantCode, true);
 
             // assert
             Assert.NotNull(addressResponse);
@@ -80,13 +80,13 @@ namespace Test
         {
             // arrange
             const string apiKey = "RamenPosDeviceAddressApiKey";
-            const string acquirerCode = "wbc";
+            const string tenantCode = "wbc";
             const string serialNumber = "328-513-254";
             var spi = new Spi("Pos1", serialNumber, "", null);
             SpiClientTestUtils.SetInstanceField(spi, "_currentStatus", SpiStatus.Unpaired);
             spi.SetTestMode(true);
             spi.SetDeviceApiKey(apiKey);
-            spi.SetAcquirerCode(acquirerCode);
+            spi.SetTenantCode(tenantCode);
 
             // act
             var response = spi.GetTerminalAddress();
@@ -101,13 +101,13 @@ namespace Test
         {
             // arrange
             const string apiKey = "RamenPosDeviceAddressApiKey";
-            const string acquirerCode = "wbc";
+            const string tenantCode = "gko";
             const string serialNumber = "123-456-789";
             var spi = new Spi("Pos1", serialNumber, "", null);
             SpiClientTestUtils.SetInstanceField(spi, "_currentStatus", SpiStatus.Unpaired);
             spi.SetTestMode(true);
             spi.SetDeviceApiKey(apiKey);
-            spi.SetAcquirerCode(acquirerCode);
+            spi.SetTenantCode(tenantCode);
 
             // act
             var response = spi.GetTerminalAddress();

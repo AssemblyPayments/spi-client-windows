@@ -231,13 +231,22 @@ namespace SPIClient
             }
         }
 
-
         /// <summary>
         /// Set the acquirer code of your bank, please contact mx51's for acquirer code.
         /// </summary>
+        [Obsolete("Please use SetTenantCode(string tenantCode) instead")]
         public bool SetAcquirerCode(string acquirerCode)
         {
-            _acquirerCode = acquirerCode;
+            SetTenantCode(acquirerCode);
+            return true;
+        }
+
+        /// <summary>
+        /// Set the tenant code of your financial instituion, please contact mx51's for tenant code.
+        /// </summary>
+        public bool SetTenantCode(string tenantCode)
+        {
+            _tenantCode = tenantCode;
             return true;
         }
 
@@ -1180,7 +1189,7 @@ namespace SPIClient
         public async Task<string> GetTerminalAddress()
         {
             var service = new DeviceAddressService();
-            var addressResponse = await service.RetrieveDeviceAddress(_serialNumber, _deviceApiKey, _acquirerCode, _inTestMode);
+            var addressResponse = await service.RetrieveDeviceAddress(_serialNumber, _deviceApiKey, _tenantCode, _inTestMode);
             var deviceAddressStatus = DeviceHelper.GenerateDeviceAddressStatus(addressResponse, _eftposAddress);
 
             return deviceAddressStatus.Address;
@@ -2370,7 +2379,7 @@ namespace SPIClient
             }
 
             var service = new DeviceAddressService();
-            var addressResponse = await service.RetrieveDeviceAddress(_serialNumber, _deviceApiKey, _acquirerCode, _inTestMode);
+            var addressResponse = await service.RetrieveDeviceAddress(_serialNumber, _deviceApiKey, _tenantCode, _inTestMode);
             var deviceAddressStatus = DeviceHelper.GenerateDeviceAddressStatus(addressResponse, _eftposAddress);
             CurrentDeviceStatus = deviceAddressStatus;
 
@@ -2424,7 +2433,7 @@ namespace SPIClient
             _ = Task.Factory.StartNew(() =>
                 {
                     var service = new AnalyticsService();
-                    var analyticsResponse = service.ReportTransaction(transactionReport, _deviceApiKey, _acquirerCode, _inTestMode);
+                    var analyticsResponse = service.ReportTransaction(transactionReport, _deviceApiKey, _tenantCode, _inTestMode);
 
                     if (analyticsResponse.Result == null)
                     {
@@ -2473,7 +2482,7 @@ namespace SPIClient
         private string _eftposAddress;
         private string _serialNumber;
         private string _deviceApiKey;
-        private string _acquirerCode;
+        private string _tenantCode;
         private string _terminalModel;
         private bool _inTestMode;
         private bool _autoAddressResolutionEnabled = true; // enabled by default

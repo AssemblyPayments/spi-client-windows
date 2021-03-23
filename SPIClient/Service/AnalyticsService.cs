@@ -51,9 +51,9 @@ namespace SPIClient.Service
     {
         private const string ApiKeyHeader = "ASM-MSP-DEVICE-ADDRESS-API-KEY";
 
-        public Task<IRestResponse<TransactionReport>> ReportTransaction(TransactionReport transactionReport, string apiKey, string acquirerCode, bool isTestMode)
+        public Task<IRestResponse<TransactionReport>> ReportTransaction(TransactionReport transactionReport, string apiKey, string tenantCode, bool isTestMode)
         {
-            var transactionServiceUri = isTestMode ? $"https://spi-analytics-api-sb.{acquirerCode}.mspenv.io/v1/report-transaction" : $"https://spi-analytics-api.{acquirerCode}.mspenv.io/v1/report-transaction";
+            var transactionServiceUri = isTestMode ? $"https://spi-analytics-api-sb.{tenantCode}.mspenv.io/v1/report-transaction" : $"https://spi-analytics-api.{tenantCode}.mspenv.io/v1/report-transaction";
 
 #if DEBUG
             transactionServiceUri = "https://spi-analytics-api-qa.eng.mspenv.io/v1/report-transaction";

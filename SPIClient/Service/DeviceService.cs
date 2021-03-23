@@ -38,9 +38,9 @@ namespace SPIClient.Service
     {
         private const string ApiKeyHeader = "ASM-MSP-DEVICE-ADDRESS-API-KEY";
 
-        public async Task<IRestResponse<DeviceAddressStatus>> RetrieveDeviceAddress(string serialNumber, string apiKey, string acquirerCode, bool isTestMode)
+        public async Task<IRestResponse<DeviceAddressStatus>> RetrieveDeviceAddress(string serialNumber, string apiKey, string tenantCode, bool isTestMode)
         {
-            var deviceAddressUri = isTestMode ? $"https://device-address-api-sb.{acquirerCode}.mspenv.io/v1/{serialNumber}/ip" : $"https://device-address-api.{acquirerCode}.mspenv.io/v1/{serialNumber}/ip";
+            var deviceAddressUri = isTestMode ? $"https://device-address-api-sb.{tenantCode}.mspenv.io/v1/{serialNumber}/ip" : $"https://device-address-api.{tenantCode}.mspenv.io/v1/{serialNumber}/ip";
 
             var addressService = new HttpBaseService(deviceAddressUri);
             var request = new RestRequest(Method.GET);
