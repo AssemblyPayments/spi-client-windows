@@ -1,0 +1,103 @@
+# Pipeline will be triggered based if the following are satisfied:
+# - Any commits on any branch excluding 'prototype'
+# - Tags on any branch
+# - All pull requests
+
+pool:
+  vmImage: 'windows-latest'
+
+pr:
+  branches:
+    include:
+    - '*'
+
+trigger:
+  branches:
+    include:
+      - '*'
+    exclude:
+      - 'prototype/*'
+  tags:
+    include: 
+       - '*'
+
+variables:
+  - name: SOLUTION
+    value: '**/*.sln'
+  - name: ARTIFACT_NAME
+    value: SPIClient
+  - name: BUILD_VERSION_VS
+    value: 16.0
+  - name: BUILD_PLATFORM
+    value: Any CPU
+  - name: BUILD_CONFIGURATION
+    value: Release
+  - name: BRANCH_NAME
+    value: $[variables['Build.SourceBranch']]
+
+stages:
+- stage: build
+  displayName: Build
+  jobs:
+  - job: build
+    displayName: Building SPIClient
+    steps:
+        # restore nuget packages from solution
+        - task: NuGetCommand@2
+          displayName: Restore nuget solution
+          inputs:
+            restoreSolution: '$(SOLUTION)'
+
+        # build solution
+        - task: VSBuild@1
+          displayName: Build SPIClient
+          inputs:
+            solution: '$(SOLUTION)'
+            vsVersion: '$(BUILD_VERSION_VS)'
+            platform: '$(BUILD_PLATFORM)'
+            configuration: '$(BUILD_CONFIGURATION)'
+
+        # run visual studio unit tests
+        - task: VSTest@2
+          displayName: Run VSTests
+          inputs:
+            platform: '$(BUILD_PLATFORM)'
+            configuration: '$(BUILD_CONFIGURATION)'
+
+        # publish artifact  
+        - publish: $(System.DefaultWorkingDirectory)
+          artifact: $(ARTIFACT_NAME)
+          condition: and(succeeded(), contains(variables['BRANCH_NAME'], 'refs/tags/'))      
+          displayName: 'Publish Arfifact'
+
+- stage: deploy
+  condition: and(succeeded(), contains(variables['BRANCH_NAME'], 'refs/tags/'))      
+  displayName: Deploy
+  dependsOn: build
+  jobs:
+  - deployment: SPIClient
+    displayName: Deploy
+    environment: production
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # pack SPIClient 
+          - task: NuGetCommand@2
+            displayName: Package SPIClient
+            inputs:
+                command: 'pack'
+                packagesToPack: $(Agent.BuildDirectory)/SPIClient/SPIClient/*.csproj
+                packDestination: '$(Build.ArtifactStagingDirectory)'
+                verbosityPack: Detailed
+                configuration: '$(BUILD_CONFIGURATION)'
+          # publish to NuGet using NuGet Service feed
+          - task: NuGetCommand@2
+            displayName: Publish SPIClient to NuGet
+            inputs:
+              command: 'push'
+              packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
+              nuGetFeedType: external
+              publishFeedCredentials: NuGet
+              verbosityPush: Detailed
+              includeNugetOrg: true
